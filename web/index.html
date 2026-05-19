@@ -1,22 +1,3720 @@
-<!DOCTYPE html>
-<html lang="hi">
+<!doctype html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#0b6e4f" />
-  <link rel="manifest" href="manifest.json" />
-  <title>Sarkari Saathi - Voice Matters</title>
+<meta charset="utf-8" />
+<title>Voice Matters — Interactive Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F0F4F8;
+    --primary: #2A9DB5;
+    --primary-tint: #EAF3F7;
+    --primary-soft: rgba(42, 157, 181, 0.12);
+    --accent: #E8735A;
+    --navy: #1B2A41;
+    --text: #2E3A4B;
+    --muted: #8896A6;
+    --muted-2: #6A7787;
+    --line: #E3E9EF;
+    --disabled: #B0BEC5;
+    --green: #4CAF50;
+    --green-tint: #E8F5E9;
+    --green-line: #C6E5C9;
+    --amber: #D17E1B;
+    --amber-tint: #FFF4E5;
+    --amber-line: #F2DCB8;
+    --orange: #ED8B2A;
+    --orange-tint: #FFF1DE;
+    --orange-line: #F2D8B0;
+    --red: #E53935;
+    --skeleton: #E0E0E0;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: radial-gradient(ellipse at top, #E6ECF3 0%, #D2DAE3 60%, #B8C3CF 100%);
+    min-height: 100vh;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+  .hi { font-family: 'Noto Sans Devanagari', 'Inter', sans-serif; }
+
+  .stage {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px 80px;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .branding {
+    text-align: center;
+    color: var(--navy);
+  }
+  .branding h1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .branding p {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: #6A7787;
+    font-weight: 500;
+  }
+
+  /* ===== Phone ===== */
+  .phone {
+    width: 390px;
+    height: 844px;
+    background: var(--bg);
+    border-radius: 44px;
+    border: 1px solid #D6DDE5;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.6) inset,
+      0 36px 80px -20px rgba(20, 30, 50, 0.35),
+      0 12px 32px -8px rgba(20, 30, 50, 0.15);
+    position: relative;
+    overflow: hidden;
+  }
+  .notch {
+    position: absolute;
+    top: 12px; left: 50%;
+    transform: translateX(-50%);
+    width: 110px; height: 30px;
+    background: #0E1620;
+    border-radius: 999px;
+    z-index: 50;
+  }
+  .status-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 54px;
+    padding: 18px 28px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--navy);
+    z-index: 40;
+    pointer-events: none;
+  }
+  .status-bar .icons { display: flex; gap: 6px; }
+  .status-bar .icons svg { display: block; }
+
+  .home-indicator {
+    position: absolute;
+    bottom: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 134px;
+    height: 5px;
+    border-radius: 999px;
+    background: #1B2A41;
+    opacity: 0.3;
+    z-index: 45;
+  }
+
+  /* ===== Screen layering ===== */
+  .screen {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    padding-top: 54px;
+    display: none;
+    flex-direction: column;
+    opacity: 0;
+    transition: opacity 0.28s ease;
+    background: var(--bg);
+    overflow: hidden;
+  }
+  .screen.active { display: flex; opacity: 1; }
+  .screen-body {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .screen-body::-webkit-scrollbar { width: 0; }
+
+  /* ===== App header ===== */
+  .app-header {
+    padding: 12px 24px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .app-header .leading, .app-header .trailing {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: #FFFFFF;
+    border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--navy);
+    cursor: pointer;
+    transition: transform 0.15s ease;
+  }
+  .app-header .leading:hover, .app-header .trailing:hover { transform: translateY(-1px); }
+  .brand {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--navy);
+    letter-spacing: -0.01em;
+    text-align: center;
+    line-height: 1.1;
+  }
+  .brand .tag {
+    display: block;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    color: var(--primary);
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* ===== FAB ===== */
+  .fab {
+    position: absolute;
+    right: 18px;
+    bottom: 96px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+      0 14px 28px -10px rgba(232, 115, 90, 0.55),
+      0 -2px 0 rgba(255,255,255,0.18) inset;
+    z-index: 30;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+  }
+  .fab:hover { transform: translateY(-2px); }
+  .fab svg { width: 24px; height: 24px; }
+  .fab .pulse {
+    position: absolute;
+    top: -2px; right: -2px;
+    width: 14px; height: 14px;
+    background: #fff;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+  }
+  .fab .pulse::after {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    border-radius: 50%;
+    background: var(--primary);
+  }
+
+  /* ===== HOME ===== */
+  .greeting {
+    margin: 6px 24px 0;
+    padding: 14px 16px;
+    background: #FFFFFF;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .greeting .avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2A9DB5, #1F7C90);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+  }
+  .greeting .who { font-size: 13px; color: var(--muted); font-weight: 500; line-height: 1.2; }
+  .greeting .who strong {
+    display: block;
+    color: var(--navy);
+    font-weight: 600;
+    font-size: 14px;
+    margin-top: 1px;
+  }
+  .greeting .pill {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--primary);
+    background: var(--primary-soft);
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+  .greeting .pill.recording { background: rgba(229,57,53,0.12); color: var(--red); }
+  .greeting .pill.processing { background: var(--amber-tint); color: var(--amber); }
+  .greeting .pill.done { background: var(--green-tint); color: var(--green); }
+
+  .prompt {
+    text-align: center;
+    margin: 22px 32px 0;
+  }
+  .prompt h2 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--navy);
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    transition: color 0.3s ease;
+  }
+  .prompt p {
+    margin: 6px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .hint-row {
+    margin: 16px 0 0;
+    padding: 0 24px;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .hint {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--navy);
+    background: #FFFFFF;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 7px 12px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .hint:hover { border-color: var(--primary); color: var(--primary); }
+  .hint .hi {
+    color: var(--primary);
+    font-weight: 600;
+    margin-right: 4px;
+  }
+
+  /* mic */
+  .mic-stage {
+    position: relative;
+    width: 100%;
+    height: 260px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 10px;
+  }
+  .mic-button {
+    position: relative;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    box-shadow:
+      0 18px 36px -14px rgba(42, 157, 181, 0.55),
+      0 4px 0 rgba(0,0,0,0.04) inset,
+      0 -3px 0 rgba(255,255,255,0.14) inset;
+    z-index: 3;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.18s ease, background 0.25s ease, width 0.3s ease, height 0.3s ease;
+  }
+  .mic-button:active { transform: scale(0.96); }
+  .mic-button.disabled {
+    background: var(--disabled);
+    box-shadow: 0 12px 28px -16px rgba(120, 134, 150, 0.45);
+    cursor: not-allowed;
+  }
+  .mic-button.small { width: 120px; height: 120px; }
+  .mic-icon { width: 60px; height: 60px; transition: width 0.3s ease, height 0.3s ease; }
+  .mic-button.small .mic-icon { width: 46px; height: 46px; }
+
+  /* recording rings */
+  .ring {
+    position: absolute;
+    top: 50%; left: 50%;
+    border-radius: 50%;
+    border: 1.5px solid var(--primary);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .ring.r1 { width: 200px; height: 200px; background: rgba(42, 157, 181, 0.10); }
+  .ring.r2 { width: 244px; height: 244px; background: rgba(42, 157, 181, 0.06); }
+  .ring.r3 { width: 288px; height: 288px; background: rgba(42, 157, 181, 0.03); }
+  .mic-stage.recording .ring.r1 { opacity: 0.4; animation: pulse 2s infinite; }
+  .mic-stage.recording .ring.r2 { opacity: 0.25; animation: pulse 2s infinite 0.3s; }
+  .mic-stage.recording .ring.r3 { opacity: 0.15; animation: pulse 2s infinite 0.6s; }
+  @keyframes pulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-50%, -50%) scale(1.08); }
+  }
+
+  .rec-dot {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--red);
+    border: 3px solid #fff;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .mic-stage.recording .rec-dot { opacity: 1; animation: blink 1s infinite; }
+  @keyframes blink {
+    0%, 60% { opacity: 1; }
+    61%, 100% { opacity: 0.3; }
+  }
+
+  .caption {
+    text-align: center;
+    margin-top: 8px;
+    font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--muted);
+    transition: color 0.3s ease;
+  }
+  .caption.teal { color: var(--primary); font-weight: 600; }
+  .caption .en {
+    display: block;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: #A4B0BD;
+    margin-top: 4px;
+    letter-spacing: 0.02em;
+  }
+  .caption.teal .en { color: rgba(42, 157, 181, 0.7); }
+
+  /* loader */
+  .loader {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 3px solid rgba(42, 157, 181, 0.18);
+    border-top-color: var(--primary);
+    margin: 12px auto 0;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* waveform */
+  .waveform {
+    position: absolute;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: end;
+    gap: 4px;
+    height: 28px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .mic-stage.recording .waveform { opacity: 1; }
+  .waveform span {
+    display: block;
+    width: 3px;
+    border-radius: 2px;
+    background: var(--primary);
+    animation: wave 0.8s infinite ease-in-out;
+  }
+  .waveform span:nth-child(odd) { animation-delay: 0.1s; }
+  .waveform span:nth-child(3n) { animation-delay: 0.25s; }
+  @keyframes wave {
+    0%, 100% { transform: scaleY(0.5); }
+    50% { transform: scaleY(1); }
+  }
+
+  /* response card */
+  .response-wrap {
+    margin: 14px auto 0;
+    width: 322px;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    pointer-events: none;
+  }
+  .response-wrap.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  .response-card {
+    background: #fff;
+    border-radius: 18px;
+    border: 1px solid var(--line);
+    box-shadow:
+      0 1px 2px rgba(20, 30, 50, 0.04),
+      0 12px 28px -16px rgba(20, 30, 50, 0.18);
+    padding: 16px 16px 14px;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+  }
+  .response-card:hover { transform: translateY(-2px); }
+  .response-card .src {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--primary);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .response-card .src .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
+  .response-card .answer {
+    margin: 10px 0 0;
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .response-card .answer strong { color: var(--navy); font-weight: 600; }
+  .response-card .footer {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .response-card .why-link {
+    color: var(--primary);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+  .response-card .why-link .hi { font-weight: 600; }
+
+  .feedback-row {
+    margin: 12px auto 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease 0.15s;
+  }
+  .feedback-row.show { opacity: 1; pointer-events: auto; }
+  .feedback-row .label {
+    font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .feedback-row .buttons { display: flex; gap: 10px; }
+  .feedback-row button {
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    border: 1.5px solid;
+  }
+  .feedback-row button.up {
+    background: var(--green-tint);
+    border-color: var(--green-line);
+    color: var(--green);
+  }
+  .feedback-row button.down {
+    background: #FFF0EE;
+    border-color: #F5C4BC;
+    color: var(--accent);
+  }
+  .feedback-row button.up:hover { background: var(--green); color: #fff; border-color: var(--green); transform: translateY(-2px); }
+  .feedback-row button.down:hover { background: var(--accent); color: #fff; border-color: var(--accent); transform: translateY(-2px); }
+  .feedback-row button.up.active { background: var(--green); color: #fff; border-color: var(--green); }
+  .feedback-row button.down.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* Home screen — ensure content clears the tabbar */
+  #screen-home .screen-body { padding-bottom: 104px; }
+
+  /* see schemes button (responded state) */
+  .see-schemes {
+    display: block;
+    margin: 12px auto 0;
+    height: 44px;
+    padding: 0 22px;
+    border-radius: 12px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 12px 24px -10px rgba(42,157,181,0.5);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.4s ease 0.25s, transform 0.4s ease 0.25s;
+  }
+  .response-wrap.show ~ .see-schemes { opacity: 1; transform: translateY(0); }
+  .see-schemes:hover { transform: translateY(-2px); }
+  .see-schemes svg { width: 16px; height: 16px; }
+
+  /* ===== Tabbar ===== */
+  .tabbar {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    height: 68px;
+    background: #FFFFFF;
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 10px;
+    box-shadow: 0 4px 14px -8px rgba(20, 30, 50, 0.08);
+    z-index: 25;
+  }
+  .tabbar .tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: #A4B0BD;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.15s ease;
+    background: none; border: none; padding: 4px 8px;
+    font-family: inherit;
+  }
+  .tabbar .tab.active { color: var(--primary); }
+  .tabbar .tab svg { width: 22px; height: 22px; }
+
+  /* ===== Screen head (used for schemes + steps) ===== */
+  .screen-head {
+    padding: 14px 20px 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .back-btn {
+    width: 36px; height: 36px;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--navy);
+    cursor: pointer;
+    transition: transform 0.15s ease;
+  }
+  .back-btn:hover { transform: translateX(-2px); }
+  .back-btn svg { width: 18px; height: 18px; }
+  .screen-head .titles { line-height: 1.15; flex: 1; }
+  .screen-head .eyebrow {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--primary);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .screen-head h2 {
+    margin: 2px 0 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--navy);
+    letter-spacing: -0.01em;
+  }
+  .screen-head .count {
+    background: var(--primary-tint);
+    color: var(--primary);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 999px;
+  }
+
+  /* ===== Schemes list ===== */
+  .schemes-stack {
+    padding: 6px 20px 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(20, 30, 50, 0.05), 0 12px 24px -16px rgba(20, 30, 50, 0.18);
+    padding: 16px;
+    border: 1px solid var(--line);
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+  }
+  .card:hover { transform: translateY(-2px); }
+  .card.best {
+    background: #FFFFFF;
+    border: 1px solid var(--line);
+  }
+  .top-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--primary);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
+  }
+  .top-tag svg { width: 12px; height: 12px; }
+  .match-score {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--primary);
+  }
+  .match-score .bar { display: inline-flex; gap: 2px; }
+  .match-score .bar span {
+    width: 4px; height: 10px; border-radius: 1px;
+    background: var(--primary);
+  }
+  .match-score .bar span.dim { background: rgba(42,157,181,0.25); }
+  .card.secondary .match-score { color: var(--muted-2); }
+  .card.secondary .match-score .bar span { background: var(--muted); }
+  .card.secondary .match-score .bar span.dim { background: rgba(136,150,166,0.25); }
+  .ribbon-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .scheme-name {
+    margin: 10px 0 2px;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--navy);
+    letter-spacing: -0.01em;
+  }
+  .card.secondary .scheme-name { font-size: 14px; }
+  .scheme-en { font-size: 12px; color: var(--muted); font-weight: 500; }
+  .pitch {
+    margin-top: 10px;
+    font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
+    font-size: 13px;
+    color: var(--muted-2);
+    line-height: 1.45;
+  }
+  .card.secondary .pitch { font-size: 12px; }
+  .meta-row { margin-top: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .benefit { display: flex; flex-direction: column; line-height: 1.1; }
+  .benefit .amount {
+    font-size: 18px; font-weight: 700; color: var(--navy);
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .card.secondary .benefit .amount { font-size: 16px; }
+  .benefit .label { font-size: 11px; color: var(--muted); margin-top: 3px; font-weight: 500; }
+  .effort {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--green-tint); color: var(--green);
+    font-size: 12px; font-weight: 600;
+    padding: 6px 10px; border-radius: 999px;
+    border: 1px solid var(--green-line);
+  }
+  .effort .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+  .effort.medium { background: #FFF4E5; color: var(--amber); border-color: #F2DCB8; }
+  .effort.medium .dot { background: var(--amber); }
+  .official {
+    margin-top: 10px;
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; color: var(--muted-2); font-weight: 500;
+  }
+  .official .tick {
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--green); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    flex: 0 0 16px;
+  }
+  .official .tick svg { width: 10px; height: 10px; }
+  .official strong { color: var(--navy); font-weight: 600; }
+  .official .sep { width: 3px; height: 3px; border-radius: 50%; background: var(--muted); margin: 0 4px; }
+  .actions { margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .btn {
+    height: 42px;
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    cursor: pointer;
+    border: none;
+    white-space: nowrap;
+    transition: transform 0.15s ease;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn .hi { font-weight: 600; white-space: nowrap; }
+  .btn-outline { background: transparent; border: 1.5px solid var(--primary); color: var(--primary); }
+  .btn-outline.gray { border-color: #C2CCD6; color: var(--muted-2); }
+  .btn-filled { background: var(--primary); color: #fff; box-shadow: 0 6px 14px -8px rgba(42,157,181,0.6); }
+  .btn-outline svg, .btn-filled svg { width: 16px; height: 16px; }
+
+  /* ===== Steps screen ===== */
+  .steps-head-extra {
+    text-align: center;
+    margin-top: 6px;
+    padding: 0 20px;
+  }
+  .steps-head-extra .scheme-eyebrow {
+    font-size: 10px;
+    color: var(--primary);
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .steps-head-extra h2 {
+    margin: 2px 0 0;
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--navy);
+    letter-spacing: -0.015em;
+  }
+  .progress-wrap { margin: 14px 20px 0; }
+  .progress-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .progress-row .label { font-size: 12px; color: var(--muted-2); font-weight: 500; }
+  .progress-row .label strong { color: var(--navy); font-weight: 700; }
+  .progress-row .pct { font-size: 12px; color: var(--primary); font-weight: 700; }
+  .progress-bar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+  .progress-bar .seg { height: 6px; border-radius: 999px; background: #D5DCE3; transition: background 0.3s ease; }
+  .progress-bar .seg.done { background: var(--primary); }
+
+  .docs-row {
+    margin: 16px 20px 0;
+    background: #E7ECF2;
+    border-radius: 8px;
+    border: 1px solid #DEE4EB;
+    padding: 12px 14px;
+    display: flex; align-items: center; gap: 12px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+  .docs-row:hover { background: #DFE5EC; }
+  .docs-row .folder {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: #fff;
+    border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--primary);
+  }
+  .docs-row .text { flex: 1; line-height: 1.2; }
+  .docs-row .text .h { font-size: 14px; font-weight: 600; color: var(--navy); }
+  .docs-row .text .s { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .docs-row .chev svg { width: 18px; height: 18px; color: var(--muted-2); transition: transform 0.2s ease; }
+  .docs-row.open .chev svg { transform: rotate(180deg); }
+  .docs-list {
+    margin: 8px 20px 0;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: none;
+  }
+  .docs-list.open { display: block; }
+  .docs-list ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .docs-list li { font-size: 13px; color: var(--muted-2); display: flex; gap: 8px; align-items: center; }
+  .docs-list li .check {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--green); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    flex: 0 0 14px;
+  }
+  .docs-list li .check svg { width: 8px; height: 8px; }
+  .docs-list li.missing .check {
+    background: #fff; border: 1.5px dashed var(--muted);
+  }
+  .docs-list li.missing .check svg { display: none; }
+
+  .steps {
+    margin: 20px 20px 100px;
+    display: flex; flex-direction: column; gap: 12px;
+    position: relative;
+    padding: 0;
+    list-style: none;
+  }
+  .steps::before {
+    content: "";
+    position: absolute;
+    left: 19px;
+    top: 22px;
+    bottom: 22px;
+    width: 2px;
+    background: var(--line);
+    z-index: 0;
+  }
+  .step { position: relative; z-index: 1; display: flex; gap: 14px; align-items: flex-start; }
+  .badge {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: #B0BEC5;
+    color: #fff;
+    font-size: 14px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex: 0 0 38px;
+    box-shadow: 0 0 0 4px var(--bg);
+  }
+  .badge.done { background: var(--green); }
+  .badge.current { background: var(--primary); box-shadow: 0 0 0 4px var(--bg), 0 6px 14px -6px rgba(42,157,181,0.5); }
+  .badge svg { width: 18px; height: 18px; }
+  .step-card {
+    flex: 1;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px;
+  }
+  .step-card .head { display: flex; align-items: center; gap: 8px; }
+  .step-card .title { font-size: 14px; font-weight: 600; color: var(--navy); line-height: 1.3; }
+  .step.done .title { color: var(--muted); text-decoration: line-through; }
+  .step .done-tag {
+    font-size: 11px; font-weight: 600; color: var(--green);
+    margin-left: auto;
+    display: inline-flex; align-items: center; gap: 4px;
+    white-space: nowrap;
+  }
+  .step.current .step-card {
+    background: var(--primary-tint);
+    border: 1px solid rgba(42,157,181,0.18);
+    border-left: 3px solid var(--primary);
+    padding-left: 14px;
+  }
+  .step.current .title { font-size: 15px; font-weight: 700; }
+  .step.current .now-tag {
+    font-size: 10px; font-weight: 700; color: var(--primary);
+    background: #fff;
+    padding: 3px 7px; border-radius: 999px;
+    border: 1px solid rgba(42,157,181,0.25);
+    letter-spacing: 0.06em; text-transform: uppercase;
+    margin-left: auto;
+  }
+  .detail { margin-top: 8px; font-size: 13px; color: var(--muted-2); line-height: 1.5; }
+  .estimate {
+    margin-top: 10px;
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--muted-2); font-weight: 500;
+  }
+  .estimate svg { width: 14px; height: 14px; color: var(--primary); }
+  .estimate strong { color: var(--navy); font-weight: 600; }
+  .actions-row {
+    margin-top: 12px;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(42,157,181,0.25);
+  }
+  .help-link {
+    font-size: 13px; font-weight: 600; color: var(--primary);
+    text-decoration: underline; text-underline-offset: 3px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .start-btn {
+    height: 36px; padding: 0 14px;
+    border-radius: 10px;
+    background: var(--primary); color: #fff;
+    border: none; font-size: 13px; font-weight: 700;
+    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+    box-shadow: 0 6px 14px -8px rgba(42,157,181,0.6);
+    white-space: nowrap;
+    font-family: inherit;
+    transition: transform 0.15s ease;
+  }
+  .start-btn:hover { transform: translateY(-1px); }
+  .start-btn svg { width: 14px; height: 14px; }
+  .step.locked .badge { background: #B0BEC5; }
+  .step.locked .title { color: var(--muted-2); font-size: 13px; font-weight: 500; white-space: nowrap; }
+  .step.locked .step-card { background: #FAFBFC; }
+  .step.locked .lock { margin-left: auto; color: var(--muted); }
+  .step.locked .lock svg { width: 14px; height: 14px; display: block; }
+
+  /* step toast */
+  .step-toast {
+    position: absolute;
+    left: 16px; right: 16px;
+    bottom: 92px;
+    background: var(--navy);
+    color: #fff;
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 12px 28px -10px rgba(0,0,0,0.4);
+    transform: translateY(20px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+    z-index: 35;
+  }
+  .step-toast.show { opacity: 1; transform: translateY(0); }
+  .step-toast .icon { color: var(--green); display: flex; align-items: center; }
+  .step-toast .icon svg { width: 18px; height: 18px; }
+
+  /* ===== Bottom Sheet Modal (Why) ===== */
+  .modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: #00000066;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+    z-index: 60;
+    display: flex;
+    align-items: flex-end;
+    border-radius: 44px;
+    overflow: hidden;
+  }
+  .modal-overlay.open { opacity: 1; visibility: visible; }
+  .sheet {
+    width: 100%;
+    height: 640px;
+    background: #fff;
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -12px 40px -8px rgba(20,30,50,0.18);
+    padding: 24px 24px 24px;
+    display: flex; flex-direction: column; gap: 14px;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+    position: relative;
+    overflow-y: auto;
+  }
+  .modal-overlay.open .sheet { transform: translateY(0); }
+  .sheet .handle {
+    position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+    width: 40px; height: 4px; border-radius: 999px; background: #C9D2DB;
+  }
+  .sheet .close {
+    position: absolute; top: 16px; right: 16px;
+    width: 32px; height: 32px;
+    border-radius: 10px;
+    color: var(--muted-2);
+    background: #F0F4F8;
+    border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    z-index: 2;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .sheet .close:hover { background: var(--line); color: var(--navy); }
+  .sheet .close svg { width: 16px; height: 16px; }
+  .sheet h2 {
+    margin: 8px 0 0;
+    font-size: 18px; font-weight: 700;
+    color: var(--navy); letter-spacing: -0.015em;
+  }
+  .sheet h2 .en {
+    display: block;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px; font-weight: 500;
+    color: var(--muted); margin-top: 3px;
+  }
+  .divider { height: 1px; background: var(--line); }
+  .sec-label {
+    font-size: 11px; font-weight: 700; color: var(--primary);
+    letter-spacing: 0.12em; text-transform: uppercase;
+  }
+  .sec-label.muted { color: var(--muted-2); }
+  .why-section p {
+    margin: 8px 0 0;
+    color: var(--muted-2);
+    font-size: 13px; line-height: 1.55;
+  }
+  .source-section { display: flex; flex-direction: column; gap: 6px; }
+  .source-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+  .source-row .tick { width: 16px; height: 16px; border-radius: 50%; background: var(--green); color: #fff; display: flex; align-items: center; justify-content: center; }
+  .source-row .tick svg { width: 10px; height: 10px; }
+  .source-row .label { font-size: 13px; font-weight: 600; color: var(--green); }
+  .source-url { color: var(--primary); font-size: 13px; font-weight: 500; text-decoration: underline; text-underline-offset: 3px; word-break: break-all; }
+  .conf-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .conf-card {
+    background: #F2F5F8;
+    border: 1px solid #E6EAEF;
+    border-radius: 8px;
+    padding: 12px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .conf-card .icon-wrap {
+    width: 28px; height: 28px; border-radius: 50%;
+    flex: 0 0 28px;
+    display: flex; align-items: center; justify-content: center;
+    background: #fff;
+  }
+  .conf-card.green.active { background: var(--green-tint); border-color: var(--green-line); }
+  .conf-card.green.active .icon-wrap { background: var(--green); color: #fff; }
+  .conf-card.green.active .name { color: var(--green); }
+  .conf-card.orange.active { background: var(--orange-tint); border-color: var(--orange-line); }
+  .conf-card.orange.active .icon-wrap { background: var(--orange); color: #fff; }
+  .conf-card.orange.active .name { color: var(--orange); }
+  .conf-card .icon-wrap svg { width: 16px; height: 16px; }
+  .conf-card .name { font-size: 13px; font-weight: 700; color: var(--muted-2); }
+  .conf-card .sub { font-size: 11px; color: var(--muted-2); margin-top: 2px; font-weight: 500; }
+  .social { display: flex; flex-direction: column; gap: 6px; }
+  .social .text { font-size: 13px; color: var(--muted-2); }
+  .social .text strong { color: var(--navy); font-weight: 700; }
+  .social .bar {
+    width: 200px; height: 6px; border-radius: 999px;
+    background: #E3E9EF; overflow: hidden;
+  }
+  .social .bar > span { display: block; height: 100%; background: var(--primary); border-radius: 999px; }
+  /* vote row in Why modal */
+  .vote-row {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .vote-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted-2);
+    text-align: center;
+    letter-spacing: 0.02em;
+  }
+  .vote-label .hi { font-weight: 600; }
+  .vote-btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .vote-btn {
+    height: 48px;
+    border-radius: 12px;
+    background: #fff;
+    border: 1.5px solid var(--line);
+    color: var(--muted-2);
+    font-size: 14px; font-weight: 700;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-family: inherit;
+    transition: all 0.2s ease;
+  }
+  .vote-btn svg { width: 20px; height: 20px; }
+  .vote-btn.up:hover, .vote-btn.up.active { background: var(--green-tint); border-color: var(--green-line); color: var(--green); }
+  .vote-btn.down:hover, .vote-btn.down.active { background: #FFF0EE; border-color: #F5C4BC; color: var(--accent); }
+  /* inline feedback popup inside sheet */
+  .vote-feedback {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    animation: slidein 0.25s ease;
+  }
+  .vote-feedback.open { display: flex; }
+  @keyframes slidein { from { opacity:0; transform: translateY(6px); } to { opacity:1; transform: translateY(0); } }
+  .vote-feedback .vf-label { font-size: 12px; font-weight: 600; color: var(--navy); }
+  .vote-feedback .vf-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .vote-feedback .vf-chip {
+    font-size: 12px; font-weight: 500;
+    padding: 6px 10px; border-radius: 999px;
+    border: 1px solid var(--line);
+    background: #fff; color: var(--navy);
+    cursor: pointer; transition: all 0.15s ease;
+  }
+  .vote-feedback .vf-chip:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-tint); }
+  .vote-feedback .vf-chip.selected { border-color: var(--primary); color: var(--primary); background: var(--primary-tint); }
+  .vote-feedback .vf-submit {
+    height: 38px;
+    border-radius: 10px;
+    background: var(--primary); color: #fff;
+    border: none; font-size: 13px; font-weight: 700;
+    cursor: pointer; font-family: inherit;
+    transition: transform 0.15s ease;
+  }
+  .vote-feedback .vf-submit:hover { transform: translateY(-1px); }
+
+  /* ===== Onboarding ===== */
+  .onboarding {
+    position: absolute;
+    inset: 0;
+    z-index: 80;
+    background: rgba(15, 23, 36, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    border-radius: 44px;
+    overflow: hidden;
+  }
+  .onboarding.open { opacity: 1; visibility: visible; }
+  .ob-card {
+    width: 320px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 24px 48px -16px rgba(0,0,0,0.35);
+    padding: 22px 22px 24px;
+    text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    transform: scale(0.92);
+    transition: transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .onboarding.open .ob-card { transform: scale(1); }
+  .ob-card .namaskar {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--primary-tint);
+    color: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 2px;
+  }
+  .ob-card .namaskar svg { width: 32px; height: 32px; }
+  .ob-card h3 {
+    margin: 4px 0 0;
+    font-size: 18px; font-weight: 700;
+    color: var(--navy); letter-spacing: -0.01em;
+  }
+  .ob-card p { margin: 0; font-size: 13px; color: var(--muted-2); line-height: 1.5; }
+  .ob-card .pointer { color: var(--primary); margin-top: 4px; animation: bounce 1.4s infinite; }
+  .ob-card .pointer svg { width: 36px; height: 36px; }
+  @keyframes bounce { 0%,100%{transform: translateY(0);} 50%{transform: translateY(6px);} }
+  .ob-card .cta {
+    margin-top: 10px;
+    width: 200px; height: 44px;
+    border-radius: 12px;
+    background: var(--primary); color: #fff; border: none;
+    font-size: 14px; font-weight: 700;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+    font-family: inherit;
+    box-shadow: 0 12px 26px -10px rgba(42,157,181,0.5);
+  }
+  .ob-card .cta:hover { transform: translateY(-1px); }
+  .ob-card .cta svg { width: 14px; height: 14px; }
+
+  /* ===== Error overlay (network) ===== */
+  .error-screen {
+    position: absolute;
+    inset: 0;
+    z-index: 70;
+    background: var(--bg);
+    display: none;
+    flex-direction: column;
+    border-radius: 44px;
+    overflow: hidden;
+  }
+  .error-screen.open { display: flex; }
+  .error-stage {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 100px 32px 100px;
+  }
+  .icon-orb {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    margin-bottom: 14px;
+    box-shadow: 0 12px 28px -16px rgba(20,30,50,0.18);
+    color: var(--muted-2);
+  }
+  .icon-orb svg { width: 48px; height: 48px; }
+  .wifi-x {
+    position: absolute; bottom: -4px; right: -4px;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--red); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    border: 3px solid var(--bg);
+  }
+  .wifi-x svg { width: 18px; height: 18px; }
+  .state-title { font-size: 17px; font-weight: 700; color: var(--navy); text-align: center; margin: 6px 0 0; }
+  .state-sub { font-size: 13px; color: var(--muted-2); text-align: center; margin: 4px 0 0; line-height: 1.5; }
+  .retry-cta {
+    margin-top: 20px;
+    width: 200px; height: 48px;
+    border-radius: 12px;
+    background: var(--primary); color: #fff;
+    border: none; font-size: 14px; font-weight: 700;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+    font-family: inherit;
+    box-shadow: 0 12px 26px -10px rgba(42,157,181,0.5);
+  }
+  .retry-cta svg { width: 16px; height: 16px; }
+
+  /* ===== Chatbot mini popover ===== */
+  .chat-popover {
+    position: absolute;
+    right: 22px; bottom: 100px;
+    width: 280px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 20px 40px -12px rgba(20,30,50,0.25);
+    padding: 14px 16px;
+    z-index: 31;
+    display: none;
+  }
+  .chat-popover.open { display: block; }
+  .chat-popover h4 {
+    margin: 0 0 8px;
+    font-size: 14px; font-weight: 700; color: var(--navy);
+  }
+  .chat-popover p { margin: 0; font-size: 12px; color: var(--muted-2); line-height: 1.5; }
+  .chat-popover .chat-mini-actions {
+    margin-top: 10px;
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+  .chat-popover .chip {
+    font-size: 11px; font-weight: 500;
+    background: var(--primary-tint); color: var(--primary);
+    padding: 5px 9px; border-radius: 999px;
+    border: 1px solid rgba(42,157,181,0.18);
+    cursor: pointer;
+  }
+  .chat-popover::after {
+    content: "";
+    position: absolute;
+    right: 24px; bottom: -8px;
+    width: 16px; height: 16px;
+    background: #fff;
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    transform: rotate(45deg);
+  }
+
+  /* ===== History Screen ===== */
+  .history-filter {
+    padding: 14px 20px 0;
+    display: flex;
+    gap: 8px;
+  }
+  .hf-chip {
+    height: 32px; padding: 0 14px;
+    border-radius: 999px;
+    font-size: 12px; font-weight: 600;
+    background: #fff; border: 1px solid var(--line);
+    color: var(--muted-2); cursor: pointer;
+    transition: all 0.15s ease; font-family: inherit;
+    white-space: nowrap;
+  }
+  .hf-chip.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .history-list { padding: 12px 20px 100px; display: flex; flex-direction: column; gap: 10px; }
+  .hist-entry {
+    background: #fff; border: 1px solid var(--line);
+    border-radius: 14px; padding: 14px 14px 12px;
+    cursor: pointer; transition: transform 0.15s ease; position: relative;
+  }
+  .hist-entry:hover { transform: translateY(-1px); }
+  .hist-entry.in-progress { border-color: var(--primary); background: var(--primary-tint); }
+  .hist-time-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .hist-time { font-size: 11px; font-weight: 600; color: var(--muted); display: flex; align-items: center; gap: 5px; }
+  .hist-time svg { width: 12px; height: 12px; }
+  .hist-badge {
+    font-size: 10px; font-weight: 700;
+    padding: 3px 8px; border-radius: 999px;
+    letter-spacing: 0.04em; text-transform: uppercase;
+  }
+  .hist-badge.answered { background: var(--green-tint); color: var(--green); border: 1px solid var(--green-line); }
+  .hist-badge.saved { background: var(--amber-tint); color: var(--amber); border: 1px solid var(--amber-line); }
+  .hist-badge.applied { background: var(--primary-tint); color: var(--primary); border: 1px solid rgba(42,157,181,0.25); }
+  .hist-query { font-size: 14px; font-weight: 600; color: var(--navy); line-height: 1.3; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .hist-query .q-icon {
+    width: 22px; height: 22px; border-radius: 6px;
+    background: var(--primary-soft); color: var(--primary);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .hist-query .q-icon svg { width: 12px; height: 12px; }
+  .hist-result {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px; background: var(--bg);
+    border-radius: 8px; border: 1px solid var(--line);
+  }
+  .hist-result .r-icon {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: var(--primary); color: #fff;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .hist-result .r-icon svg { width: 14px; height: 14px; }
+  .hist-result .r-name { font-size: 12px; font-weight: 600; color: var(--navy); line-height: 1.3; }
+  .hist-result .r-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .hist-result .r-chev { margin-left: auto; color: var(--muted); }
+  .hist-result .r-chev svg { width: 14px; height: 14px; display: block; }
+  .hist-sep { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
+  .hist-sep .sep-label { font-size: 10px; font-weight: 700; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; }
+  .hist-sep .sep-line { flex: 1; height: 1px; background: var(--line); }
+
+  /* ===== Chat Screen ===== */
+  .chat-header-row {
+    padding: 12px 20px 10px;
+    display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid var(--line); background: #fff; flex-shrink: 0;
+  }
+  .chat-avatar {
+    width: 38px; height: 38px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--primary), #1F7C90);
+    color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .chat-avatar svg { width: 20px; height: 20px; }
+  .chat-hdr-name { font-size: 15px; font-weight: 700; color: var(--navy); letter-spacing: -0.01em; }
+  .chat-hdr-status { font-size: 11px; color: var(--green); font-weight: 600; display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+  .chat-hdr-status .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+  .chat-hdr-actions { margin-left: auto; display: flex; gap: 8px; }
+  .chat-icon-btn {
+    width: 34px; height: 34px; border-radius: 10px;
+    background: var(--bg); border: 1px solid var(--line);
+    color: var(--muted-2); display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.15s ease;
+  }
+  .chat-icon-btn:hover { border-color: var(--primary); color: var(--primary); }
+  .chat-icon-btn svg { width: 16px; height: 16px; }
+  .chat-messages {
+    flex: 1; overflow-y: auto; overflow-x: hidden;
+    padding: 16px 16px 8px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .chat-messages::-webkit-scrollbar { width: 0; }
+  .chat-msg { display: flex; align-items: flex-end; gap: 8px; max-width: 100%; }
+  .chat-msg.user { flex-direction: row-reverse; }
+  .cm-avatar {
+    width: 28px; height: 28px; border-radius: 9px;
+    background: linear-gradient(135deg, var(--primary), #1F7C90);
+    color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .cm-avatar svg { width: 14px; height: 14px; }
+  .cm-avatar.user-av { background: linear-gradient(135deg, var(--navy), #2E3A4B); }
+  .chat-bubble {
+    max-width: 240px; padding: 10px 13px;
+    border-radius: 14px; font-size: 13px; line-height: 1.5;
+  }
+  .chat-msg.bot .chat-bubble { background: #fff; border: 1px solid var(--line); color: var(--text); border-bottom-left-radius: 4px; }
+  .chat-msg.user .chat-bubble { background: var(--primary); color: #fff; border-bottom-right-radius: 4px; }
+  .cb-hi { font-family: 'Noto Sans Devanagari','Inter',sans-serif; font-size: 14px; font-weight: 500; display: block; }
+  .cb-en { font-size: 11px; opacity: 0.65; margin-top: 2px; display: block; }
+  .chat-ts { font-size: 10px; color: var(--muted); margin-top: 3px; padding: 0 2px; }
+  .chat-msg.user .chat-ts { text-align: right; }
+  .chat-date-div {
+    text-align: center; font-size: 10px; font-weight: 700;
+    color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase;
+    position: relative; margin: 4px 0;
+  }
+  .chat-date-div::before, .chat-date-div::after {
+    content: ""; position: absolute; top: 50%;
+    width: calc(50% - 44px); height: 1px; background: var(--line);
+  }
+  .chat-date-div::before { left: 0; }
+  .chat-date-div::after { right: 0; }
+  /* inline scheme card in chat */
+  .chat-scheme-mini {
+    background: var(--bg); border: 1px solid var(--line);
+    border-radius: 10px; padding: 10px 12px;
+    margin-top: 8px; cursor: pointer; transition: transform 0.15s ease;
+  }
+  .chat-scheme-mini:hover { transform: translateY(-1px); }
+  .csm-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .csm-icon { width: 26px; height: 26px; border-radius: 7px; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; }
+  .csm-icon svg { width: 13px; height: 13px; }
+  .csm-name { font-size: 12px; font-weight: 700; color: var(--navy); }
+  .csm-interest { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 2px; }
+  .csm-sub { font-size: 11px; color: var(--muted-2); }
+  .csm-cta {
+    margin-top: 8px; width: 100%; height: 30px;
+    background: var(--primary); color: #fff;
+    border: none; border-radius: 7px;
+    font-size: 11px; font-weight: 700;
+    cursor: pointer; font-family: inherit;
+  }
+  /* typing indicator */
+  .chat-typing-wrap { display: flex; align-items: flex-end; gap: 8px; }
+  .chat-typing { display: flex; align-items: center; gap: 4px; padding: 10px 13px; background: #fff; border: 1px solid var(--line); border-radius: 14px; border-bottom-left-radius: 4px; }
+  .chat-typing span { width: 5px; height: 5px; background: var(--muted); border-radius: 50%; animation: typing-dot 1.2s infinite; }
+  .chat-typing span:nth-child(2) { animation-delay: 0.2s; }
+  .chat-typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typing-dot { 0%,60%,100% { transform: translateY(0); opacity: 0.4; } 30% { transform: translateY(-4px); opacity: 1; } }
+  /* suggestions + input */
+  .chat-suggestions {
+    padding: 6px 16px 8px; display: flex; gap: 6px;
+    overflow-x: auto; flex-shrink: 0; min-height: 48px; align-items: center;
+  }
+  .chat-suggestions::-webkit-scrollbar { width: 0; height: 0; }
+  .chat-chip {
+    white-space: nowrap; height: 32px; padding: 0 12px;
+    border-radius: 999px; background: #fff; border: 1px solid var(--line);
+    color: var(--navy); font-size: 12px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s ease; font-family: inherit; flex-shrink: 0;
+  }
+  .chat-chip:hover, .chat-chip.selected { border-color: var(--primary); color: var(--primary); background: var(--primary-tint); }
+  .chat-input-bar {
+    padding: 10px 16px 14px; display: flex; align-items: center; gap: 8px;
+    background: #fff; border-top: 1px solid var(--line); flex-shrink: 0;
+  }
+  .chat-text-input {
+    flex: 1; height: 40px; padding: 0 14px;
+    border-radius: 12px; background: var(--bg); border: 1px solid var(--line);
+    font-size: 13px; font-family: inherit; color: var(--text); outline: none;
+    transition: border-color 0.15s ease;
+  }
+  .chat-text-input:focus { border-color: var(--primary); }
+  .chat-text-input::placeholder { color: var(--muted); }
+  .chat-voice-btn {
+    width: 40px; height: 40px; border-radius: 12px; background: var(--primary);
+    color: #fff; border: none; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0; box-shadow: 0 6px 14px -6px rgba(42,157,181,0.5);
+    transition: transform 0.15s ease;
+  }
+  .chat-voice-btn:hover { transform: translateY(-1px); }
+  .chat-voice-btn svg { width: 18px; height: 18px; }
+  .chat-send-btn {
+    width: 40px; height: 40px; border-radius: 12px; background: var(--accent);
+    color: #fff; border: none; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0; box-shadow: 0 6px 14px -6px rgba(232,115,90,0.5);
+    transition: transform 0.15s ease;
+  }
+  .chat-send-btn:hover { transform: translateY(-1px); }
+  .chat-send-btn svg { width: 18px; height: 18px; }
+
+  /* Chat screen — lift above tabbar */
+  #screen-chat { bottom: 84px; }
+
+  /* Chatbox composer upgrade */
+  .chatbox {
+    padding: 10px 14px 14px;
+    background: #fff;
+    border-top: 1px solid var(--line);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .chatbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg);
+    border: 1.5px solid var(--line);
+    border-radius: 16px;
+    padding: 6px 8px 6px 14px;
+    transition: border-color 0.15s ease;
+  }
+  .chatbox-row:focus-within { border-color: var(--primary); background: #fff; }
+  .chatbox-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text);
+    outline: none;
+    min-height: 22px;
+    resize: none;
+    line-height: 1.4;
+  }
+  .chatbox-input::placeholder { color: var(--muted); }
+  .chatbox-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .chatbox-mic {
+    width: 36px; height: 36px;
+    border-radius: 11px;
+    background: var(--primary-soft);
+    color: var(--primary);
+    border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .chatbox-mic:hover { background: rgba(42,157,181,0.22); }
+  .chatbox-mic svg { width: 16px; height: 16px; }
+  .chatbox-send {
+    width: 36px; height: 36px;
+    border-radius: 11px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px -4px rgba(232,115,90,0.5);
+    transition: transform 0.15s ease;
+  }
+  .chatbox-send:hover { transform: scale(1.07); }
+  .chatbox-send svg { width: 16px; height: 16px; }
+  .chatbox-hint {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .chatbox-hint .divider-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--muted); opacity: 0.5; }
+
+  /* ===== Tweaks Panel ===== */
+  .tweaks {
+    position: fixed;
+    right: 24px; top: 24px;
+    width: 240px;
+    background: #FFFFFF;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 20px 40px -12px rgba(20,30,50,0.25);
+    padding: 14px 16px 16px;
+    z-index: 100;
+  }
+  .tweaks .tp-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 6px; }
+  .tweaks .tp-eyebrow { font-size: 10px; font-weight: 700; color: var(--primary); letter-spacing: 0.14em; text-transform: uppercase; }
+  .tweaks .tp-title { font-size: 14px; font-weight: 700; color: var(--navy); margin-top: 2px; letter-spacing: -0.01em; }
+  .tweaks .tp-section { padding: 10px 0 0; }
+  .tweaks .tp-section + .tp-section { border-top: 1px solid #F0F4F8; margin-top: 6px; }
+  .tweaks .tp-label { font-size: 10px; font-weight: 600; color: var(--muted-2); margin-bottom: 6px; letter-spacing: 0.06em; text-transform: uppercase; }
+  .tweaks .row { display: flex; flex-direction: column; gap: 6px; }
+  .tweaks button.tp-btn {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 7px 10px;
+    font-size: 12px; font-weight: 600;
+    color: var(--navy);
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+    display: flex; align-items: center; gap: 8px;
+    transition: all 0.15s ease;
+  }
+  .tweaks button.tp-btn:hover { border-color: var(--primary); }
+  .tweaks button.tp-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .tweaks button.tp-btn .num {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--primary-tint);
+    color: var(--primary);
+    font-size: 10px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .tweaks button.tp-btn.active .num { background: #fff; color: var(--primary); }
+
+  /* speech bubble (recording transcription preview) */
+  .transcript-bubble {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 220px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--text);
+    max-width: 280px;
+    text-align: center;
+    box-shadow: 0 6px 14px -6px rgba(20,30,50,0.12);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .transcript-bubble.show { opacity: 1; }
+  .transcript-bubble .hi { color: var(--navy); font-weight: 600; }
+  .transcript-bubble::after {
+    content: "";
+    position: absolute;
+    bottom: -7px; left: 50%; transform: translateX(-50%) rotate(45deg);
+    width: 12px; height: 12px;
+    background: #fff;
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  /* ===== Language Switcher ===== */
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .head-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+  }
+  .icon-btn {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    background: #FFFFFF;
+    border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--navy);
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+    padding: 0;
+    position: relative;
+    flex: 0 0 40px;
+  }
+  .icon-btn:hover { transform: translateY(-1px); border-color: var(--primary); }
+  .icon-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  .lang-badge {
+    position: absolute;
+    bottom: -3px; right: -3px;
+    background: var(--primary);
+    color: #fff;
+    font-size: 7px; font-weight: 800;
+    padding: 2px 3px;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+    line-height: 1.1;
+    border: 1.5px solid var(--bg);
+    pointer-events: none;
+  }
+
+  /* Language bottom sheet overrides */
+  .lang-sheet { height: auto !important; padding-bottom: 32px !important; }
+  .lang-sheet-head {
+    display: flex; align-items: center; gap: 14px;
+    margin-top: 8px;
+  }
+  .lang-globe {
+    width: 46px; height: 46px;
+    border-radius: 14px;
+    background: var(--primary-tint);
+    color: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+    flex: 0 0 46px;
+    border: 1px solid rgba(42,157,181,0.18);
+  }
+  .lang-globe svg { width: 22px; height: 22px; }
+  .lang-title-block h2 { margin: 0; font-size: 18px; font-weight: 700; color: var(--navy); }
+  .lang-title-block p { margin: 4px 0 0; font-size: 12px; color: var(--muted-2); }
+  .lang-options { display: flex; flex-direction: column; gap: 8px; }
+  .lang-option {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #F8FAFB;
+    border: 1.5px solid var(--line);
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    width: 100%;
+    transition: all 0.15s ease;
+  }
+  .lang-option:hover { border-color: var(--primary); background: var(--primary-tint); }
+  .lang-option.active { border-color: var(--primary); background: var(--primary-tint); }
+  .lang-option:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  .lang-option:not(.active) .lang-check-mark { display: none; }
+  .lang-code-badge {
+    width: 34px; height: 34px;
+    border-radius: 9px;
+    background: var(--navy);
+    color: #fff;
+    font-size: 11px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    flex: 0 0 34px;
+    letter-spacing: 0.06em;
+    transition: background 0.15s ease;
+  }
+  .lang-option.active .lang-code-badge { background: var(--primary); }
+  .lang-info { flex: 1; line-height: 1.2; }
+  .lang-name { display: block; font-size: 15px; font-weight: 600; color: var(--navy); }
+  .lang-sub-text { font-size: 11px; color: var(--muted); font-weight: 500; }
+  .lang-check-mark {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    flex: 0 0 22px;
+  }
+  .lang-check-mark svg { width: 12px; height: 12px; }
+  .pilot-badge {
+    font-size: 10px; font-weight: 700;
+    color: var(--amber);
+    background: var(--amber-tint);
+    border: 1px solid var(--amber-line);
+    padding: 3px 8px; border-radius: 999px;
+    white-space: nowrap;
+  }
+  .lang-note {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 12px;
+    background: var(--primary-tint);
+    border-radius: 10px;
+    border: 1px solid rgba(42,157,181,0.15);
+  }
+  .lang-note svg { flex: 0 0 16px; color: var(--primary); margin-top: 1px; }
+  .lang-note p { margin: 0; font-size: 12px; color: var(--muted-2); line-height: 1.45; }
+
+  /* Cancel processing button — H3 User control & freedom */
+  .cancel-proc-btn {
+    display: none;
+    margin: 6px auto 0;
+    height: 36px; padding: 0 18px;
+    border-radius: 10px;
+    background: transparent;
+    border: 1.5px solid var(--line);
+    color: var(--muted-2);
+    font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    align-items: center; gap: 6px;
+  }
+  .cancel-proc-btn:hover { border-color: var(--red); color: var(--red); }
+  .cancel-proc-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  .cancel-proc-btn.show { display: flex; }
+
+  /* ===== Applied / Interested card states ===== */
+  .applied-badge, .interested-badge {
+    position: absolute; top: 14px; right: 14px;
+    width: 36px; height: 36px; border-radius: 50%;
+    color: #fff; display: flex; align-items: center; justify-content: center;
+  }
+  .applied-badge { background: var(--green); box-shadow: 0 6px 14px -6px rgba(76,175,80,0.55); }
+  .interested-badge { background: var(--amber); box-shadow: 0 6px 14px -6px rgba(209,126,27,0.55); }
+  .applied-badge svg, .interested-badge svg { width: 18px; height: 18px; }
+  .applied-status {
+    display: inline-flex; align-items: center; gap: 6px; margin-top: 6px;
+    color: var(--green); font-family: 'Noto Sans Devanagari','Inter',sans-serif;
+    font-size: 13px; font-weight: 600;
+  }
+  .timeline {
+    margin-top: 12px;
+    background: rgba(255,255,255,0.6); border: 1px solid var(--green-line);
+    border-radius: 10px; padding: 10px 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .timeline .step {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 10px; font-weight: 600; color: var(--green);
+  }
+  .timeline .step .bullet {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--green); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .timeline .step .bullet svg { width: 8px; height: 8px; }
+  .timeline .step.pending { color: var(--muted); }
+  .timeline .step.pending .bullet { background: #fff; border: 1.5px dashed #B6C5BA; }
+  .timeline .line {
+    flex: 1; height: 2px; border-radius: 2px;
+    background: linear-gradient(90deg, var(--green) 0%, var(--green) 50%, #C9D5CC 50%, #C9D5CC 100%);
+  }
+  .applied-actions { margin-top: 14px; }
+  .applied-actions .btn { width: 100%; }
+
+  /* ===== Scheme Detail Screen ===== */
+  .det-top-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; padding: 12px 20px 8px;
+    background: var(--bg); border-bottom: 1px solid transparent;
+    transition: border-color 0.15s; flex-shrink: 0; z-index: 10;
+  }
+  .det-top-bar.scrolled { border-bottom-color: var(--line); }
+  .det-back-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--primary); font-size: 13px; font-weight: 600;
+    cursor: pointer; background: none; border: none; padding: 4px 0;
+    font-family: inherit;
+  }
+  .det-back-btn svg { width: 16px; height: 16px; }
+  .det-elig-btn {
+    height: 34px; padding: 0 12px; border-radius: 10px;
+    background: var(--primary-tint); border: 1.5px solid rgba(42,157,181,0.3);
+    color: var(--primary); font-family: 'Inter', sans-serif;
+    font-size: 11px; font-weight: 700; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+  }
+  .det-elig-btn svg { width: 13px; height: 13px; }
+  .det-hero { padding: 14px 20px 18px; border-bottom: 1px solid var(--line); }
+  .det-hero-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+  .det-cat-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--primary);
+    background: var(--primary-tint); border: 1px solid rgba(42,157,181,0.22);
+    padding: 4px 9px; border-radius: 6px;
+  }
+  .det-match-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: var(--primary); }
+  .det-bars { display: inline-flex; gap: 2px; }
+  .det-bars span { width: 4px; height: 10px; border-radius: 1px; background: var(--primary); }
+  .det-bars span.dim { background: rgba(42,157,181,0.22); }
+  .det-name-hi { font-size: 21px; font-weight: 700; color: var(--navy); letter-spacing: -0.01em; line-height: 1.2; margin: 0 0 3px; }
+  .det-name-en { font-size: 12px; color: var(--muted-2); font-weight: 500; margin: 0 0 12px; }
+  .det-official-row { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; font-size: 11px; color: var(--muted-2); font-weight: 500; flex-wrap: wrap; }
+  .det-official-row strong { color: var(--navy); font-weight: 600; }
+  .det-tick { width: 16px; height: 16px; border-radius: 50%; background: var(--green); color: #fff; display: flex; align-items: center; justify-content: center; flex: 0 0 16px; }
+  .det-tick svg { width: 10px; height: 10px; }
+  .det-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--muted); flex: 0 0 3px; }
+  .det-pitch { font-size: 13.5px; color: var(--muted-2); line-height: 1.5; margin: 0; }
+  .det-stats-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border-bottom: 1px solid var(--line); }
+  .det-stat { background: #fff; padding: 14px 12px; display: flex; flex-direction: column; gap: 2px; }
+  .det-stat-val { font-size: 15px; font-weight: 700; color: var(--navy); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .det-stat-lbl { font-size: 10px; font-weight: 600; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; margin-top: 3px; }
+  .det-section { padding: 18px 20px 0; }
+  .det-divider { height: 1px; background: var(--line); margin: 16px 20px 0; }
+  .det-sec-title { font-size: 11px; font-weight: 700; color: var(--primary); letter-spacing: 0.1em; text-transform: uppercase; margin: 0 0 10px; }
+  .det-desc { font-size: 13px; color: var(--muted-2); line-height: 1.6; margin: 0; text-wrap: pretty; }
+  .det-benefit-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+  .det-benefit-item { display: flex; align-items: flex-start; gap: 10px; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+  .det-benefit-icon { width: 30px; height: 30px; border-radius: 8px; background: var(--primary-tint); border: 1px solid rgba(42,157,181,0.2); color: var(--primary); display: flex; align-items: center; justify-content: center; flex: 0 0 30px; }
+  .det-benefit-icon svg { width: 15px; height: 15px; }
+  .det-benefit-content { flex: 1; }
+  .det-benefit-head { font-size: 13px; font-weight: 600; color: var(--navy); line-height: 1.25; }
+  .det-benefit-sub { font-size: 11px; color: var(--muted); font-weight: 500; margin-top: 2px; line-height: 1.4; }
+  .det-elig-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+  .det-elig-item { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--text); line-height: 1.4; }
+  .det-chk { width: 18px; height: 18px; border-radius: 50%; background: var(--green-tint); border: 1.5px solid var(--green-line); color: var(--green); display: flex; align-items: center; justify-content: center; flex: 0 0 18px; margin-top: 1px; }
+  .det-chk svg { width: 10px; height: 10px; }
+  .det-cross { width: 18px; height: 18px; border-radius: 50%; background: #FEF0EF; border: 1.5px solid #FBCFCC; color: #D94F43; display: flex; align-items: center; justify-content: center; flex: 0 0 18px; margin-top: 1px; }
+  .det-cross svg { width: 9px; height: 9px; }
+  .det-doc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .det-doc-chip { display: flex; align-items: center; gap: 7px; background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+  .det-doc-chip svg { width: 13px; height: 13px; color: var(--primary); flex: 0 0 13px; }
+  .det-doc-chip span { font-size: 11.5px; font-weight: 600; color: var(--navy); line-height: 1.25; }
+  .det-link-row { display: flex; align-items: center; gap: 12px; padding: 11px 13px; background: #fff; border: 1px solid var(--line); border-radius: 12px; cursor: pointer; margin-bottom: 8px; transition: background 0.15s; }
+  .det-link-row:last-child { margin-bottom: 0; }
+  .det-link-icon { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex: 0 0 34px; }
+  .det-li-web { background: var(--primary-tint); color: var(--primary); border: 1px solid rgba(42,157,181,0.2); }
+  .det-li-doc { background: #F0EFFE; color: #6C5CE7; border: 1px solid rgba(108,92,231,0.2); }
+  .det-li-phone { background: var(--green-tint); color: var(--green); border: 1px solid var(--green-line); }
+  .det-link-icon svg { width: 16px; height: 16px; }
+  .det-link-content { flex: 1; min-width: 0; }
+  .det-link-title { font-size: 13px; font-weight: 600; color: var(--navy); line-height: 1.2; }
+  .det-link-sub { font-size: 11px; color: var(--muted); font-weight: 500; margin-top: 2px; }
+  .det-helpline-row { align-items: flex-start; padding-top: 13px; padding-bottom: 13px; }
+  .det-helpline-num { font-size: 17px; font-weight: 700; color: var(--navy); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; line-height: 1; margin-bottom: 3px; }
+  .det-avail { font-size: 10px; font-weight: 600; color: var(--green); background: var(--green-tint); border: 1px solid var(--green-line); padding: 2px 7px; border-radius: 999px; margin-top: 5px; display: inline-block; }
+  .det-call-btn { height: 34px; padding: 0 12px; border-radius: 8px; background: var(--green-tint); border: 1.5px solid var(--green-line); color: var(--green); font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; margin-top: 2px; }
+  .det-link-chev { color: var(--muted); }
+  .det-link-chev svg { width: 16px; height: 16px; display: block; }
+  .det-apply-bar {
+    position: absolute; left: 0; right: 0; bottom: 84px;
+    background: linear-gradient(to top, var(--bg) 68%, transparent);
+    padding: 14px 20px 16px;
+    display: flex; flex-direction: column; gap: 8px;
+    z-index: 20; pointer-events: none;
+  }
+  .det-apply-bar > * { pointer-events: auto; }
+  .det-save-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+  .det-listen-btn { height: 40px; border-radius: 10px; background: #fff; border: 1.5px solid var(--line); color: var(--muted-2); font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; }
+  .det-listen-btn svg { width: 15px; height: 15px; color: var(--primary); }
+  .det-save-btn { width: 40px; height: 40px; border-radius: 10px; background: #fff; border: 1.5px solid var(--line); color: var(--muted-2); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .det-save-btn svg { width: 17px; height: 17px; }
+  .det-apply-btn {
+    width: 100%; height: 52px; border-radius: 14px;
+    background: var(--primary); color: #fff; border: none;
+    font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 700;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+    letter-spacing: -0.01em;
+    box-shadow: 0 8px 20px -8px rgba(42,157,181,0.7), 0 -1px 0 rgba(255,255,255,0.15) inset;
+    transition: transform 0.15s ease;
+  }
+  .det-apply-btn:hover { transform: translateY(-1px); }
+  .det-apply-btn svg { width: 18px; height: 18px; }
+
+  /* responsive */
+  @media (max-width: 700px) {
+    .tweaks { position: relative; top: auto; right: auto; width: 320px; }
+    .stage { padding-top: 20px; }
+  }
+</style>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#2A9DB5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
 </head>
 <body>
-  <main>
-    <h1>Sarkari Saathi</h1>
-    <p>Hindi-first voice PWA for government scheme discovery.</p>
-    <p><em>Prototype UI will be wired in Prompt 2.</em></p>
-  </main>
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').catch(() => {});
+
+<div class="stage">
+  <div class="branding">
+    <h1>Voice Matters</h1>
+    <p>Interactive prototype · tap the mic to start</p>
+  </div>
+
+  <div class="phone" id="phone" data-screen-label="Voice Matters Prototype">
+    <div class="notch"></div>
+    <div class="status-bar">
+      <span>9:41</span>
+      <span class="icons">
+        <svg width="16" height="10" viewBox="0 0 16 10" fill="none"><path d="M1 7h2v2H1zM5 5h2v4H5zM9 3h2v6H9zM13 1h2v8h-2z" fill="#1B2A41"/></svg>
+        <svg width="14" height="10" viewBox="0 0 14 10" fill="none"><path d="M7 1.5c1.7 0 3.3.6 4.5 1.7l-.7.8C9.8 3.1 8.4 2.6 7 2.6S4.2 3.1 3.2 4l-.7-.8C3.7 2.1 5.3 1.5 7 1.5Zm0 2.4c1.1 0 2.1.4 2.9 1.1l-.7.8C8.6 5.3 7.8 5 7 5s-1.6.3-2.2.8l-.7-.8C4.9 4.3 5.9 3.9 7 3.9ZM7 6.3c.5 0 1 .2 1.4.5L7 8.5 5.6 6.8c.4-.3.9-.5 1.4-.5Z" fill="#1B2A41"/></svg>
+        <svg width="24" height="11" viewBox="0 0 24 11" fill="none"><rect x="0.5" y="0.5" width="20" height="10" rx="2.5" stroke="#1B2A41"/><rect x="2" y="2" width="17" height="7" rx="1.2" fill="#1B2A41"/><rect x="21.5" y="3.5" width="1.5" height="4" rx="0.5" fill="#1B2A41"/></svg>
+      </span>
+    </div>
+
+    <!-- ===== HOME SCREEN ===== -->
+    <section class="screen active" id="screen-home" data-screen-label="01 Home">
+      <div class="app-header">
+        <div class="leading">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+        </div>
+        <div class="brand">
+          Voice Matters
+          <span class="tag">Sarkari Saathi</span>
+        </div>
+        <div class="header-actions">
+          <button class="icon-btn" onclick="openLangSheet()" aria-label="Change language · भाषा बदलें" title="Change language · भाषा बदलें">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M3 12h18"/></svg>
+            <span class="lang-badge" aria-hidden="true">HI</span>
+          </button>
+          <div class="trailing" role="button" aria-label="Profile" tabindex="0">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="greeting">
+        <div class="avatar">RK</div>
+        <div class="who">
+          Namaste,
+          <strong>Ramesh ji</strong>
+        </div>
+        <span class="pill" id="status-pill" aria-live="polite" aria-atomic="true">12 schemes</span>
+      </div>
+
+      <div class="screen-body">
+        <div class="prompt">
+          <h2 id="prompt-title">Kya jaanna hai?</h2>
+          <p id="prompt-sub">PM Kisan, Ayushman, Ration, Pension —<br/>kuch bhi poochiye apni bhasha mein.</p>
+        </div>
+
+        <div class="hint-row" id="hint-row">
+          <button class="hint" data-q="kisan"><span class="hi">किसान</span>PM-Kisan</button>
+          <button class="hint" data-q="ration"><span class="hi">राशन</span>Ration card</button>
+          <button class="hint" data-q="beti"><span class="hi">बेटी</span>Beti ke liye</button>
+        </div>
+
+        <div class="mic-stage" id="mic-stage">
+          <div class="ring r3"></div>
+          <div class="ring r2"></div>
+          <div class="ring r1"></div>
+          <button class="mic-button" id="mic-btn" aria-label="Microphone">
+            <div class="rec-dot"></div>
+            <svg class="mic-icon" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="3" width="6" height="12" rx="3" fill="white" stroke="white"/>
+              <path d="M5 11a7 7 0 0 0 14 0"/>
+              <line x1="12" y1="18" x2="12" y2="22"/>
+              <line x1="8" y1="22" x2="16" y2="22"/>
+            </svg>
+          </button>
+          <div class="waveform">
+            <span style="height:10px"></span>
+            <span style="height:18px"></span>
+            <span style="height:26px"></span>
+            <span style="height:14px"></span>
+            <span style="height:22px"></span>
+            <span style="height:8px"></span>
+            <span style="height:20px"></span>
+            <span style="height:28px"></span>
+            <span style="height:16px"></span>
+            <span style="height:10px"></span>
+            <span style="height:22px"></span>
+            <span style="height:14px"></span>
+            <span style="height:6px"></span>
+          </div>
+        </div>
+
+        <div class="transcript-bubble" id="transcript">
+          <span class="hi">“बेटी के लिए saving scheme batao”</span>
+        </div>
+
+        <div class="caption" id="mic-caption" role="status" aria-live="polite">
+          अपनी बात सुनिए
+          <span class="en">Tap to speak · Apni baat suniye</span>
+        </div>
+
+        <div class="loader" id="processing-loader" style="display: none;"></div>
+        <!-- H3: User control — cancel during processing -->
+        <button class="cancel-proc-btn" id="cancel-processing" onclick="setMicState('idle')" aria-label="Cancel search · रद्द करें" title="Cancel search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <span class="hi">रद्द करें</span>&nbsp;· Cancel
+        </button>
+
+        <div class="response-wrap" id="response-wrap">
+          <div class="response-card" id="response-card" style="cursor:pointer;" onclick="navigate('schemes')" title="Scheme details dekho">
+            <div class="src"><span class="dot"></span>Sukanya Samriddhi Yojana</div>
+            <p class="answer">
+              <strong>Aapki beti ke liye sabse achhi scheme</strong> — 8.2% saalana byaaj,
+              tax-free. ₹250 se shuru karein, 21 saal mein paisa matures hota hai.
+            </p>
+            <div class="footer">
+              <span>Source · india.gov.in</span>
+              <span class="why-link" data-action="open-why"><span class="hi">यह कैसे पता चला?</span></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="feedback-row" id="feedback-row">
+          <div class="label hi">Helpful tha?</div>
+          <div class="buttons">
+            <button class="up" aria-label="Yes" onclick="this.classList.add('active');this.parentElement.querySelector('.down').classList.remove('active')">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1h3Zm0 0 4-8a3 3 0 0 1 3 3v3h4.5a2 2 0 0 1 2 2.3l-1.3 7A2 2 0 0 1 17.2 20H7"/></svg>
+            </button>
+            <button class="down" aria-label="No" onclick="this.classList.add('active');this.parentElement.querySelector('.up').classList.remove('active')">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 13V4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h3Zm0 0 4 8a3 3 0 0 0 3-3v-3h4.5a2 2 0 0 0 2-2.3l-1.3-7A2 2 0 0 0 17.2 4H7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <button class="see-schemes" id="see-schemes-btn" data-nav="schemes">
+          <span class="hi">सभी विकल्प देखो</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+
+      <button class="fab" id="fab-home" aria-label="Chatbot">
+        <span class="pulse"></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 1 1-3.2-6.4L21 4l-1 3.6A7.95 7.95 0 0 1 21 12Z"/><circle cx="9" cy="12" r="1" fill="white"/><circle cx="13" cy="12" r="1" fill="white"/><circle cx="17" cy="12" r="1" fill="white"/></svg>
+      </button>
+    </section>
+
+    <!-- ===== SCHEMES SCREEN ===== -->
+    <section class="screen" id="screen-schemes" data-screen-label="02 Schemes">
+      <div class="screen-head">
+        <button class="back-btn" data-nav="home">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="titles">
+          <div class="eyebrow">Aapke liye yojanayein</div>
+          <h2>3 schemes mile</h2>
+        </div>
+        <div class="head-actions">
+          <button class="icon-btn" onclick="openLangSheet()" aria-label="Change language · भाषा बदलें" title="Change language">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M3 12h18"/></svg>
+            <span class="lang-badge" aria-hidden="true">HI</span>
+          </button>
+          <div class="count">Ramesh ji</div>
+        </div>
+      </div>
+
+      <div class="screen-body">
+        <div class="schemes-stack">
+          <!-- Best -->
+          <article class="card best" data-nav="detail" data-scheme="sukanya" style="cursor:pointer;">
+            <div class="ribbon-row">
+              <span class="top-tag">
+                <svg viewBox="0 0 24 24" fill="white"><path d="M12 2l2.39 4.84 5.34.78-3.86 3.77.91 5.32L12 14.27l-4.78 2.51.91-5.32L4.27 7.62l5.34-.78L12 2z"/></svg>
+                Aapke liye sabse achha
+              </span>
+            </div>
+            <h3 class="scheme-name">Sukanya Samriddhi Yojana</h3>
+            <div class="scheme-en">Savings scheme for the girl child</div>
+            <div class="meta-row">
+              <div class="benefit">
+                <span class="amount">₹1,50,000<span style="font-size:12px; color:#8896A6; font-weight:500;"> / year</span></span>
+              </div>
+              <span class="effort"><span class="dot"></span>Easy to apply</span>
+            </div>
+            <div class="actions">
+              <button class="btn btn-outline" onclick="event.stopPropagation(); speakScheme();">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+                <span class="hi">सुन लो</span>
+              </button>
+              <button class="btn btn-filled" data-nav="detail" data-scheme="sukanya">
+                <span class="hi">आगे बढ़ो</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            </div>
+          </article>
+
+          <!-- Secondary -->
+          <article class="card secondary" data-nav="detail" style="cursor:pointer;">
+            <div class="ribbon-row">
+              <span style="font-size:10px; font-weight:600; color:var(--muted); letter-spacing:0.08em; text-transform:uppercase;">Health · Central</span>
+            </div>
+            <h3 class="scheme-name">Ayushman Bharat — PMJAY</h3>
+            <div class="scheme-en">Health coverage scheme</div>
+            <div class="meta-row">
+              <div class="benefit">
+                <span class="amount">₹5,00,000<span style="font-size:11px; color:#8896A6; font-weight:500;"> / family / year</span></span>
+              </div>
+              <span class="effort medium"><span class="dot"></span>Medium</span>
+            </div>
+            <div class="actions">
+              <button class="btn btn-outline" onclick="event.stopPropagation(); speakScheme();">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                <span class="hi">सुन लो</span>
+              </button>
+              <button class="btn btn-filled" data-nav="detail">
+                <span class="hi">आगे बढ़ो</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            </div>
+          </article>
+
+          <!-- Card 3 — Applied: PM Kisan -->
+          <article class="card applied" data-nav="detail" style="cursor:pointer; background:var(--green-tint); border:1px solid var(--green-line);">
+            <div class="applied-badge" aria-label="Applied">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div style="font-size:10px; font-weight:600; color:var(--green); letter-spacing:0.08em; text-transform:uppercase;">Agriculture · Central</div>
+            <h3 class="scheme-name" style="padding-right:44px;">PM Kisan Samman Nidhi</h3>
+            <div class="scheme-en">Income support for farmers · Ministry of Agriculture</div>
+            <div class="applied-status">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Apply ho gaya</span>
+              <span class="en" style="font-family:'Inter',sans-serif; color:rgba(76,175,80,0.7); font-weight:500; margin-left:4px;">· application #VM-48219</span>
+            </div>
+            <div class="timeline">
+              <div class="step">
+                <span class="bullet"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                Applied
+              </div>
+              <div class="line"></div>
+              <div class="step pending"><span class="bullet"></span>Verifying</div>
+              <div class="line" style="background:#C9D5CC;"></div>
+              <div class="step pending"><span class="bullet"></span>Approved</div>
+            </div>
+            <div class="applied-actions">
+              <button class="btn btn-outline gray" style="width:100%;" onclick="event.stopPropagation();">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+                View status
+              </button>
+            </div>
+          </article>
+
+        </div>
+      </div>
+
+      <button class="fab" aria-label="Chatbot" onclick="toggleChat()">
+        <span class="pulse"></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 1 1-3.2-6.4L21 4l-1 3.6A7.95 7.95 0 0 1 21 12Z"/><circle cx="9" cy="12" r="1" fill="white"/><circle cx="13" cy="12" r="1" fill="white"/><circle cx="17" cy="12" r="1" fill="white"/></svg>
+      </button>
+    </section>
+
+    <!-- ===== SCHEME DETAIL SCREEN ===== -->
+    <section class="screen" id="screen-detail" data-screen-label="03 Scheme Detail">
+
+      <div class="det-top-bar" id="det-top-bar">
+        <button class="det-back-btn" data-nav="schemes">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          <span class="hi">वापस</span>
+        </button>
+        <button class="det-elig-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+          पात्रता जाँचें
+        </button>
+      </div>
+
+      <div class="screen-body" id="det-body">
+
+        <!-- Hero -->
+        <div class="det-hero">
+          <div class="det-hero-meta">
+            <span class="det-cat-tag">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+              Finance · Central Govt
+            </span>
+            <span class="det-match-pill">
+              <span class="det-bars"><span></span><span></span><span></span><span></span><span class="dim"></span></span>
+              94% match
+            </span>
+          </div>
+          <h1 class="det-name-hi hi">सुकन्या समृद्धि योजना</h1>
+          <p class="det-name-en">Sukanya Samriddhi Yojana · Ministry of Finance</p>
+          <div class="det-official-row">
+            <span class="det-tick"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+            <strong>Official source</strong>
+            <span class="det-dot"></span>
+            <span>india.gov.in</span>
+            <span class="det-dot"></span>
+            <span>Updated 2 days ago</span>
+          </div>
+          <p class="det-pitch hi">बेटी के भविष्य के लिए पैसे बचाने की सरकारी योजना। <span style="font-family:'Inter',sans-serif; color:var(--muted-2);">8.2% yearly interest, tax-free returns, matures at 21 years.</span></p>
+        </div>
+
+        <!-- Stats strip -->
+        <div class="det-stats-strip">
+          <div class="det-stat"><div class="det-stat-val">8.2%</div><div class="det-stat-lbl">Yearly interest</div></div>
+          <div class="det-stat"><div class="det-stat-val">₹250</div><div class="det-stat-lbl">Min / year</div></div>
+          <div class="det-stat"><div class="det-stat-val">21 yrs</div><div class="det-stat-lbl">Maturity</div></div>
+        </div>
+
+        <!-- About -->
+        <div class="det-section">
+          <p class="det-sec-title">इस योजना के बारे में · About</p>
+          <p class="det-desc"><span class="hi">सुकन्या समृद्धि योजना 10 साल से कम उम्र की बेटियों के लिए है।</span> Open a savings account at any post office or bank in your daughter's name. Deposit ₹250–₹1,50,000 per year. Account matures when she turns 21.</p>
+        </div>
+
+        <div class="det-divider"></div>
+
+        <!-- Key Benefits -->
+        <div class="det-section">
+          <p class="det-sec-title">मुख्य फायदे · Key Benefits</p>
+          <ul class="det-benefit-list">
+            <li class="det-benefit-item">
+              <span class="det-benefit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+              <div class="det-benefit-content">
+                <div class="det-benefit-head">8.2% tax-free interest</div>
+                <div class="det-benefit-sub">Highest rate among all small savings schemes in India</div>
+              </div>
+            </li>
+            <li class="det-benefit-item">
+              <span class="det-benefit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+              <div class="det-benefit-content">
+                <div class="det-benefit-head hi">धारा 80C के तहत टैक्स छूट</div>
+                <div class="det-benefit-sub">Up to ₹1.5 lakh deduction under Section 80C per year</div>
+              </div>
+            </li>
+            <li class="det-benefit-item">
+              <span class="det-benefit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></span>
+              <div class="det-benefit-content">
+                <div class="det-benefit-head">Partial withdrawal at 18</div>
+                <div class="det-benefit-sub">Up to 50% for daughter's education after age 18</div>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <div class="det-divider"></div>
+
+        <!-- Eligibility -->
+        <div class="det-section">
+          <p class="det-sec-title">कौन आवेदन कर सकता है · Eligibility</p>
+          <ul class="det-elig-list">
+            <li class="det-elig-item">
+              <span class="det-chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+              <span>Girl child below <strong>10 years of age</strong></span>
+            </li>
+            <li class="det-elig-item">
+              <span class="det-chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+              <span>Account opened by <strong>parent or legal guardian</strong></span>
+            </li>
+            <li class="det-elig-item">
+              <span class="det-chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+              <span>Must be a <strong>resident of India</strong></span>
+            </li>
+            <li class="det-elig-item">
+              <span class="det-chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+              <span>Max <strong>2 accounts per family</strong> (one per girl child)</span>
+            </li>
+            <li class="det-elig-item">
+              <span class="det-cross"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
+              <span>NRI families <strong>not eligible</strong> after becoming non-resident</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="det-divider"></div>
+
+        <!-- Documents -->
+        <div class="det-section">
+          <p class="det-sec-title">ज़रूरी कागज़ · Documents</p>
+          <div class="det-doc-grid">
+            <div class="det-doc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/></svg><span>Birth Certificate</span></div>
+            <div class="det-doc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M15 8h2M15 12h2M7 16h10"/></svg><span>Aadhaar Card</span></div>
+            <div class="det-doc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M15 8h2M15 12h2M7 16h10"/></svg><span>Parent ID Proof</span></div>
+            <div class="det-doc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Address Proof</span></div>
+            <div class="det-doc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg><span>Bank Passbook</span></div>
+            <div class="det-doc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><span>Passport Photo</span></div>
+          </div>
+        </div>
+
+        <div class="det-divider"></div>
+
+        <!-- Links & Support -->
+        <div class="det-section" style="padding-bottom: 4px;">
+          <p class="det-sec-title" style="margin-bottom: 10px;">सम्पर्क और जानकारी · Links &amp; Support</p>
+          <div class="det-link-row">
+            <span class="det-link-icon det-li-web"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>
+            <div class="det-link-content"><div class="det-link-title">Official Website</div><div class="det-link-sub">india.gov.in/spotlight/sukanya-samriddhi-yojana</div></div>
+            <span class="det-link-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+          </div>
+          <div class="det-link-row">
+            <span class="det-link-icon det-li-doc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/></svg></span>
+            <div class="det-link-content"><div class="det-link-title">Official Guidelines (PDF)</div><div class="det-link-sub">Ministry of Finance circular · Hindi + English</div></div>
+            <span class="det-link-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+          </div>
+          <div class="det-link-row det-helpline-row">
+            <span class="det-link-icon det-li-phone" style="margin-top:2px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.62 2h3a2 2 0 0 1 2 1.72 12.05 12.05 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.18 6.18l.97-.97a2 2 0 0 1 2.11-.45 12.05 12.05 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></span>
+            <div class="det-link-content">
+              <div class="det-helpline-num">1800-223-040</div>
+              <div class="det-link-sub">National Helpline · Toll Free</div>
+              <div class="det-avail">● Available 9 AM – 6 PM, Mon–Sat</div>
+            </div>
+            <button class="det-call-btn">Call Now</button>
+          </div>
+        </div>
+
+        <div style="height: 150px;"></div>
+      </div>
+
+      <!-- Sticky apply bar -->
+      <div class="det-apply-bar">
+        <div class="det-save-row">
+          <button class="det-listen-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+            <span class="hi">सुनें</span> · Listen
+          </button>
+          <button class="det-save-btn" title="Save scheme">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+          </button>
+        </div>
+        <button class="det-apply-btn" data-nav="steps">
+          <span class="hi">आवेदन करें</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          · How to Apply
+        </button>
+      </div>
+
+    </section>
+
+    <!-- ===== STEPS SCREEN ===== -->
+    <section class="screen" id="screen-steps" data-screen-label="04 Application Steps">
+      <div class="screen-head">
+        <button class="back-btn" data-nav="detail">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="titles" style="flex:1; text-align:center;">
+          <div class="eyebrow">Apply ho raha hai</div>
+        </div>
+        <div class="head-actions">
+          <button class="icon-btn" onclick="openLangSheet()" aria-label="Change language · भाषा बदलें" title="Change language">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M3 12h18"/></svg>
+            <span class="lang-badge" aria-hidden="true">HI</span>
+          </button>
+          <span style="display:inline-flex; align-items:center; gap:6px; background:#E8F5E9; border:1px solid #C6E5C9; color:#4CAF50; font-size:11px; font-weight:600; padding:5px 9px; border-radius:999px;">
+            <span style="width:14px;height:14px;border-radius:50%;background:#4CAF50;color:#fff;display:flex;align-items:center;justify-content:center;">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </span>
+            Official
+          </span>
+        </div>
+      </div>
+
+      <div class="screen-body">
+        <div class="steps-head-extra">
+          <h2>Sukanya Samriddhi Yojana</h2>
+        </div>
+
+        <div class="progress-wrap">
+          <div class="progress-row">
+            <span class="label"><strong>Step <span id="progress-current">2</span> of 5</strong> · <span id="progress-name">Aadhaar link</span></span>
+            <span class="pct"><span id="progress-pct">40</span>%</span>
+          </div>
+          <div class="progress-bar" id="progress-bar">
+            <span class="seg done"></span>
+            <span class="seg done"></span>
+            <span class="seg"></span>
+            <span class="seg"></span>
+            <span class="seg"></span>
+          </div>
+        </div>
+
+        <div class="docs-row" id="docs-row" role="button" aria-expanded="false">
+          <span class="folder">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>
+          </span>
+          <span class="text">
+            <span class="h hi">ज़रूरी कागज़</span>
+            <span class="s">4 documents · Aadhaar, photo, birth cert, passbook</span>
+          </span>
+          <span class="chev">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </div>
+        <div class="docs-list" id="docs-list">
+          <ul>
+            <li><span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Aadhaar card · ready</li>
+            <li><span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Bank passbook · ready</li>
+            <li class="missing"><span class="check"></span>Daughter's birth certificate</li>
+            <li class="missing"><span class="check"></span>Passport-size photo</li>
+          </ul>
+        </div>
+
+        <ol class="steps" id="steps-list">
+          <li class="step" data-step="1">
+            <span class="badge"><span class="num">1</span></span>
+            <div class="step-card">
+              <div class="head">
+                <span class="title hi">जन धन खाता खुलवाइए</span>
+              </div>
+            </div>
+          </li>
+          <li class="step" data-step="2">
+            <span class="badge"><span class="num">2</span></span>
+            <div class="step-card">
+              <div class="head">
+                <span class="title hi">आधार लिंक करवाइए</span>
+              </div>
+            </div>
+          </li>
+          <li class="step" data-step="3">
+            <span class="badge"><span class="num">3</span></span>
+            <div class="step-card">
+              <div class="head">
+                <span class="title hi">बैंक में फ़ॉर्म भरो</span>
+              </div>
+            </div>
+          </li>
+          <li class="step" data-step="4">
+            <span class="badge"><span class="num">4</span></span>
+            <div class="step-card">
+              <div class="head">
+                <span class="title hi">फ़ोटो और साइन करो</span>
+              </div>
+            </div>
+          </li>
+          <li class="step" data-step="5">
+            <span class="badge"><span class="num">5</span></span>
+            <div class="step-card">
+              <div class="head">
+                <span class="title hi">सबमिट करो और रसीद लो</span>
+              </div>
+            </div>
+          </li>
+        </ol>
+      </div>
+
+      <div class="step-toast" id="step-toast">
+        <span class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </span>
+        <span><span id="toast-text">Step pura hua!</span></span>
+      </div>
+
+      <button class="fab" aria-label="Chatbot" onclick="toggleChat()">
+        <span class="pulse"></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 1 1-3.2-6.4L21 4l-1 3.6A7.95 7.95 0 0 1 21 12Z"/><circle cx="9" cy="12" r="1" fill="white"/><circle cx="13" cy="12" r="1" fill="white"/><circle cx="17" cy="12" r="1" fill="white"/></svg>
+      </button>
+    </section>
+
+    <!-- ===== HISTORY SCREEN ===== -->
+    <section class="screen" id="screen-history" data-screen-label="05 History">
+      <div class="app-header">
+        <div style="width:40px;"></div>
+        <div class="brand">
+          <span class="hi">इतिहास</span>
+          <span class="tag">Search History</span>
+        </div>
+        <div class="head-actions">
+          <button class="icon-btn" onclick="openLangSheet()" aria-label="Change language" title="Change language">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M3 12h18"/></svg>
+            <span class="lang-badge">HI</span>
+          </button>
+        </div>
+      </div>
+      <div class="screen-body">
+        <div class="history-filter">
+          <button class="hf-chip active" data-hfilter="today" onclick="filterHistory('today')"><span class="hi">आज</span> · Today</button>
+          <button class="hf-chip" data-hfilter="week" onclick="filterHistory('week')">Is Hafte · Week</button>
+          <button class="hf-chip" data-hfilter="all" onclick="filterHistory('all')">Sab · All</button>
+        </div>
+        <div class="history-list" id="history-list">
+
+          <!-- Today -->
+          <div class="hist-sep" data-hperiod="today"><span class="sep-line"></span><span class="sep-label">Aaj · Today</span><span class="sep-line"></span></div>
+
+          <div class="hist-entry" data-hperiod="today" onclick="navigate('detail')">
+            <div class="hist-time-row">
+              <span class="hist-time"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>11:42 AM</span>
+              <span class="hist-badge answered">✓ Answered</span>
+            </div>
+            <div class="hist-query">
+              <span class="q-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></span>
+              <span class="hi">"बेटी के लिए saving scheme"</span>
+            </div>
+            <div class="hist-result">
+              <span class="r-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></span>
+              <div><div class="r-name">Sukanya Samriddhi Yojana</div><div class="r-sub">8.2% byaj · Tax free</div></div>
+              <span class="r-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+            </div>
+          </div>
+
+          <div class="hist-entry" data-hperiod="today">
+            <div class="hist-time-row">
+              <span class="hist-time"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>9:15 AM</span>
+              <span class="hist-badge saved">📌 Saved</span>
+            </div>
+            <div class="hist-query">
+              <span class="q-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></span>
+              <span>"Kisan ke liye credit scheme"</span>
+            </div>
+            <div class="hist-result">
+              <span class="r-icon" style="background:#388E3C;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V12"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><path d="M8 6a4 4 0 0 1 8 0c0 4-4 6-4 6s-4-2-4-6z"/></svg></span>
+              <div><div class="r-name">PM Kisan Credit Card</div><div class="r-sub">₹3 lakh tak · 4% byaj</div></div>
+              <span class="r-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+            </div>
+          </div>
+
+          <!-- Yesterday -->
+          <div class="hist-sep" data-hperiod="week"><span class="sep-line"></span><span class="sep-label">Kal · Yesterday</span><span class="sep-line"></span></div>
+
+          <div class="hist-entry" data-hperiod="week">
+            <div class="hist-time-row">
+              <span class="hist-time"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>3:28 PM</span>
+              <span class="hist-badge answered">✓ Answered</span>
+            </div>
+            <div class="hist-query">
+              <span class="q-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></span>
+              <span class="hi">"Ration card documents kya chahiye"</span>
+            </div>
+            <div class="hist-result">
+              <span class="r-icon" style="background:var(--amber);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/></svg></span>
+              <div><div class="r-name">NFSA Ration Card</div><div class="r-sub">4 documents chahiye</div></div>
+              <span class="r-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+            </div>
+          </div>
+
+          <!-- Monday -->
+          <div class="hist-sep" data-hperiod="week"><span class="sep-line"></span><span class="sep-label">Monday</span><span class="sep-line"></span></div>
+
+          <div class="hist-entry in-progress" data-hperiod="week" onclick="navigate('steps')">
+            <div class="hist-time-row">
+              <span class="hist-time"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>10:05 AM</span>
+              <span class="hist-badge applied">▶ Applied</span>
+            </div>
+            <div class="hist-query">
+              <span class="q-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></span>
+              <span>"Ghar banane ke liye sarkari help"</span>
+            </div>
+            <div class="hist-result">
+              <span class="r-icon" style="background:var(--accent);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+              <div><div class="r-name">PM Awas Yojana (PMAY)</div><div class="r-sub" style="color:var(--primary);font-weight:600;">Step 2/5 · In progress →</div></div>
+              <span class="r-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+            </div>
+          </div>
+
+          <!-- Last week -->
+          <div class="hist-sep" data-hperiod="all"><span class="sep-line"></span><span class="sep-label">Pichla Hapta · Last Week</span><span class="sep-line"></span></div>
+
+          <div class="hist-entry" data-hperiod="all">
+            <div class="hist-time-row">
+              <span class="hist-time"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>May 9, 2:17 PM</span>
+              <span class="hist-badge answered">✓ Answered</span>
+            </div>
+            <div class="hist-query">
+              <span class="q-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></span>
+              <span class="hi">"Pregnancy mein sarkar kya deti hai"</span>
+            </div>
+            <div class="hist-result">
+              <span class="r-icon" style="background:#C2185B;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></span>
+              <div><div class="r-name">PM Matru Vandana Yojana</div><div class="r-sub">₹5,000 maternity benefit</div></div>
+              <span class="r-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== CHAT SCREEN ===== -->
+    <section class="screen" id="screen-chat" data-screen-label="06 Chatbot">
+      <!-- Header -->
+      <div class="chat-header-row">
+        <div class="chat-avatar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 1 1-3.2-6.4L21 4l-1 3.6A7.95 7.95 0 0 1 21 12Z"/><circle cx="9" cy="12" r="1" fill="white" stroke="none"/><circle cx="13" cy="12" r="1" fill="white" stroke="none"/></svg>
+        </div>
+        <div style="flex:1;">
+          <div class="chat-hdr-name">Sahayak · <span class="hi" style="font-weight:500;font-size:14px;">AI साथी</span></div>
+          <div class="chat-hdr-status"><span class="dot"></span>Online · 24×7 available</div>
+        </div>
+        <div class="chat-hdr-actions">
+          <button class="chat-icon-btn" onclick="navigate('home')" title="Voice — go to mic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          </button>
+          <button class="chat-icon-btn" onclick="clearChat()" title="Clear chat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div class="chat-messages" id="chat-messages">
+        <div class="chat-date-div">Today</div>
+        <!-- Bot greeting — initial -->
+        <div class="chat-msg bot">
+          <div class="cm-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 1 1-3.2-6.4L21 4l-1 3.6A7.95 7.95 0 0 1 21 12Z"/></svg></div>
+          <div>
+            <div class="chat-bubble">
+              <span class="cb-hi">Namaskar! 🙏</span>
+              <span class="cb-en">Main Sahayak hoon — aapka AI Saathi.<br/>Koi bhi sarkari yojana poochhiye.</span>
+            </div>
+            <div class="chat-ts">Now</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Suggestion chips -->
+      <div class="chat-suggestions" id="chat-suggestions">
+        <button class="chat-chip" onclick="sendChip(this,'beti')"><span class="hi">बेटी के लिए scheme</span></button>
+        <button class="chat-chip" onclick="sendChip(this,'kisan')">Kisan yojana</button>
+        <button class="chat-chip" onclick="sendChip(this,'ration')"><span class="hi">राशन कार्ड</span></button>
+        <button class="chat-chip" onclick="sendChip(this,'health')">Ayushman Bharat</button>
+        <button class="chat-chip" onclick="sendChip(this,'ghar')">Ghar ke liye</button>
+      </div>
+
+      <!-- Chatbox composer -->
+      <div class="chatbox">
+        <div class="chatbox-row">
+          <input type="text" class="chatbox-input" id="chat-input" placeholder="Kuch bhi poochhiye…" onkeydown="handleChatKey(event)">
+          <div class="chatbox-actions">
+            <button class="chatbox-mic" onclick="navigate('home')" title="Voice input">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+            </button>
+            <button class="chatbox-send" onclick="sendChatText()" title="Send">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="chatbox-hint">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+          Voice se bolein
+          <span class="divider-dot"></span>
+          Type karein
+          <span class="divider-dot"></span>
+          Chip chunein
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== TABBAR (persistent) ===== -->
+    <nav class="tabbar" id="tabbar">
+      <button class="tab active" data-nav="home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+        Home
+      </button>
+      <button class="tab" data-nav="schemes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 10h8M8 14h5"/></svg>
+        Schemes
+      </button>
+      <button class="tab" data-nav="steps">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18"/></svg>
+        Apply
+      </button>
+      <button class="tab" data-nav="history">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+        History
+      </button>
+      <button class="tab" data-nav="chat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 1 1-3.2-6.4L21 4l-1 3.6A7.95 7.95 0 0 1 21 12Z"/></svg>
+        Sahayak
+      </button>
+    </nav>
+
+    <div class="home-indicator"></div>
+
+    <!-- ===== LANGUAGE SHEET ===== -->
+    <div class="modal-overlay" id="lang-modal" role="dialog" aria-modal="true" aria-label="Choose language · भाषा चुनिए">
+      <div class="sheet lang-sheet">
+        <div class="handle"></div>
+        <button class="close" aria-label="Close language selector" onclick="closeLangSheet()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+
+        <div class="lang-sheet-head">
+          <div class="lang-globe" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M3 12h18"/></svg>
+          </div>
+          <div class="lang-title-block">
+            <h2><span class="hi">भाषा चुनिए</span></h2>
+            <p>Choose your language</p>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="lang-options" role="listbox" aria-label="Language options" id="lang-options">
+
+          <button class="lang-option active" data-lang="hi" role="option" aria-selected="true" onclick="selectLanguage('hi')">
+            <span class="lang-code-badge" aria-hidden="true">HI</span>
+            <span class="lang-info">
+              <span class="lang-name hi">हिंदी</span>
+              <span class="lang-sub-text">Hindi · Default</span>
+            </span>
+            <span class="lang-check-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+          </button>
+
+          <button class="lang-option" data-lang="en" role="option" aria-selected="false" onclick="selectLanguage('en')">
+            <span class="lang-code-badge" aria-hidden="true">EN</span>
+            <span class="lang-info">
+              <span class="lang-name">English</span>
+              <span class="lang-sub-text">अंग्रेज़ी</span>
+            </span>
+            <span class="lang-check-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+          </button>
+
+          <button class="lang-option" data-lang="mr" role="option" aria-selected="false" onclick="selectLanguage('mr')">
+            <span class="lang-code-badge" aria-hidden="true">MR</span>
+            <span class="lang-info">
+              <span class="lang-name">मराठी</span>
+              <span class="lang-sub-text">Marathi</span>
+            </span>
+            <span class="pilot-badge">Pilot</span>
+          </button>
+
+          <button class="lang-option" data-lang="bn" role="option" aria-selected="false" onclick="selectLanguage('bn')">
+            <span class="lang-code-badge" aria-hidden="true">BN</span>
+            <span class="lang-info">
+              <span class="lang-name">বাংলা</span>
+              <span class="lang-sub-text">Bengali</span>
+            </span>
+            <span class="pilot-badge">Pilot</span>
+          </button>
+
+          <button class="lang-option" data-lang="ta" role="option" aria-selected="false" onclick="selectLanguage('ta')">
+            <span class="lang-code-badge" aria-hidden="true">TA</span>
+            <span class="lang-info">
+              <span class="lang-name">தமிழ்</span>
+              <span class="lang-sub-text">Tamil</span>
+            </span>
+            <span class="pilot-badge">Pilot</span>
+          </button>
+
+          <button class="lang-option" data-lang="te" role="option" aria-selected="false" onclick="selectLanguage('te')">
+            <span class="lang-code-badge" aria-hidden="true">TE</span>
+            <span class="lang-info">
+              <span class="lang-name">తెలుగు</span>
+              <span class="lang-sub-text">Telugu</span>
+            </span>
+            <span class="pilot-badge">Pilot</span>
+          </button>
+
+        </div>
+
+        <div class="lang-note" role="note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <p>Interface labels switch immediately. Full scheme content in your language <strong>coming soon</strong>.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== WHY MODAL ===== -->
+    <div class="modal-overlay" id="why-modal">
+      <div class="sheet">
+        <div class="handle"></div>
+        <button class="close" aria-label="Close" onclick="closeWhy()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <h2>
+          <span class="hi">यह कैसे पता चला?</span>
+          <span class="en">Why we said this</span>
+        </h2>
+        <div class="divider"></div>
+        <div class="why-section">
+          <span class="sec-label hi">क्यों सही लग रहा है</span>
+          <p>
+            <span class="hi">आपने पूछा था — “बेटी के लिए saving scheme”।</span>
+            Yeh scheme 0–10 saal ki ladkiyon ke liye banai gayi hai. Ministry of Finance ke under aati hai aur har post office mein available hai.
+          </p>
+        </div>
+        <div class="source-section">
+          <span class="sec-label muted">Source</span>
+          <div class="source-row">
+            <span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+            <span class="label hi">सरकारी सोर्स</span>
+          </div>
+          <a class="source-url">india.gov.in/sukanya-samriddhi-yojana</a>
+        </div>
+        <div>
+          <span class="sec-label muted" style="display:block; margin-bottom:8px;">Confidence</span>
+          <div class="conf-row">
+            <div class="conf-card green active">
+              <span class="icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+              <span>
+                <span class="name hi">पक्की जानकारी</span>
+                <span class="sub">Verified · official</span>
+              </span>
+            </div>
+            <div class="conf-card orange">
+              <span class="icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="16" x2="12" y2="16.01"/></svg></span>
+              <span>
+                <span class="name hi">अंदाज़ा है</span>
+                <span class="sub">Best guess</span>
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="social">
+          <span class="text"><strong>87% logon</strong> ke liye sahi tha · 4,210 voters</span>
+          <span class="bar"><span style="width: 87%;"></span></span>
+        </div>
+        <div class="vote-row">
+          <div class="vote-label"><span class="hi">यह जवाब कैसा लगा?</span> &nbsp;·&nbsp; Was this helpful?</div>
+          <div class="vote-btns">
+            <button class="vote-btn up" id="vote-up" onclick="handleVote('up')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1h3Zm0 0 4-8a3 3 0 0 1 3 3v3h4.5a2 2 0 0 1 2 2.3l-1.3 7A2 2 0 0 1 17.2 20H7"/></svg>
+              <span class="hi">हाँ</span>
+            </button>
+            <button class="vote-btn down" id="vote-down" onclick="handleVote('down')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 13V4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h3Zm0 0 4 8a3 3 0 0 0 3-3v-3h4.5a2 2 0 0 0 2-2.3l-1.3-7A2 2 0 0 0 17.2 4H7"/></svg>
+              <span class="hi">नहीं</span>
+            </button>
+          </div>
+          <div class="vote-feedback" id="vote-feedback">
+            <div class="vf-label hi" id="vf-label">क्या ग़लत लगा?</div>
+            <div class="vf-chips" id="vf-chips"></div>
+            <button class="vf-submit" onclick="submitVoteFeedback()"><span class="hi">भेजो</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Chatbot popover ===== -->
+    <div class="chat-popover" id="chat-popover">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <h4 style="margin:0;">Sahayak · AI Saathi</h4>
+        <button onclick="toggleChat()" style="width:24px;height:24px;border-radius:6px;border:1px solid var(--line);background:#F0F4F8;color:var(--muted-2);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <p>Aapki madad ke liye 24×7 available. Kuch poochhna hai?</p>
+      <div class="chat-mini-actions">
+        <span class="chip">Helpline number</span>
+        <span class="chip">Aadhaar problem</span>
+        <span class="chip">Form bhulein</span>
+      </div>
+    </div>
+
+    <!-- ===== Error overlay ===== -->
+    <div class="error-screen" id="error-screen">
+      <div class="error-stage">
+        <div class="icon-orb">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12" y2="20.01"/></svg>
+          <span class="wifi-x"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
+        </div>
+        <h3 class="state-title hi">इंटरनेट चेक कीजिए</h3>
+        <p class="state-sub"><span class="hi">कनेक्शन नहीं मिल रही</span><br/>Try Wi-Fi ya mobile data</p>
+        <button class="retry-cta" onclick="closeError()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15A9 9 0 1 1 18 5.64"/></svg>
+          <span class="hi">फिर से कीजिए</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ===== Onboarding overlay ===== -->
+    <div class="onboarding open" id="onboarding">
+      <div class="ob-card">
+        <div class="namaskar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 21v-3"/>
+            <path d="M9 18c-3 0-5-2-5-5V8a2 2 0 0 1 4 0v3"/>
+            <path d="M15 18c3 0 5-2 5-5V8a2 2 0 0 0-4 0v3"/>
+            <path d="M9 11V6a3 3 0 0 1 3-3 3 3 0 0 1 3 3v5"/>
+          </svg>
+        </div>
+        <h3>Namaskar!</h3>
+        <p class="hi" style="margin-top:4px;">माइक दबाइए और अपनी बात बताइए</p>
+        <p style="font-size:12px;">Hindi, English, Marathi — koi bhi bhasha chalegi</p>
+        <div class="pointer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5v14"/>
+            <polyline points="6 13 12 19 18 13"/>
+          </svg>
+        </div>
+        <button class="cta" onclick="dismissOnboarding()">
+          <span class="hi">शुरू करें</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== TWEAKS PANEL ===== -->
+<aside class="tweaks">
+  <div class="tp-head">
+    <div>
+      <div class="tp-eyebrow">Tweaks</div>
+      <div class="tp-title">Prototype Controls</div>
+    </div>
+  </div>
+
+  <div class="tp-section">
+    <div class="tp-label">Jump to screen</div>
+    <div class="row">
+      <button class="tp-btn" data-nav="home"><span class="num">1</span>Home</button>
+      <button class="tp-btn" data-nav="schemes"><span class="num">2</span>Schemes</button>
+      <button class="tp-btn" data-nav="detail"><span class="num">3</span>Scheme detail</button>
+      <button class="tp-btn" data-nav="steps"><span class="num">4</span>Apply steps</button>
+      <button class="tp-btn" data-nav="history"><span class="num">5</span>History</button>
+      <button class="tp-btn" data-nav="chat"><span class="num">6</span>Chatbot</button>
+    </div>
+  </div>
+
+  <div class="tp-section">
+    <div class="tp-label">Overlays</div>
+    <div class="row">
+      <button class="tp-btn" onclick="openOnboarding()">Onboarding</button>
+      <button class="tp-btn" onclick="openWhy()">Why modal</button>
+      <button class="tp-btn" onclick="openError()">No-network error</button>
+      <button class="tp-btn" onclick="toggleChat()">Chatbot popover</button>
+    </div>
+  </div>
+
+  <div class="tp-section">
+    <div class="tp-label">Mic flow</div>
+    <div class="row">
+      <button class="tp-btn" onclick="playMicFlow()">▶ Replay full flow</button>
+    </div>
+  </div>
+</aside>
+
+<script>
+  // ===== VM_CONFIG (Sprint A Day 1: backend wiring) =====
+  const VM_CONFIG = {
+    API_BASE: location.hostname === 'localhost'
+      ? 'http://localhost:8000/api/v1'
+      : '/api/v1',
+    get conversationId() {
+      let id = localStorage.getItem('vm_conv_id');
+      if (!id) {
+        id = crypto.randomUUID();
+        localStorage.setItem('vm_conv_id', id);
+      }
+      return id;
     }
-  </script>
+  };
+
+  // ===== State =====
+  const State = {
+    screen: 'home',
+    micState: 'idle' // idle | recording | processing | responded
+  };
+
+  // ===== Navigation =====
+  function navigate(target) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const el = document.getElementById('screen-' + target);
+    if (el) el.classList.add('active');
+
+    document.querySelectorAll('#tabbar .tab').forEach(t => t.classList.remove('active'));
+    // detail shares the Schemes tab highlight
+    const tabTarget = target === 'detail' ? 'schemes' : target;
+    document.querySelectorAll('#tabbar .tab[data-nav="' + tabTarget + '"]').forEach(t => t.classList.add('active'));
+
+    document.querySelectorAll('.tweaks .tp-btn[data-nav]').forEach(b => b.classList.toggle('active', b.dataset.nav === target));
+
+    State.screen = target;
+
+    // Scroll-shadow for detail top bar
+    if (target === 'detail') {
+      const detBody = document.getElementById('det-body');
+      const detTopBar = document.getElementById('det-top-bar');
+      if (detBody && detTopBar) {
+        detBody.addEventListener('scroll', function onDetScroll() {
+          detTopBar.classList.toggle('scrolled', detBody.scrollTop > 8);
+        }, { passive: true });
+        // reset scroll on each entry
+        detBody.scrollTop = 0;
+        detTopBar.classList.remove('scrolled');
+      }
+    }
+  }
+
+  document.addEventListener('click', (e) => {
+    const navEl = e.target.closest('[data-nav]');
+    if (navEl) {
+      const t = navEl.dataset.nav;
+      navigate(t);
+    }
+    const action = e.target.closest('[data-action]');
+    if (action) {
+      if (action.dataset.action === 'open-why') openWhy();
+    }
+  });
+
+  // ===== Language System =====
+  const LANGS = {
+    hi: {
+      code: 'HI',
+      caption_idle: 'अपनी बात सुनिए <span class="en">Tap to speak · Apni baat suniye</span>',
+      caption_recording: 'सुन रहा हूँ… <span class="en">Sun raha hoon · tap to stop</span>',
+      caption_processing: 'सोच रहा हूँ… <span class="en">Scanning 12 schemes</span>',
+      caption_responded: 'फिर पूछिए <span class="en">Phir poochiye · ask again</span>',
+      prompt_idle: 'Kya jaanna hai?',
+      prompt_sub_idle: 'PM Kisan, Ayushman, Ration, Pension —<br/>kuch bhi poochiye apni bhasha mein.',
+      prompt_recording: 'Aap boliye…',
+      prompt_sub_recording: 'Hindi, English, Marathi —<br/>sab samajh aata hai.',
+      prompt_processing: 'Ek minute…',
+      prompt_sub_processing: 'Sarkari records aur scheme<br/>database se jawab dhoondh raha hoon.',
+      prompt_responded: 'Yeh dekho!',
+      prompt_sub_responded: 'Aapki beti ke liye sabse achhi scheme<br/>mili hai.',
+      status_idle: '12 schemes',
+      status_recording: '● Listening',
+      status_processing: '● Searching',
+      status_responded: '✓ Answer',
+      mic_idle:       'Microphone — tap to speak',
+      mic_recording:  'Recording active — tap to stop',
+      mic_processing: 'Processing — please wait',
+      mic_responded:  'Answer ready — tap to ask again',
+      toast: 'हिंदी में बदल गया ✓',
+      pilot_prefix: 'जल्द आएगा — '
+    },
+    en: {
+      code: 'EN',
+      caption_idle: 'Tap to speak',
+      caption_recording: 'Listening… <span class="en">Tap mic to stop</span>',
+      caption_processing: 'Thinking… <span class="en">Scanning 12 schemes</span>',
+      caption_responded: 'Ask again',
+      prompt_idle: 'What do you want to know?',
+      prompt_sub_idle: 'PM Kisan, Ayushman, Ration, Pension —<br/>ask anything in your language.',
+      prompt_recording: 'Go ahead…',
+      prompt_sub_recording: 'Hindi, English, Marathi —<br/>all languages understood.',
+      prompt_processing: 'One moment…',
+      prompt_sub_processing: 'Searching government records<br/>and scheme database.',
+      prompt_responded: 'Here you go!',
+      prompt_sub_responded: 'Best scheme found<br/>for your daughter.',
+      status_idle: '12 schemes',
+      status_recording: '● Listening',
+      status_processing: '● Searching',
+      status_responded: '✓ Answer',
+      mic_idle:       'Microphone — tap to speak',
+      mic_recording:  'Recording active — tap to stop',
+      mic_processing: 'Processing — please wait',
+      mic_responded:  'Answer ready — tap to ask again',
+      toast: 'Switched to English ✓',
+      pilot_prefix: 'Coming soon — '
+    }
+  };
+
+  const PILOT_NAMES = { mr: 'मराठी', bn: 'বাংলা', ta: 'தமிழ்', te: 'తెలుగు' };
+  let currentLang = localStorage.getItem('vm_lang') || 'hi';
+  function getLang() { return LANGS[currentLang] || LANGS.hi; }
+
+  // H1: show current lang code on all badges
+  function syncLangBadges() {
+    document.querySelectorAll('.lang-badge').forEach(b => b.textContent = getLang().code);
+  }
+
+  // H6: highlight active option + show/hide checkmarks
+  function syncLangOptions() {
+    document.querySelectorAll('.lang-option').forEach(opt => {
+      const active = opt.dataset.lang === currentLang;
+      opt.classList.toggle('active', active);
+      opt.setAttribute('aria-selected', active ? 'true' : 'false');
+      const chk = opt.querySelector('.lang-check-mark');
+      if (chk) chk.style.display = active ? 'flex' : 'none';
+    });
+  }
+
+  function openLangSheet() {
+    // H5: Error prevention — block during active recording
+    if (State.micState === 'recording') {
+      showSysToast('⚠️ Recording rok ke bhasha badlein · Stop recording first', 2400);
+      return;
+    }
+    syncLangOptions();
+    document.getElementById('lang-modal').classList.add('open');
+  }
+
+  function closeLangSheet() {
+    document.getElementById('lang-modal').classList.remove('open');
+  }
+
+  function selectLanguage(code) {
+    // H9: Pilot languages — clear error recovery message
+    if (code !== 'hi' && code !== 'en') {
+      const name = PILOT_NAMES[code] || code.toUpperCase();
+      showSysToast(getLang().pilot_prefix + name, 2600);
+      closeLangSheet();
+      return;
+    }
+    if (code === currentLang) { closeLangSheet(); return; }
+
+    currentLang = code;
+    localStorage.setItem('vm_lang', code);        // H7: persist preference
+    document.documentElement.lang = code;
+
+    syncLangBadges();
+    syncLangOptions();
+    applyLangToMicState(State.micState);           // refresh all visible text
+    closeLangSheet();
+    showSysToast(getLang().toast, 2000);           // H1: confirm the change
+  }
+
+  // Updates all home-screen mic-state text in the active language
+  function applyLangToMicState(s) {
+    const L = getLang();
+    const cap = document.getElementById('mic-caption');
+    const pill = document.getElementById('status-pill');
+    const pt = document.getElementById('prompt-title');
+    const ps = document.getElementById('prompt-sub');
+    const mb = document.getElementById('mic-btn');
+    if (!cap) return;
+    if (s === 'idle') {
+      cap.className = 'caption'; cap.innerHTML = L.caption_idle;
+      if (pill && pill.className === 'pill') pill.textContent = L.status_idle;
+      if (pt) pt.textContent = L.prompt_idle;
+      if (ps) ps.innerHTML = L.prompt_sub_idle;
+      if (mb) mb.setAttribute('aria-label', L.mic_idle);
+    } else if (s === 'recording') {
+      cap.className = 'caption teal'; cap.innerHTML = L.caption_recording;
+      if (pill) pill.textContent = L.status_recording;
+      if (pt) pt.textContent = L.prompt_recording;
+      if (ps) ps.innerHTML = L.prompt_sub_recording;
+      if (mb) mb.setAttribute('aria-label', L.mic_recording);
+    } else if (s === 'processing') {
+      cap.className = 'caption'; cap.innerHTML = L.caption_processing;
+      if (pill) pill.textContent = L.status_processing;
+      if (pt) pt.textContent = L.prompt_processing;
+      if (ps) ps.innerHTML = L.prompt_sub_processing;
+      if (mb) mb.setAttribute('aria-label', L.mic_processing);
+    } else if (s === 'responded') {
+      cap.className = 'caption'; cap.innerHTML = L.caption_responded;
+      if (pill) pill.textContent = L.status_responded;
+      if (pt) pt.textContent = L.prompt_responded;
+      if (ps) ps.innerHTML = L.prompt_sub_responded;
+      if (mb) mb.setAttribute('aria-label', L.mic_responded);
+    }
+  }
+
+  // H1: system toast — visible, timed, non-blocking (role="status" for a11y)
+  function showSysToast(msg, duration) {
+    const old = document.getElementById('sys-toast');
+    if (old) old.remove();
+    const t = document.createElement('div');
+    t.id = 'sys-toast';
+    t.setAttribute('role', 'status');
+    t.setAttribute('aria-live', 'polite');
+    t.style.cssText = 'position:absolute;left:16px;right:16px;bottom:92px;background:#1B2A41;color:#fff;border-radius:12px;padding:12px 16px;font-size:13px;font-weight:600;z-index:36;text-align:center;animation:slidein 0.25s ease;pointer-events:none;font-family:inherit;';
+    t.textContent = msg;
+    document.getElementById('phone').appendChild(t);
+    setTimeout(() => { if (t.parentNode) t.remove(); }, duration || 2400);
+  }
+
+  // H3: dismiss lang sheet by tapping backdrop
+  document.getElementById('lang-modal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('lang-modal')) closeLangSheet();
+  });
+  document.querySelector('#lang-modal .sheet').addEventListener('click', (e) => e.stopPropagation());
+
+  // ===== Mic flow =====
+  const micStage = document.getElementById('mic-stage');
+  const micBtn = document.getElementById('mic-btn');
+  const caption = document.getElementById('mic-caption');
+  const transcript = document.getElementById('transcript');
+  const loader = document.getElementById('processing-loader');
+  const cancelProcBtn = document.getElementById('cancel-processing');
+  const responseWrap = document.getElementById('response-wrap');
+  const seeBtn = document.getElementById('see-schemes-btn');
+  const statusPill = document.getElementById('status-pill');
+  const promptTitle = document.getElementById('prompt-title');
+  const promptSub = document.getElementById('prompt-sub');
+  const hintRow = document.getElementById('hint-row');
+
+  function setMicState(s) {
+    State.micState = s;
+    const L = getLang();
+
+    // Reset all transient UI
+    micStage.classList.remove('recording');
+    micBtn.classList.remove('disabled', 'small');
+    loader.style.display = 'none';
+    responseWrap.classList.remove('show');
+    transcript.classList.remove('show');
+    if (cancelProcBtn) cancelProcBtn.classList.remove('show');
+
+    if (s === 'idle') {
+      caption.className = 'caption';
+      caption.innerHTML = L.caption_idle;
+      statusPill.className = 'pill';
+      statusPill.textContent = L.status_idle;
+      promptTitle.textContent = L.prompt_idle;
+      promptSub.innerHTML = L.prompt_sub_idle;
+      hintRow.style.display = '';
+      micBtn.setAttribute('aria-label', L.mic_idle);          // H10
+      document.getElementById('feedback-row').classList.remove('show');
+      document.querySelectorAll('#feedback-row button').forEach(b => b.classList.remove('active'));
+    }
+    if (s === 'recording') {
+      micStage.classList.add('recording');
+      caption.className = 'caption teal';
+      caption.innerHTML = L.caption_recording;
+      statusPill.className = 'pill recording';
+      statusPill.textContent = L.status_recording;
+      promptTitle.textContent = L.prompt_recording;
+      promptSub.innerHTML = L.prompt_sub_recording;
+      hintRow.style.display = 'none';
+      setTimeout(() => transcript.classList.add('show'), 800);
+      micBtn.setAttribute('aria-label', L.mic_recording);     // H10
+    }
+    if (s === 'processing') {
+      micBtn.classList.add('disabled');
+      loader.style.display = 'block';
+      if (cancelProcBtn) cancelProcBtn.classList.add('show'); // H3: let user escape
+      caption.className = 'caption';
+      caption.innerHTML = L.caption_processing;
+      statusPill.className = 'pill processing';
+      statusPill.textContent = L.status_processing;
+      promptTitle.textContent = L.prompt_processing;
+      promptSub.innerHTML = L.prompt_sub_processing;
+      hintRow.style.display = 'none';
+      micBtn.setAttribute('aria-label', L.mic_processing);    // H10
+    }
+    if (s === 'responded') {
+      micBtn.classList.add('small');
+      caption.className = 'caption';
+      caption.innerHTML = L.caption_responded;
+      statusPill.className = 'pill done';
+      statusPill.textContent = L.status_responded;
+      promptTitle.textContent = L.prompt_responded;
+      promptSub.innerHTML = L.prompt_sub_responded;
+      hintRow.style.display = 'none';
+      setTimeout(() => responseWrap.classList.add('show'), 100);
+      setTimeout(() => document.getElementById('feedback-row').classList.add('show'), 350);
+      micBtn.setAttribute('aria-label', L.mic_responded);     // H10
+    }
+  }
+
+  micBtn.addEventListener('click', () => {
+    if (micBtn.classList.contains('disabled')) return;
+    if (State.micState === 'idle' || State.micState === 'responded') {
+      playMicFlow();
+    } else if (State.micState === 'recording') {
+      // tap during recording -> stop & process
+      setMicState('processing');
+      setTimeout(() => setMicState('responded'), 1600);
+    }
+  });
+
+  function playMicFlow() {
+    navigate('home');
+    setMicState('idle');
+    setTimeout(() => setMicState('recording'), 200);
+    setTimeout(() => setMicState('processing'), 2400);
+    setTimeout(() => setMicState('responded'), 4000);
+  }
+
+  hintRow.querySelectorAll('.hint').forEach(h => {
+    h.addEventListener('click', () => playMicFlow());
+  });
+
+  // ===== Why modal =====
+  function openWhy() {
+    document.getElementById('why-modal').classList.add('open');
+  }
+  function closeWhy() {
+    document.getElementById('why-modal').classList.remove('open');
+  }
+  document.getElementById('why-modal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('why-modal')) closeWhy();
+  });
+  document.querySelector('.sheet').addEventListener('click', (e) => e.stopPropagation());
+
+  // ===== Onboarding =====
+  function openOnboarding() {
+    document.getElementById('onboarding').classList.add('open');
+  }
+  function dismissOnboarding() {
+    document.getElementById('onboarding').classList.remove('open');
+  }
+
+  // ===== Error =====
+  function openError() {
+    document.getElementById('error-screen').classList.add('open');
+  }
+  function closeError() {
+    document.getElementById('error-screen').classList.remove('open');
+  }
+
+  // ===== Chat popover — now routes to full chat screen =====
+  function toggleChat() {
+    navigate('chat');
+  }
+  document.getElementById('fab-home').addEventListener('click', (e) => {
+    e.stopPropagation();
+    navigate('chat');
+  });
+  document.querySelectorAll('.fab').forEach(fab => {
+    fab.addEventListener('click', (e) => e.stopPropagation());
+  });
+  // close legacy popover on outside click (keep for safety)
+  document.getElementById('chat-popover').addEventListener('click', (e) => e.stopPropagation());
+  document.addEventListener('click', () => {
+    document.getElementById('chat-popover').classList.remove('open');
+  });
+
+  // ===== Vote / feedback in Why modal =====
+  const UP_CHIPS = ['Sahi jawaab', 'Clearly explained', 'Helpful scheme', 'Fast response'];
+  const DOWN_CHIPS = ['Galat scheme bataya', 'Meri situation alag hai', 'Aur details chahiye', 'Language samajh nahi aayi'];
+
+  function handleVote(dir) {
+    document.getElementById('vote-up').classList.toggle('active', dir === 'up');
+    document.getElementById('vote-down').classList.toggle('active', dir === 'down');
+    const fb = document.getElementById('vote-feedback');
+    const label = document.getElementById('vf-label');
+    const chips = document.getElementById('vf-chips');
+    const list = dir === 'up' ? UP_CHIPS : DOWN_CHIPS;
+    label.innerHTML = dir === 'up'
+      ? '<span class="hi">Kya achha laga? (optional)</span>'
+      : '<span class="hi">Kya galat laga? Batao</span>';
+    chips.innerHTML = list.map(c =>
+      `<span class="vf-chip" onclick="this.classList.toggle('selected')">${c}</span>`
+    ).join('');
+    fb.classList.add('open');
+  }
+
+  function submitVoteFeedback() {
+    document.getElementById('vote-feedback').classList.remove('open');
+    document.getElementById('vote-up').classList.remove('active');
+    document.getElementById('vote-down').classList.remove('active');
+    const sheet = document.getElementById('why-modal').querySelector('.sheet');
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position:absolute;left:16px;right:16px;bottom:16px;background:#1B2A41;color:#fff;border-radius:12px;padding:12px 16px;font-size:13px;font-weight:600;z-index:99;text-align:center;animation:slidein 0.25s ease';
+    toast.innerHTML = '<span style="font-family:\'Noto Sans Devanagari\',sans-serif">शुक्रिया! </span>Feedback mil gaya 🙏';
+    sheet.appendChild(toast);
+    setTimeout(() => { toast.remove(); closeWhy(); }, 2000);
+  }
+
+  // ===== Speak scheme (TTS stub) =====
+  function speakScheme() {
+    if (!('speechSynthesis' in window)) return;
+    const u = new SpeechSynthesisUtterance("Sukanya Samriddhi Yojana — beti ke bhavishya ke liye saving scheme.");
+    u.rate = 0.95;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+  }
+
+  // ===== Steps logic =====
+  const stepsList = document.getElementById('steps-list');
+  const progressBar = document.getElementById('progress-bar');
+  const stepToast = document.getElementById('step-toast');
+  const toastText = document.getElementById('toast-text');
+  const progressCurrent = document.getElementById('progress-current');
+  const progressName = document.getElementById('progress-name');
+  const progressPct = document.getElementById('progress-pct');
+
+  const STEP_TITLES_HI = [
+    "जन धन खाता",
+    "आधार लिंक",
+    "बैंक में फ़ॉर्म",
+    "फ़ोटो और साइन",
+    "सबमिट और रसीद"
+  ];
+
+  const STEP_DETAILS = {
+    1: { detail: "Apne nazdiki bank mein Jan Dhan account khulwaiye.", est: "20 minute · ek bank visit" },
+    2: { detail: "Apna Aadhaar card lekar bank jaiye aur khaate se link karwaiye. Branch staff aapko ek chhota form denge.", est: "15 minute · ek bank visit" },
+    3: { detail: "Branch se Sukanya Samriddhi ka form lekar bhariye. Maa ya pita guardian ban sakte hain.", est: "30 minute" },
+    4: { detail: "Beti ki recent photo aur guardian ki signature ki zaroorat hai.", est: "10 minute" },
+    5: { detail: "Bharaa hua form aur documents bank ko jamaa karein. Receipt zaroor lein.", est: "15 minute" }
+  };
+
+  let stepStates = ['done', 'current', 'locked', 'locked', 'locked'];
+
+  function renderSteps() {
+    const items = stepsList.querySelectorAll('.step');
+    items.forEach((li, i) => {
+      const state = stepStates[i];
+      li.className = 'step ' + state;
+      const card = li.querySelector('.step-card');
+      const badge = li.querySelector('.badge');
+      const num = i + 1;
+
+      // badge content
+      if (state === 'done') {
+        badge.classList.add('done');
+        badge.classList.remove('current');
+        badge.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+      } else if (state === 'current') {
+        badge.classList.add('current');
+        badge.classList.remove('done');
+        badge.innerHTML = num;
+      } else {
+        badge.classList.remove('done', 'current');
+        badge.innerHTML = num;
+      }
+
+      // step body
+      let title = li.querySelector('.title').textContent.replace(/^[^\u0900-\u097F]*/, ''); // keep hindi
+      const titleHi = li.querySelector('.title').textContent;
+      if (state === 'current') {
+        card.innerHTML = `
+          <div class="head">
+            <span class="title hi">${titleHi}</span>
+            <span class="now-tag">Abhi</span>
+          </div>
+          <p class="detail">${STEP_DETAILS[num].detail}</p>
+          <span class="estimate">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+            Lagbhag <strong>${STEP_DETAILS[num].est.split('·')[0].trim()}</strong>
+          </span>
+          <div class="actions-row">
+            <span class="help-link hi" onclick="event.stopPropagation(); toggleChat();">मदद चाहिए?</span>
+            <button class="start-btn" onclick="event.stopPropagation(); completeCurrentStep();">
+              <span class="hi">पूरा हो गया</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </button>
+          </div>
+        `;
+      } else if (state === 'done') {
+        card.innerHTML = `
+          <div class="head">
+            <span class="title hi">${titleHi}</span>
+            <span class="done-tag">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span class="hi">कर लिया</span>
+            </span>
+          </div>
+        `;
+      } else {
+        card.innerHTML = `
+          <div class="head">
+            <span class="title hi">${titleHi}</span>
+            <span class="lock">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+            </span>
+          </div>
+        `;
+      }
+    });
+
+    // progress
+    const doneCount = stepStates.filter(s => s === 'done').length;
+    const currentIdx = stepStates.indexOf('current');
+    const stepNumDisplay = currentIdx >= 0 ? currentIdx + 1 : (doneCount === 5 ? 5 : doneCount);
+    progressCurrent.textContent = stepNumDisplay;
+    progressName.textContent = currentIdx >= 0 ? STEP_TITLES_HI[currentIdx] : 'Done';
+    const pct = Math.round((doneCount / 5) * 100);
+    progressPct.textContent = pct;
+    progressBar.querySelectorAll('.seg').forEach((seg, i) => {
+      seg.classList.toggle('done', i < doneCount || (i === currentIdx));
+    });
+  }
+
+  function completeCurrentStep() {
+    const currentIdx = stepStates.indexOf('current');
+    if (currentIdx < 0) return;
+    stepStates[currentIdx] = 'done';
+    if (currentIdx + 1 < stepStates.length) {
+      stepStates[currentIdx + 1] = 'current';
+      toastText.textContent = 'Step ' + (currentIdx + 1) + ' pura! Ab step ' + (currentIdx + 2) + ' shuru karein.';
+    } else {
+      toastText.textContent = '🎉 Sab steps pure! Application submit ho gaya.';
+    }
+    renderSteps();
+    stepToast.classList.add('show');
+    setTimeout(() => stepToast.classList.remove('show'), 2800);
+  }
+
+  document.getElementById('docs-row').addEventListener('click', () => {
+    const row = document.getElementById('docs-row');
+    const list = document.getElementById('docs-list');
+    row.classList.toggle('open');
+    list.classList.toggle('open');
+    // H1: Visibility of system status — keep aria-expanded in sync
+    row.setAttribute('aria-expanded', row.classList.contains('open') ? 'true' : 'false');
+  });
+
+  // ===== History Filter =====
+  function filterHistory(period) {
+    document.querySelectorAll('.hf-chip').forEach(c =>
+      c.classList.toggle('active', c.dataset.hfilter === period)
+    );
+    const show = { today: ['today'], week: ['today','week'], all: ['today','week','all'] }[period] || ['today'];
+    document.getElementById('history-list').querySelectorAll('[data-hperiod]').forEach(el => {
+      el.style.display = show.includes(el.dataset.hperiod) ? '' : 'none';
+    });
+  }
+
+  // ===== Chat Engine =====
+  const CHAT_FLOWS = {
+    beti: {
+      userText: 'Beti ke liye saving scheme batao',
+      delay: 1300,
+      response: { type: 'text', text: 'Aapki beti ki umar kya hai?', chips: ['0–10 saal', '10–18 saal', 'Nahin pata'] }
+    },
+    '0–10 saal': {
+      userText: '0–10 saal ki beti hai',
+      delay: 1500,
+      response: { type: 'scheme', name: 'Sukanya Samriddhi Yojana', interest: '8.2% byaj guaranteed', sub: 'Tax-free · Min ₹250/year', cta: 'Apply kaise karein →', chips: ['Aur documents kya chahiye', 'Helpline number', 'Aur schemes dikhao'] }
+    },
+    '10–18 saal': {
+      userText: '10–18 saal ki beti hai',
+      delay: 1400,
+      response: { type: 'scheme', name: 'CBSE Udaan Scheme', interest: 'Free coaching + scholarship', sub: 'Class 11–12 girls · STEM focus', cta: 'Details dekhein →', chips: ['Aur options', 'Helpline number'] }
+    },
+    kisan: {
+      userText: 'Kisan yojana ke baare mein batao',
+      delay: 1200,
+      response: { type: 'scheme', name: 'PM Kisan Samman Nidhi', interest: '₹6,000 / saal', sub: 'Direct bank transfer · 3 installments', cta: 'Apply karein →', chips: ['PM Kisan Credit Card', 'Kisan Maan Dhan Yojana', 'Documents kya chahiye'] }
+    },
+    ration: {
+      userText: 'Ration card ke baare mein',
+      delay: 1100,
+      response: { type: 'list', hi: 'राशन कार्ड के लिए ज़रूरी कागज़:', items: ['Aadhaar card (sabka)', 'Address proof', 'Income certificate', 'Passport-size photo'], chips: ['Form kahan milega', 'Helpline number'] }
+    },
+    health: {
+      userText: 'Ayushman Bharat ke baare mein',
+      delay: 1300,
+      response: { type: 'scheme', name: 'Ayushman Bharat – PMJAY', interest: '₹5 lakh free treatment', sub: '24,000+ empanelled hospitals', cta: 'Eligibility check karein', chips: ['Card kaise banein', 'Hospital list', 'Helpline'] }
+    },
+    ghar: {
+      userText: 'Ghar banane ke liye sarkari help',
+      delay: 1400,
+      response: { type: 'scheme', name: 'PM Awas Yojana (PMAY)', interest: '₹2.67 lakh subsidy', sub: 'Urban + Rural · EWS/LIG families', cta: 'Steps dekhein →', chips: ['Urban ya rural?', 'Documents', 'Eligibility'] }
+    },
+    'Aur schemes dikhao': {
+      userText: 'Aur schemes dikhao',
+      delay: 1000,
+      response: { type: 'text', hi: 'इन योजनाओं में भी eligible ho सकते हैं:', text: 'CBSE Udaan · Ladli Laxmi · Beti Bachao Beti Padhao', chips: ['Beti Bachao details', 'Home screen pe jaayein'] }
+    },
+    'Helpline number': {
+      userText: 'Helpline number batao',
+      delay: 800,
+      response: { type: 'text', hi: '📞 Toll-Free Helpline:', text: '1800-223-040\nSomvar–Shanivaar · 9AM–6PM', chips: ['Dhanyavaad 🙏'] }
+    },
+    'Dhanyavaad 🙏': {
+      userText: 'Dhanyavaad!',
+      delay: 700,
+      response: { type: 'text', hi: 'Bahut bahut dhanyavaad! 🙏', text: 'Kabhi bhi poochhiye — main hamesha hoon.', chips: ['Nayi query karo', 'Beti ke liye scheme', 'Kisan yojana'] }
+    }
+  };
+
+  const DEFAULT_CHIPS = ['बेटी के लिए scheme', 'Kisan yojana', 'राशन कार्ड', 'Ayushman Bharat', 'Ghar ke liye'];
+
+  function chatNow() { return new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}); }
+
+  function appendChatMsg(role, html) {
+    const msgs = document.getElementById('chat-messages');
+    const wrap = document.createElement('div');
+    wrap.className = 'chat-msg ' + role;
+    const botAv = `<div class="cm-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 1 1-3.2-6.4L21 4l-1 3.6A7.95 7.95 0 0 1 21 12Z"/></svg></div>`;
+    const userAv = `<div class="cm-avatar user-av"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>`;
+    wrap.innerHTML = (role === 'user' ? userAv : botAv) + `<div>${html}<div class="chat-ts">${chatNow()}</div></div>`;
+    msgs.appendChild(wrap);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function showTyping() {
+    const msgs = document.getElementById('chat-messages');
+    const wrap = document.createElement('div');
+    wrap.id = 'chat-typing'; wrap.className = 'chat-msg bot';
+    wrap.innerHTML = `<div class="cm-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 1 1-3.2-6.4L21 4l-1 3.6A7.95 7.95 0 0 1 21 12Z"/></svg></div><div class="chat-typing"><span></span><span></span><span></span></div>`;
+    msgs.appendChild(wrap);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function hideTyping() {
+    const el = document.getElementById('chat-typing');
+    if (el) el.remove();
+  }
+
+  function setChatChips(chips) {
+    const sugg = document.getElementById('chat-suggestions');
+    if (!chips || !chips.length) { sugg.innerHTML = ''; return; }
+    sugg.innerHTML = chips.map(c =>
+      `<button class="chat-chip" onclick="sendChip(this,'${c.replace(/'/g,"&#39;")}')">${c}</button>`
+    ).join('');
+  }
+
+  function buildBotBubble(resp) {
+    if (resp.type === 'text') {
+      return `<div class="chat-bubble">${resp.hi ? `<span class="cb-hi">${resp.hi}</span>` : ''}<span class="${resp.hi ? 'cb-en' : ''}" style="${resp.hi ? '' : 'font-size:13px;'}">${resp.text.replace(/\n/g,'<br>')}</span></div>`;
+    }
+    if (resp.type === 'list') {
+      const listHtml = resp.items.map(i => `<li style="padding:2px 0;">${i}</li>`).join('');
+      return `<div class="chat-bubble" style="max-width:260px;">${resp.hi ? `<span class="cb-hi" style="font-size:12px;margin-bottom:6px;display:block;">${resp.hi}</span>` : ''}<ul style="margin:0;padding-left:16px;font-size:12px;color:var(--muted-2);line-height:1.7;">${listHtml}</ul></div>`;
+    }
+    if (resp.type === 'scheme') {
+      return `<div class="chat-bubble" style="max-width:260px;padding:10px 12px;">
+        <span class="cb-en" style="opacity:1;font-weight:700;color:var(--primary);font-size:11px;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px;display:block;">Best match mila!</span>
+        <div class="chat-scheme-mini" onclick="navigate('detail')">
+          <div class="csm-head"><span class="csm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg></span><span class="csm-name">${resp.name}</span></div>
+          <div class="csm-interest">${resp.interest}</div>
+          <div class="csm-sub">${resp.sub}</div>
+          <button class="csm-cta" onclick="event.stopPropagation();navigate('steps')">${resp.cta}</button>
+        </div>
+      </div>`;
+    }
+    return '';
+  }
+
+  function sendChip(btn, key) {
+    btn.classList.add('selected');
+    const flow = CHAT_FLOWS[key];
+    if (!flow) return;
+    setTimeout(() => {
+      appendChatMsg('user', `<div class="chat-bubble">${flow.userText}</div>`);
+      setChatChips([]);
+      showTyping();
+      setTimeout(() => {
+        hideTyping();
+        appendChatMsg('bot', buildBotBubble(flow.response));
+        setChatChips(flow.response.chips || DEFAULT_CHIPS);
+      }, flow.delay);
+    }, 180);
+  }
+
+  function sendChatText() {
+    const inp = document.getElementById('chat-input');
+    const txt = inp.value.trim();
+    if (!txt) return;
+    appendChatMsg('user', `<div class="chat-bubble">${txt}</div>`);
+    inp.value = '';
+    setChatChips([]);
+    showTyping();
+    setTimeout(() => {
+      hideTyping();
+      appendChatMsg('bot', buildBotBubble({ type: 'text', hi: 'Samajh gaya!', text: 'Abhi search kar raha hoon… Ek baar Schemes tab bhi dekh sakte hain.' }));
+      setChatChips(['बेटी के लिए scheme', 'Kisan yojana', 'Helpline number', 'Dhanyavaad 🙏']);
+    }, 1200);
+  }
+
+  function handleChatKey(e) { if (e.key === 'Enter') sendChatText(); }
+
+  function clearChat() {
+    document.getElementById('chat-messages').innerHTML = `
+      <div class="chat-date-div">Today</div>
+      <div class="chat-msg bot">
+        <div class="cm-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 1 1-3.2-6.4L21 4l-1 3.6A7.95 7.95 0 0 1 21 12Z"/></svg></div>
+        <div><div class="chat-bubble"><span class="cb-hi">Namaskar! 🙏</span><span class="cb-en">Chat clear hua. Kuch naya poochhiye!</span></div><div class="chat-ts">${chatNow()}</div></div>
+      </div>`;
+    setChatChips(DEFAULT_CHIPS.map(c => c));
+    document.getElementById('chat-suggestions').innerHTML = `
+      <button class="chat-chip" onclick="sendChip(this,'beti')"><span class="hi">बेटी के लिए scheme</span></button>
+      <button class="chat-chip" onclick="sendChip(this,'kisan')">Kisan yojana</button>
+      <button class="chat-chip" onclick="sendChip(this,'ration')"><span class="hi">राशन कार्ड</span></button>
+      <button class="chat-chip" onclick="sendChip(this,'health')">Ayushman Bharat</button>
+      <button class="chat-chip" onclick="sendChip(this,'ghar')">Ghar ke liye</button>`;
+  }
+
+  // ===== Language init (H7: flexibility — restore saved preference) =====
+  (function initLang() {
+    const saved = localStorage.getItem('vm_lang') || 'hi';
+    currentLang = saved;
+    syncLangBadges();
+    syncLangOptions();
+    if (saved !== 'hi') applyLangToMicState('idle');
+  })();
+
+  // init
+  renderSteps();
+
+  // ===== Service Worker registration (Sprint A Day 1) =====
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .catch(err => console.warn('SW registration failed:', err));
+    });
+  }
+</script>
+
 </body>
 </html>
