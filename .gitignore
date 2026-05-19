@@ -16,3 +16,10 @@ scheme-corpus/schemes/raw/*
 scheme-corpus/schemes/processed/*
 !scheme-corpus/schemes/raw/.gitkeep
 !scheme-corpus/schemes/processed/.gitkeep
+
+# Runtime artifacts from the voice pipeline
+backend/.tmp/
+backend/static/audio/*
+!backend/static/audio/.gitkeep
+backend/sample_hindi.wav
+backend/voice_resp.json

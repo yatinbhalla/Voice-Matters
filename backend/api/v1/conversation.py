@@ -1,9 +1,13 @@
 import structlog
-from fastapi import APIRouter, File, UploadFile
+from fastapi import APIRouter, File, Form, UploadFile
 from pydantic import BaseModel
+
+from services.voice_pipeline import run_voice_pipeline
 
 log = structlog.get_logger()
 router = APIRouter(tags=["conversation"])
+
+MAX_AUDIO_BYTES = 10 * 1024 * 1024  # 10 MB hard ceiling for ~30s clips
 
 
 class ChatRequest(BaseModel):
@@ -16,9 +20,31 @@ class ActionRequest(BaseModel):
 
 
 @router.post("/conversation/{conversation_id}/voice")
-async def post_voice(conversation_id: str, audio: UploadFile = File(...)):
-    log.info("voice_stub", conversation_id=conversation_id, filename=audio.filename)
-    return {"conversation_id": conversation_id, "status": "not_implemented"}
+async def post_voice(
+    conversation_id: str,
+    audio: UploadFile = File(...),
+    language_hint: str = Form("hi"),
+):
+    audio_bytes = await audio.read()
+    if len(audio_bytes) > MAX_AUDIO_BYTES:
+        log.warning(
+            "voice_too_large", conversation_id=conversation_id, bytes=len(audio_bytes)
+        )
+    log.info(
+        "voice_received",
+        conversation_id=conversation_id,
+        filename=audio.filename,
+        content_type=audio.content_type,
+        bytes=len(audio_bytes),
+        language_hint=language_hint,
+    )
+    return await run_voice_pipeline(
+        conversation_id=conversation_id,
+        audio_bytes=audio_bytes,
+        content_type=audio.content_type,
+        filename=audio.filename,
+        language_hint=language_hint,
+    )
 
 
 @router.post("/conversation/{conversation_id}/chat")
