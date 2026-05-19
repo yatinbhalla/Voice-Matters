@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b6e4f" />
+  <link rel="manifest" href="manifest.json" />
+  <title>Sarkari Saathi - Voice Matters</title>
+</head>
+<body>
+  <main>
+    <h1>Sarkari Saathi</h1>
+    <p>Hindi-first voice PWA for government scheme discovery.</p>
+    <p><em>Prototype UI will be wired in Prompt 2.</em></p>
+  </main>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "name": "Sarkari Saathi",
+  "short_name": "Saathi",
+  "description": "Hindi-first voice PWA for government scheme discovery",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0b6e4f",
+  "lang": "hi",
+  "icons": []
+}

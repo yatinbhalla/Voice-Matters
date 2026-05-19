@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+httpx
+tenacity
+structlog
+sqlalchemy
+asyncpg
+alembic
+pinecone-client
+openai
+python-dotenv
+pydantic-settings
+python-multipart
