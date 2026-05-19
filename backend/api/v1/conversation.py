@@ -1,6 +1,6 @@
-from fastapi import APIRouter, UploadFile, File
-from pydantic import BaseModel
 import structlog
+from fastapi import APIRouter, File, UploadFile
+from pydantic import BaseModel
 
 log = structlog.get_logger()
 router = APIRouter(tags=["conversation"])

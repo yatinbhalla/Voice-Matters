@@ -1,4 +1,5 @@
 import os
+
 import structlog
 
 log = structlog.get_logger()

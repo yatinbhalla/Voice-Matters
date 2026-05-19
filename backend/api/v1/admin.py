@@ -1,5 +1,5 @@
-from fastapi import APIRouter
 import structlog
+from fastapi import APIRouter
 
 log = structlog.get_logger()
 router = APIRouter(tags=["admin"])

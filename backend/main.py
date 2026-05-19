@@ -2,9 +2,9 @@ import logging
 import os
 
 import structlog
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
 
 from api.v1 import router as v1_router
 
