@@ -14,8 +14,9 @@ import structlog
 
 from clients.sarvam_client import SarvamClient
 from data.sushila_stub import STUB_RESPONSE_HI, TOP_3_SCHEMES
-from db import SessionLocal
 from models import Telemetry
+from models.db import SessionLocal
+from services import conversation_service
 from services.audio import save_and_normalize
 
 log = structlog.get_logger()
@@ -49,6 +50,14 @@ async def run_voice_pipeline(
     sarvam = SarvamClient()
     pipeline_start = time.perf_counter()
     message_id = uuid.uuid4().hex
+
+    # Ensure the conversation row exists before we append any messages.
+    try:
+        conv = await conversation_service.get_or_create(conversation_id)
+        canonical_conv_id = str(conv.id)
+    except Exception as e:
+        log.warning("conversation_create_failed", error=str(e))
+        canonical_conv_id = conversation_id
 
     # Stage 0: normalize audio (write /tmp/<uuid>.<ext>, transcode if needed)
     norm_start = time.perf_counter()
@@ -136,6 +145,30 @@ async def run_voice_pipeline(
         }
     ]
 
+    # Persist both turns. Fail-soft: if the DB write fails we still return
+    # the envelope so the user gets their answer.
+    persisted_message_id = message_id
+    try:
+        await conversation_service.append_message(
+            canonical_conv_id,
+            role="user",
+            modality="voice",
+            content_text=transcript_hi,
+        )
+        assistant_msg = await conversation_service.append_message(
+            canonical_conv_id,
+            role="assistant",
+            modality="voice",
+            content_text=response_text_hi,
+            content_audio_url=audio_url or None,
+            retrieved_schemes=top_3,
+            sources=sources,
+            confidence="medium",
+        )
+        persisted_message_id = str(assistant_msg.id)
+    except Exception as e:
+        log.warning("message_persist_failed", error=str(e))
+
     return {
         "transcript_hi": transcript_hi,
         "response_text_hi": response_text_hi,
@@ -145,6 +178,6 @@ async def run_voice_pipeline(
         "confidence": "medium",
         "sources": sources,
         "explanations": explanations,
-        "conversation_id": conversation_id,
-        "message_id": message_id,
+        "conversation_id": canonical_conv_id,
+        "message_id": persisted_message_id,
     }

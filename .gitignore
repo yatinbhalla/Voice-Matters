@@ -23,3 +23,6 @@ backend/static/audio/*
 !backend/static/audio/.gitkeep
 backend/sample_hindi.wav
 backend/voice_resp.json
+backend/messages_resp.json
+backend/convs_resp.json
+backend/alembic/versions/__pycache__/

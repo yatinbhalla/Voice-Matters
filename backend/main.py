@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
 
 from api.v1 import router as v1_router  # noqa: E402
-from db import init_db  # noqa: E402
+from models.db import init_db  # noqa: E402
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 (STATIC_DIR / "audio").mkdir(parents=True, exist_ok=True)
@@ -28,6 +28,7 @@ structlog.configure(
 log = structlog.get_logger()
 
 FRONTEND_ORIGIN = os.getenv("FRONTEND_ORIGIN", "http://localhost:8000")
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 
 app = FastAPI(title="Voice Matters - Sarkari Saathi", version="0.1.0")
 
@@ -39,13 +40,24 @@ async def _startup() -> None:
 
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[FRONTEND_ORIGIN],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# In dev, accept any localhost/127.0.0.1 origin so the static web server and
+# the API can run on different ports without CORS drama. Prod stays strict.
+if ENVIRONMENT == "development":
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+else:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[FRONTEND_ORIGIN],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 
 @app.get("/health")

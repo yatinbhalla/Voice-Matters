@@ -1,17 +1,18 @@
 from .base import Base
-from .conversation import Conversation
+from .conversation import Confidence, Conversation, Message, Modality, Role, UserAction
 from .feedback import Feedback
-from .message import Message
 from .scheme_meta import SchemeMeta
 from .telemetry import Telemetry
-from .user_action import UserAction
 
 __all__ = [
     "Base",
+    "Confidence",
     "Conversation",
+    "Feedback",
     "Message",
-    "UserAction",
+    "Modality",
+    "Role",
     "SchemeMeta",
     "Telemetry",
-    "Feedback",
+    "UserAction",
 ]

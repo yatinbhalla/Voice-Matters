@@ -2991,6 +2991,43 @@
     }
   };
 
+  // ===== Mic capture (Sprint A Day 3) =====
+  const Mic = {
+    stream: null,
+    recorder: null,
+    chunks: [],
+
+    async start() {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error('Mic API not supported');
+      }
+      this.stream = await navigator.mediaDevices.getUserMedia({
+        audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true }
+      });
+      this.chunks = [];
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus' : 'audio/webm';
+      this.recorder = new MediaRecorder(this.stream, { mimeType });
+      this.recorder.ondataavailable = (e) => { if (e.data.size) this.chunks.push(e.data); };
+      this.recorder.start();
+      this._timer = setTimeout(() => this.stop(), 30000);
+    },
+
+    async stop() {
+      clearTimeout(this._timer);
+      return new Promise((resolve) => {
+        if (!this.recorder || this.recorder.state === 'inactive') {
+          return resolve(new Blob([], {type: 'audio/webm'}));
+        }
+        this.recorder.onstop = () => {
+          this.stream.getTracks().forEach(t => t.stop());
+          resolve(new Blob(this.chunks, { type: this.recorder.mimeType }));
+        };
+        this.recorder.stop();
+      });
+    }
+  };
+
   // ===== State =====
   const State = {
     screen: 'home',
@@ -3282,23 +3319,73 @@
     }
   }
 
-  micBtn.addEventListener('click', () => {
+  micBtn.addEventListener('click', async () => {
     if (micBtn.classList.contains('disabled')) return;
     if (State.micState === 'idle' || State.micState === 'responded') {
       playMicFlow();
-    } else if (State.micState === 'recording') {
-      // tap during recording -> stop & process
+      return;
+    }
+    if (State.micState === 'recording') {
       setMicState('processing');
-      setTimeout(() => setMicState('responded'), 1600);
+      try {
+        const blob = await Mic.stop();
+        const fd = new FormData();
+        fd.append('audio', blob, 'query.webm');
+        fd.append('language_hint', currentLang);
+        const r = await fetch(
+          `${VM_CONFIG.API_BASE}/conversation/${VM_CONFIG.conversationId}/voice`,
+          { method: 'POST', body: fd }
+        );
+        if (!r.ok) throw new Error('Backend ' + r.status);
+        const data = await r.json();
+        window.__lastResponse = data;
+        document.querySelector('#transcript .hi').textContent =
+          '"' + data.transcript_hi + '"';
+        document.querySelector('#response-card .src').innerHTML =
+          '<span class="dot"></span>' + data.top_3_schemes[0].name_en;
+        document.querySelector('#response-card .answer').innerHTML =
+          '<strong>' + data.top_3_schemes[0].one_line_pitch_hi + '</strong>';
+        document.querySelector('#response-card .footer span:first-child').textContent =
+          'Source - ' + new URL(data.sources[0].url).hostname;
+        if (data.response_audio_url) {
+          // Backend returns a path like /static/audio/<id>.mp3. The page is
+          // served from the web static server on a different port, so prepend
+          // the API origin to keep the audio request on the backend.
+          const apiOrigin = new URL(VM_CONFIG.API_BASE, location.href).origin;
+          const audioSrc = /^https?:\/\//.test(data.response_audio_url)
+            ? data.response_audio_url
+            : apiOrigin + data.response_audio_url;
+          const audio = new Audio(audioSrc);
+          audio.play().catch(e => console.warn('Audio playback failed', e));
+        }
+        setMicState('responded');
+      } catch (err) {
+        console.error('Voice query failed:', err);
+        openError();
+        setMicState('idle');
+      }
     }
   });
 
-  function playMicFlow() {
+  // Cancel during recording: stop the mic, discard the blob, don't send.
+  // The inline onclick on #cancel-processing already calls setMicState('idle');
+  // this listener fires alongside it and releases the mic stream.
+  document.getElementById('cancel-processing')?.addEventListener('click', async () => {
+    if (State.micState === 'recording' || State.micState === 'processing') {
+      try { await Mic.stop(); } catch (e) { console.warn('Mic stop on cancel failed', e); }
+    }
+  });
+
+  async function playMicFlow() {
     navigate('home');
-    setMicState('idle');
-    setTimeout(() => setMicState('recording'), 200);
-    setTimeout(() => setMicState('processing'), 2400);
-    setTimeout(() => setMicState('responded'), 4000);
+    try {
+      setMicState('recording');
+      await Mic.start();
+    } catch (err) {
+      console.error('Mic start failed:', err);
+      showSysToast('Mic permission chahiye - settings mein allow kariye', 3000);
+      setMicState('idle');
+    }
   }
 
   hintRow.querySelectorAll('.hint').forEach(h => {

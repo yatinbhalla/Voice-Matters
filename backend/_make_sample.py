@@ -3,7 +3,6 @@ can POST it to /voice and exercise the full pipeline. Not part of the app."""
 import asyncio
 import base64
 import os
-import subprocess
 import sys
 from pathlib import Path
 
