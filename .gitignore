@@ -13,8 +13,9 @@ venv/
 .DS_Store
 node_modules/
 scheme-corpus/schemes/raw/*
-scheme-corpus/schemes/processed/*
 !scheme-corpus/schemes/raw/.gitkeep
+# Curated processed JSONs (Swaroop's corpus) ARE tracked — keep them in git.
+!scheme-corpus/schemes/processed/*.json
 !scheme-corpus/schemes/processed/.gitkeep
 
 # Runtime artifacts from the voice pipeline
@@ -25,4 +26,5 @@ backend/sample_hindi.wav
 backend/voice_resp.json
 backend/messages_resp.json
 backend/convs_resp.json
+backend/verify_rag.json
 backend/alembic/versions/__pycache__/

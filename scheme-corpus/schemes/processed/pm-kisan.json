@@ -1,0 +1,59 @@
+{
+  "scheme_id": "pm-kisan",
+  "name_hi": "प्रधानमंत्री किसान सम्मान निधि (पीएम-किसान)",
+  "name_en": "Pradhan Mantri Kisan Samman Nidhi (PM-KISAN)",
+  "ministry": "Ministry of Agriculture and Farmers' Welfare",
+  "summary_hi": "खेती-योग्य ज़मीन रखने वाले छोटे किसानों के लिए ₹6,000 साल का सम्मान निधि - तीन किस्तों में सीधे बैंक खाते में।",
+  "source_url": "https://pmkisan.gov.in/",
+  "tags": ["farmer", "income-support", "dbt", "kisan-samman-nidhi"],
+  "chunks": [
+    {
+      "id": "pmkisan-summary",
+      "chunk_type": "summary",
+      "language": "hi-en",
+      "text": "Pradhan Mantri Kisan Samman Nidhi (PM-KISAN) is a central-sector direct income support scheme. Eligible landholding farmer families receive ₹6,000 per year transferred to their bank accounts via DBT in three equal instalments of ₹2,000 every four months. Launched February 2019. Saalana 6000 rupaye kisaan parivar ko teen kishton mein 2000-2000 kar ke seedha bank khaate mein."
+    },
+    {
+      "id": "pmkisan-eligibility",
+      "chunk_type": "eligibility",
+      "language": "hi-en",
+      "text": "PM-KISAN eligibility: All landholding farmer families having cultivable land in their name as per state land records. The 2-hectare ceiling was removed in 2019, so size of holding is not a bar. Not eligible: (a) all institutional landholders, (b) constitutional post-holders, MPs/MLAs/Mayors, (c) serving or retired Group A/B government employees (PSU, autonomous bodies, etc.), (d) professionals like doctors, CAs, engineers practising, (e) income-tax payers, (f) pensioners drawing > ₹10,000/month (excluding multi-tasking staff). Patrata: aap kisaan ho aur kheti yogya zameen aapke naam par ho. Sarkari karmchari, income tax dene wale, 10,000+ pension wale eligible nahin."
+    },
+    {
+      "id": "pmkisan-benefits",
+      "chunk_type": "benefits",
+      "language": "hi-en",
+      "text": "PM-KISAN benefits: ₹6,000 per year in 3 equal instalments of ₹2,000. First instalment (April-July), second (August-November), third (December-March). Money is credited directly to the Aadhaar-seeded bank account via DBT — no middlemen. Faayda: saalana 6000 rupaye, teen kishton mein - April-July, August-November, December-March. Paisa Aadhaar-linked bank khaate mein seedha aata hai, DBT ke through."
+    },
+    {
+      "id": "pmkisan-documents",
+      "chunk_type": "documents_required",
+      "language": "hi-en",
+      "text": "Documents for PM-KISAN registration: (1) Aadhaar card (mandatory). (2) Land ownership records / khasra-khatauni / Patta. (3) Bank account passbook with IFSC, Aadhaar-seeded. (4) Mobile number for OTP. (5) Self-declaration / family-details form. Kagazaat: Aadhaar card zaroori hai, khet ke kagaz (khasra/khatauni), Aadhaar se juda bank khaata aur mobile number."
+    },
+    {
+      "id": "pmkisan-apply",
+      "chunk_type": "application_process",
+      "language": "hi-en",
+      "text": "How to apply for PM-KISAN: (1) Self-register at pmkisan.gov.in → 'New Farmer Registration' tab. Enter Aadhaar and CAPTCHA, mobile OTP. (2) Or visit your local Common Service Centre (CSC) — nominal fee. (3) Or visit the village-level Patwari / Lekhpal / Revenue Officer / Nodal Officer. After data is verified by state, money begins. e-KYC is mandatory: complete via OTP on pmkisan.gov.in (Farmer's Corner → e-KYC) or biometric at CSC. Kaise apply karein: pmkisan.gov.in par khud register karein, ya nazdeeki CSC jayein, ya gaon ke Patwari/Lekhpal ke paas jayein. e-KYC zaroor karwayein warna paisa rukk jata hai."
+    },
+    {
+      "id": "pmkisan-ekyc",
+      "chunk_type": "ekyc_requirement",
+      "language": "hi-en",
+      "text": "e-KYC is MANDATORY for all PM-KISAN beneficiaries to keep receiving instalments. Three options: (1) Aadhaar OTP-based — free on pmkisan.gov.in → Farmers Corner → e-KYC. (2) Biometric at any CSC — ₹15 nominal. (3) Face-authentication via PM-KISAN mobile app — free. If e-KYC is pending the instalment is withheld. e-KYC zaroori hai - bina iske aapki kisht nahin aayegi. Khud pmkisan.gov.in par OTP ke through karen, ya CSC mein biometric karwayein, ya app mein face-auth kar sakte hain."
+    },
+    {
+      "id": "pmkisan-status",
+      "chunk_type": "status_tracking",
+      "language": "hi-en",
+      "text": "Check PM-KISAN payment status: Visit pmkisan.gov.in → Farmers Corner → 'Know Your Status'. Enter your registration number / Aadhaar / account number. You can see all installments, transaction dates and any pending checks (e.g., e-KYC, land seeding, NPCI). Apni kisht ka status pmkisan.gov.in par 'Know Your Status' mein dekh sakte hain — registration number ya Aadhaar daal kar."
+    },
+    {
+      "id": "pmkisan-helpline",
+      "chunk_type": "helpline",
+      "language": "hi-en",
+      "text": "PM-KISAN helpline: 155261 (toll-free) or 011-24300606. Email: pmkisan-ict@gov.in. Website: pmkisan.gov.in. Madad ke liye 155261 par call karein."
+    }
+  ]
+}

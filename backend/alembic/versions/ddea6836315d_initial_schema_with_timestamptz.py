@@ -1,15 +1,16 @@
 """initial schema with timestamptz
 
 Revision ID: ddea6836315d
-Revises: 
+Revises:
 Create Date: 2026-05-20 06:04:52.575685
 
 """
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = 'ddea6836315d'

@@ -5,6 +5,7 @@ raise RuntimeError when SARVAM_API_KEY is missing so callers can fail-soft.
 """
 import base64
 import os
+import re
 
 import httpx
 import structlog
@@ -14,6 +15,11 @@ from tenacity import (
     stop_after_attempt,
     wait_exponential,
 )
+
+# Sarvam-m is a reasoning model: it emits its chain-of-thought inside
+# <think>...</think> before the final answer. We never want that surfaced
+# to the user or pushed into TTS.
+_THINK_TAG_RE = re.compile(r"<think>.*?</think>", flags=re.DOTALL | re.IGNORECASE)
 
 log = structlog.get_logger()
 
@@ -85,7 +91,13 @@ class SarvamClient:
         choices = payload.get("choices") or []
         if not choices:
             return ""
-        return choices[0].get("message", {}).get("content", "")
+        raw = choices[0].get("message", {}).get("content", "")
+        # Strip reasoning blocks; also handle an unterminated <think> if the
+        # model truncated mid-trace.
+        cleaned = _THINK_TAG_RE.sub("", raw)
+        if "<think>" in cleaned:
+            cleaned = cleaned.split("</think>", 1)[-1]
+        return cleaned.strip()
 
     @retry(**_RETRY)
     async def synthesize(

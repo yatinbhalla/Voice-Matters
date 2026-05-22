@@ -6,7 +6,8 @@ structlog
 sqlalchemy
 asyncpg
 alembic
-pinecone-client
+pinecone
+sentence-transformers
 openai
 python-dotenv
 pydantic-settings
