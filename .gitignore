@@ -29,4 +29,6 @@ backend/convs_resp.json
 backend/verify_rag.json
 backend/verify_eligibility.json
 backend/verify_eligibility_10cases.json
+backend/verify_tone.json
+backend/verify_tone_review.md
 backend/alembic/versions/__pycache__/

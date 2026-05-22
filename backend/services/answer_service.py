@@ -8,6 +8,7 @@ mentioned is among the retrieved scheme set. If we detect a *different*
 scheme name that we have in our database but didn't retrieve for this
 query, append a confirmation hint pointing to the helpline.
 """
+import re
 from dataclasses import dataclass
 
 import structlog
@@ -26,12 +27,37 @@ else:
 log = structlog.get_logger()
 
 REFUSAL_HI = (
-    "Iske baare mein mujhe pakka jaankari nahin hai, helpline 14434 par baat kariye"
+    "Achha, samjha - aap is yojana ke baare mein puchh rahe hain.\n"
+    "Jaise aapne kaha, iske baare mein mujhe pakka jaankari nahin hai - "
+    "galat baat batane se behtar hai ki aap sahi jagah se confirm karein.\n"
+    "Sahi jaankari ke liye sarkari helpline aur official portal hi sabse achhi jagah hai.\n"
+    "Helpline 14434 par baat kariye - 11 bhashaon mein madad milti hai. "
+    "Ya apne nazdeeki Common Service Centre (CSC) mein jaa kar puchh lein."
 )
 
 HALLUCINATION_SUFFIX_HI = (
     " Yeh jaankari purani ho sakti hai - helpline par confirm kariye."
 )
+
+# Hard substitution layer: even with prompt rules, Sarvam-m occasionally
+# leaks these English tokens. Belt-and-suspenders sanitizer maps them to
+# the Hindi equivalents the brief specified (process->kaam, etc).
+_JARGON_SUBS = [
+    (re.compile(r"\bprocess\b", re.IGNORECASE), "kaam"),
+    (re.compile(r"\bverification\b", re.IGNORECASE), "jaanch"),
+    (re.compile(r"\bdocumentation\b", re.IGNORECASE), "kaagaz"),
+    (re.compile(r"\bprocedure\b", re.IGNORECASE), "tareeqa"),
+    (re.compile(r"\bpremium\b", re.IGNORECASE), "kisht"),
+    (re.compile(r"\bmaturity\b", re.IGNORECASE), "paisa wapas milne ka samay"),
+]
+
+
+def _sanitize_jargon(text: str) -> str:
+    if not text:
+        return text
+    for pat, replacement in _JARGON_SUBS:
+        text = pat.sub(replacement, text)
+    return text
 
 
 @dataclass
@@ -133,8 +159,9 @@ class AnswerService:
                 refused=True,
             )
 
+        sanitized = _sanitize_jargon(llm_text)
         guarded = _hallucination_guard(
-            llm_text,
+            sanitized,
             retrieved_chunks,
             all_known_scheme_names or [],
         )
