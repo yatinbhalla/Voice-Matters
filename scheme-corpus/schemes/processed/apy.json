@@ -6,6 +6,32 @@
   "summary_hi": "असंगठित मज़दूरों के लिए सरकार-समर्थित पेंशन योजना - 60 साल की उम्र के बाद ₹1,000 से ₹5,000 हर महीने पेंशन।",
   "source_url": "https://www.india.gov.in/spotlight/atal-pension-yojana-apy",
   "tags": ["pension", "unorganised-workers", "pfrda", "retirement"],
+  "eligibility_rules": {
+    "requires_external_verification": false,
+    "rules": [
+      {
+        "field": "age",
+        "op": "between",
+        "value": [18, 40],
+        "reason_hi": "APY ke liye umar 18 se 40 saal ke beech honi chahiye",
+        "ask_hi": "Aapki umar kya hai?"
+      },
+      {
+        "field": "has_aadhaar",
+        "op": "eq",
+        "value": true,
+        "reason_hi": "APY ke liye Aadhaar zaroori hai",
+        "ask_hi": "Kya aapke paas Aadhaar card hai?"
+      },
+      {
+        "field": "has_bank_account",
+        "op": "eq",
+        "value": true,
+        "reason_hi": "APY mein auto-debit ke liye savings bank ya post office khaata zaroori hai",
+        "ask_hi": "Kya aapka savings bank ya post office mein khaata hai?"
+      }
+    ]
+  },
   "chunks": [
     {
       "id": "apy-summary",

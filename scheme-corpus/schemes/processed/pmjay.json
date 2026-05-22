@@ -6,6 +6,26 @@
   "summary_hi": "गरीब परिवारों के लिए ₹5 लाख तक का मुफ्त इलाज - सरकारी और एम्पैनल्ड निजी अस्पतालों में।",
   "source_url": "https://pmjay.gov.in/",
   "tags": ["health", "insurance", "ayushman-bharat", "hospitalization"],
+  "eligibility_rules": {
+    "requires_external_verification": true,
+    "external_verification_hi": "PM-JAY ke liye SECC-2011 list mein parivar ka naam hona zaroori hai - pmjay.gov.in par 'Am I eligible?' check karein ya 14555 par call karein",
+    "rules": [
+      {
+        "field": "has_aadhaar",
+        "op": "eq",
+        "value": true,
+        "reason_hi": "PM-JAY ka Ayushman card banane ke liye Aadhaar zaroori hai",
+        "ask_hi": "Kya aapke paas Aadhaar card hai?"
+      },
+      {
+        "field": "income_monthly_inr",
+        "op": "lte",
+        "value": 25000,
+        "reason_hi": "PM-JAY garib aur vulnerable parivaron ke liye hai (SECC-2011 ke aadhaar par)",
+        "ask_hi": "Aapki maasik aamdani approximately kitni hai?"
+      }
+    ]
+  },
   "chunks": [
     {
       "id": "pmjay-summary",

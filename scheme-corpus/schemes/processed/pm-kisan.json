@@ -6,6 +6,40 @@
   "summary_hi": "खेती-योग्य ज़मीन रखने वाले छोटे किसानों के लिए ₹6,000 साल का सम्मान निधि - तीन किस्तों में सीधे बैंक खाते में।",
   "source_url": "https://pmkisan.gov.in/",
   "tags": ["farmer", "income-support", "dbt", "kisan-samman-nidhi"],
+  "eligibility_rules": {
+    "requires_external_verification": true,
+    "external_verification_hi": "Khet aapke naam par registered hona zaroori hai - khasra/khatauni mein naam check karein aur e-KYC poori karwayein",
+    "rules": [
+      {
+        "field": "occupation",
+        "op": "contains_any",
+        "value": ["farmer", "kisan", "kheti", "agriculture", "किसान", "खेती"],
+        "reason_hi": "PM-KISAN sirf kisaan parivaron ke liye hai",
+        "ask_hi": "Kya aap kheti karte hain ya aapke paas kheti ki zameen hai?"
+      },
+      {
+        "field": "has_aadhaar",
+        "op": "eq",
+        "value": true,
+        "reason_hi": "PM-KISAN ke liye Aadhaar aur e-KYC zaroori hai",
+        "ask_hi": "Kya aapke paas Aadhaar card hai?"
+      },
+      {
+        "field": "has_bank_account",
+        "op": "eq",
+        "value": true,
+        "reason_hi": "PM-KISAN ki kisht Aadhaar-linked bank account mein hi aati hai",
+        "ask_hi": "Kya aapka bank khaata Aadhaar se juda hai?"
+      },
+      {
+        "field": "occupation",
+        "op": "not_contains_any",
+        "value": ["government", "sarkari", "mla", "mp", "mayor", "doctor practising", "engineer practising", "income tax payer"],
+        "reason_hi": "Sarkari karmchari, MP/MLA, practising professionals aur income-tax dene wale PM-KISAN ke liye eligible nahin",
+        "ask_hi": "Aap kya kaam karte hain?"
+      }
+    ]
+  },
   "chunks": [
     {
       "id": "pmkisan-summary",

@@ -27,4 +27,6 @@ backend/voice_resp.json
 backend/messages_resp.json
 backend/convs_resp.json
 backend/verify_rag.json
+backend/verify_eligibility.json
+backend/verify_eligibility_10cases.json
 backend/alembic/versions/__pycache__/

@@ -6,6 +6,39 @@
   "summary_hi": "असंगठित क्षेत्र के मज़दूरों के लिए राष्ट्रीय पहचान पत्र। 2 लाख रुपये का दुर्घटना बीमा मुफ़्त।",
   "source_url": "https://eshram.gov.in/",
   "tags": ["unorganised-workers", "labour", "insurance", "uan"],
+  "eligibility_rules": {
+    "requires_external_verification": false,
+    "rules": [
+      {
+        "field": "age",
+        "op": "between",
+        "value": [16, 59],
+        "reason_hi": "e-Shram ke liye umar 16 se 59 saal ke beech honi chahiye",
+        "ask_hi": "Aapki umar kya hai?"
+      },
+      {
+        "field": "has_aadhaar",
+        "op": "eq",
+        "value": true,
+        "reason_hi": "e-Shram registration ke liye Aadhaar card aur Aadhaar se juda mobile zaroori hai",
+        "ask_hi": "Kya aapke paas Aadhaar card hai?"
+      },
+      {
+        "field": "has_bank_account",
+        "op": "eq",
+        "value": true,
+        "reason_hi": "e-Shram ke liye bank account aur IFSC zaroori hai",
+        "ask_hi": "Kya aapka bank khaata hai?"
+      },
+      {
+        "field": "occupation",
+        "op": "not_contains_any",
+        "value": ["government", "sarkari naukri", "epfo", "esic", "ias", "ips", "minister", "psu employee"],
+        "reason_hi": "Sarkari karmchari, EPFO ya ESIC member e-Shram mein register nahin ho sakte",
+        "ask_hi": "Aap kya kaam karte hain?"
+      }
+    ]
+  },
   "chunks": [
     {
       "id": "eshram-summary",

@@ -22,6 +22,7 @@ from models.db import SessionLocal
 from services import conversation_service
 from services.answer_service import AnswerService
 from services.audio import save_and_normalize
+from services.eligibility_service import EligibilityService
 from services.rag_service import RAGService
 
 log = structlog.get_logger()
@@ -75,6 +76,7 @@ async def run_voice_pipeline(
     sarvam = SarvamClient()
     rag = RAGService()
     answerer = AnswerService(sarvam=sarvam)
+    eligibility = EligibilityService(sarvam=sarvam)
 
     pipeline_start = time.perf_counter()
     message_id = uuid.uuid4().hex
@@ -127,6 +129,20 @@ async def run_voice_pipeline(
     sources = answer.sources
     confidence = answer.confidence
 
+    # Stage 3.5: eligibility check (separate LLM call to extract facts)
+    elig_start = time.perf_counter()
+    eligibility_results: list[dict] = []
+    follow_up_question_hi: str | None = None
+    if retrieved_chunks and not answer.refused:
+        try:
+            results, follow_up_question_hi, _ = await eligibility.check(
+                transcript_hi, retrieved_chunks
+            )
+            eligibility_results = [r.to_dict() for r in results]
+        except Exception as e:
+            log.warning("eligibility_check_failed", error=str(e))
+    elig_ms = _ms_since(elig_start)
+
     # Stage 4: TTS
     tts_start = time.perf_counter()
     audio_filename = f"{uuid.uuid4().hex}.mp3"
@@ -150,12 +166,14 @@ async def run_voice_pipeline(
         stt_ms=stt_ms,
         rag_ms=rag_ms,
         llm_ms=llm_ms,
+        elig_ms=elig_ms,
         tts_ms=tts_ms,
         total_ms=total_ms,
         transcript_chars=len(transcript_hi),
         retrieved=len(retrieved_chunks),
         refused=answer.refused,
         confidence=confidence,
+        eligibility_n=len(eligibility_results),
     )
 
     await _persist_telemetry(
@@ -166,6 +184,7 @@ async def run_voice_pipeline(
             "stt_ms": stt_ms,
             "rag_ms": rag_ms,
             "llm_ms": llm_ms,
+            "elig_ms": elig_ms,
             "tts_ms": tts_ms,
             "total_ms": total_ms,
             "transcript_chars": len(transcript_hi),
@@ -173,6 +192,7 @@ async def run_voice_pipeline(
             "retrieved": len(retrieved_chunks),
             "refused": answer.refused,
             "confidence": confidence,
+            "eligibility_n": len(eligibility_results),
         }
     )
 
@@ -224,6 +244,7 @@ async def run_voice_pipeline(
             retrieved_schemes=top_3_envelope,
             sources=sources,
             confidence=confidence,
+            eligibility_results=eligibility_results,
         )
         persisted_message_id = str(assistant_msg.id)
     except Exception as e:
@@ -234,7 +255,8 @@ async def run_voice_pipeline(
         "response_text_hi": response_text_hi,
         "response_audio_url": audio_url,
         "top_3_schemes": top_3_envelope,
-        "eligibility_results": [],
+        "eligibility_results": eligibility_results,
+        "follow_up_question_hi": follow_up_question_hi,
         "confidence": confidence,
         "sources": sources,
         "explanations": explanations,
