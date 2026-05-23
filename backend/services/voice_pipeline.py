@@ -17,6 +17,7 @@ import structlog
 from sqlalchemy import select
 
 from clients.sarvam_client import SarvamClient
+from data import scheme_corpus
 from models import SchemeMeta, Telemetry
 from models.db import SessionLocal
 from services import conversation_service
@@ -114,7 +115,8 @@ async def run_voice_pipeline(
 
     # Stage 2: RAG retrieval
     rag_start = time.perf_counter()
-    retrieved_chunks = await rag.retrieve(transcript_hi, top_k=5, min_score=0.75)
+    # Let RAGService pick the provider-appropriate default (0.30 local, 0.75 openai).
+    retrieved_chunks = await rag.retrieve(transcript_hi, top_k=5)
     rag_ms = _ms_since(rag_start)
 
     # Stage 3: LLM answer
@@ -212,19 +214,27 @@ async def run_voice_pipeline(
 
     # Frontend currently consumes name_en/one_line_pitch_hi/effort/benefit fields.
     # Adapt the deduped scheme dicts to the legacy envelope shape.
-    top_3_envelope = [
-        {
-            "scheme_id": s["scheme_id"],
-            "name_hi": s["name_hi"],
-            "name_en": s["name_en"],
-            "one_line_pitch_hi": "",
-            "benefit_amount_inr": None,
-            "effort": "low",
-            "source_url": s["source_url"],
-            "match_confidence": s["match_confidence"],
-        }
-        for s in top_schemes[:3]
-    ]
+    # Enrich each top scheme with display fields the schemes-list cards need.
+    # Pulls from /scheme-corpus so we don't drift between display and source
+    # of truth.
+    top_3_envelope = []
+    for s in top_schemes[:3]:
+        corpus = scheme_corpus.get_scheme(s["scheme_id"]) or {}
+        top_3_envelope.append(
+            {
+                "scheme_id": s["scheme_id"],
+                "name_hi": s["name_hi"],
+                "name_en": s["name_en"],
+                "summary_hi": corpus.get("summary_hi", ""),
+                "ministry": corpus.get("ministry"),
+                "tags": corpus.get("tags", []),
+                "one_line_pitch_hi": corpus.get("summary_hi", ""),
+                "benefit_amount_inr": None,  # display layer chooses presentation
+                "effort": "low",
+                "source_url": s["source_url"],
+                "match_confidence": s["match_confidence"],
+            }
+        )
 
     # Persist both turns. Fail-soft.
     persisted_message_id = message_id

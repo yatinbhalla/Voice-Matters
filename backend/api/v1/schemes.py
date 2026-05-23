@@ -8,6 +8,7 @@ from fastapi import APIRouter, HTTPException, Query
 from clients.sarvam_client import SarvamClient
 from models import SchemeExplainCache, SchemeMeta
 from models.db import SessionLocal
+from services.answer_service import _sanitize_jargon
 
 log = structlog.get_logger()
 router = APIRouter(tags=["schemes"])
@@ -87,21 +88,41 @@ async def explain_scheme(
         "summary_hi", ""
     )
 
-    system = (
-        "Aap Sarkari Saathi hain. Niche di gayi scheme ki detail ke aadhaar par "
-        f"{target_sentences} sentence ki Hindi-Roman mein saaf, samjhaane wali explanation "
-        "do. Apni training se yaad rakhi detail mat use karein - sirf niche likha "
-        "context use karein. Numerical figures aur source bilkul wahi rakhein."
-    )
-    prompt = f"Scheme: {data['name_en']}\nContext:\n{context}\n\nAb {length} length ki explanation dein."
+    # For "short" we serve the curated summary_hi directly - no LLM call,
+    # so no jargon contamination and no LLM-failure refusal. Medium/long
+    # still expand via Sarvam-m for natural-language flow.
+    if length == "short":
+        explanation_text_hi = data.get("summary_hi") or ""
+    else:
+        system = (
+            "Aap Sarkari Saathi hain. Niche di gayi scheme ki detail ke aadhaar par "
+            f"{target_sentences} sentence ki saaf, samjhaane wali Hindi-Roman explanation do.\n"
+            "STRICT RULES:\n"
+            "1. Sirf niche diye context ka use karein. Apni training se yaad rakhi detail mat use karein.\n"
+            "2. English jargon BILKUL MAT use karein. Yeh substitution karein:\n"
+            "   process -> kaam | verification -> jaanch | documentation -> kaagaz\n"
+            "   procedure -> tareeqa | premium -> kisht | maturity -> paisa wapas milne ka samay\n"
+            "   eligibility -> patrata | beneficiary -> labharthi\n"
+            "3. Sanskritised words mat use karein. Conversational Hindi-Roman mein likhein "
+            "jaise ki ek dost se baat ho rahi ho.\n"
+            "4. Numerical figures bilkul context jaisi rakhein.\n"
+            "5. Section names jaise '80C' ya 'Section 8' wagairah short form mein likhein.\n"
+        )
+        prompt = f"Scheme: {data['name_en']}\nContext:\n{context}\n\nAb {length} length ki explanation dein."
+        sarvam_for_text = SarvamClient()
+        try:
+            explanation_text_hi = await sarvam_for_text.generate(
+                prompt=prompt, system_prompt=system
+            )
+        except Exception as e:
+            log.error("explain_generate_failed", scheme_id=scheme_id, error=str(e))
+            explanation_text_hi = data.get("summary_hi", "")
+
+    # Belt-and-suspenders: enforce the substitution table even if the LLM
+    # slipped (or if summary_hi happens to contain a jargon word).
+    explanation_text_hi = _sanitize_jargon(explanation_text_hi)
 
     sarvam = SarvamClient()
-    try:
-        explanation_text_hi = await sarvam.generate(prompt=prompt, system_prompt=system)
-    except Exception as e:
-        log.error("explain_generate_failed", scheme_id=scheme_id, error=str(e))
-        explanation_text_hi = data.get("summary_hi", "")
-
     audio_url: str | None = None
     try:
         audio_bytes = await sarvam.synthesize(explanation_text_hi, voice="anushka")
@@ -111,7 +132,9 @@ async def explain_scheme(
     except Exception as e:
         log.warning("explain_tts_failed", scheme_id=scheme_id, error=str(e))
 
-    if SessionLocal is not None:
+    # Only cache rows that HAVE a working audio URL - otherwise we'd serve
+    # a null audio_url to the client forever and force browser-TTS fallback.
+    if SessionLocal is not None and audio_url:
         try:
             async with SessionLocal() as session:
                 cached = SchemeExplainCache(

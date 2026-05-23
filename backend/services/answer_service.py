@@ -27,12 +27,12 @@ else:
 log = structlog.get_logger()
 
 REFUSAL_HI = (
-    "Achha, samjha - aap is yojana ke baare mein puchh rahe hain.\n"
-    "Jaise aapne kaha, iske baare mein mujhe pakka jaankari nahin hai - "
-    "galat baat batane se behtar hai ki aap sahi jagah se confirm karein.\n"
-    "Sahi jaankari ke liye sarkari helpline aur official portal hi sabse achhi jagah hai.\n"
-    "Helpline 14434 par baat kariye - 11 bhashaon mein madad milti hai. "
-    "Ya apne nazdeeki Common Service Centre (CSC) mein jaa kar puchh lein."
+    "अच्छा, समझा — आप इस योजना के बारे में पूछ रहे हैं।\n"
+    "जैसे आपने कहा, इसके बारे में मुझे पक्की जानकारी नहीं है — "
+    "ग़लत बात बताने से बेहतर है कि आप सही जगह से पुष्टि कर लें।\n"
+    "सही जानकारी के लिए सरकारी हेल्पलाइन और सरकारी पोर्टल ही सबसे अच्छी जगह है।\n"
+    "हेल्पलाइन 14434 पर बात कीजिए — 11 भाषाओं में मदद मिलती है। "
+    "या अपने नज़दीकी सेवा केंद्र (CSC) में जाकर पूछ लीजिए।"
 )
 
 HALLUCINATION_SUFFIX_HI = (

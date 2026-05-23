@@ -2630,7 +2630,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 1 1-3.2-6.4L21 4l-1 3.6A7.95 7.95 0 0 1 21 12Z"/><circle cx="9" cy="12" r="1" fill="white" stroke="none"/><circle cx="13" cy="12" r="1" fill="white" stroke="none"/></svg>
         </div>
         <div style="flex:1;">
-          <div class="chat-hdr-name">Sahayak · <span class="hi" style="font-weight:500;font-size:14px;">AI साथी</span></div>
+          <div class="chat-hdr-name">Vaani · <span class="hi" style="font-weight:500;font-size:14px;">AI साथी</span></div>
           <div class="chat-hdr-status"><span class="dot"></span>Online · 24×7 available</div>
         </div>
         <div class="chat-hdr-actions">
@@ -2652,7 +2652,7 @@
           <div>
             <div class="chat-bubble">
               <span class="cb-hi">Namaskar! 🙏</span>
-              <span class="cb-en">Main Sahayak hoon — aapka AI Saathi.<br/>Koi bhi sarkari yojana poochhiye.</span>
+              <span class="cb-en">Main Vaani hoon — aapki AI Saathi.<br/>Koi bhi sarkari yojana poochhiye.</span>
             </div>
             <div class="chat-ts">Now</div>
           </div>
@@ -2712,7 +2712,7 @@
       </button>
       <button class="tab" data-nav="chat">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 1 1-3.2-6.4L21 4l-1 3.6A7.95 7.95 0 0 1 21 12Z"/></svg>
-        Sahayak
+        Vaani
       </button>
     </nav>
 
@@ -2877,7 +2877,7 @@
     <!-- ===== Chatbot popover ===== -->
     <div class="chat-popover" id="chat-popover">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-        <h4 style="margin:0;">Sahayak · AI Saathi</h4>
+        <h4 style="margin:0;">Vaani · AI Saathi</h4>
         <button onclick="toggleChat()" style="width:24px;height:24px;border-radius:6px;border:1px solid var(--line);background:#F0F4F8;color:var(--muted-2);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
@@ -3339,24 +3339,45 @@
         if (!r.ok) throw new Error('Backend ' + r.status);
         const data = await r.json();
         window.__lastResponse = data;
+        // Cache top_3 so the Schemes tab can render the user's results next
+        // time they navigate there.
+        if (Array.isArray(data.top_3_schemes) && data.top_3_schemes.length) {
+          window.__lastTop3 = data.top_3_schemes;
+        }
         document.querySelector('#transcript .hi').textContent =
-          '"' + data.transcript_hi + '"';
-        document.querySelector('#response-card .src').innerHTML =
-          '<span class="dot"></span>' + data.top_3_schemes[0].name_en;
-        document.querySelector('#response-card .answer').innerHTML =
-          '<strong>' + data.top_3_schemes[0].one_line_pitch_hi + '</strong>';
+          '"' + (data.transcript_hi || '') + '"';
+        // The backend may legitimately refuse with empty top_3_schemes
+        // (no good match in corpus, or sensitive-data refusal). Render
+        // the actual response_text_hi in that case instead of crashing.
+        const topScheme = (data.top_3_schemes && data.top_3_schemes[0]) || null;
+        const topSource = (data.sources && data.sources[0]) || null;
+        if (topScheme) {
+          document.querySelector('#response-card .src').innerHTML =
+            '<span class="dot"></span>' + topScheme.name_en;
+          document.querySelector('#response-card .answer').innerHTML =
+            '<strong>' + (data.response_text_hi || topScheme.one_line_pitch_hi || '') + '</strong>';
+        } else {
+          document.querySelector('#response-card .src').innerHTML =
+            '<span class="dot"></span>Sarkari Saathi';
+          document.querySelector('#response-card .answer').innerHTML =
+            '<strong>' + (data.response_text_hi || '') + '</strong>';
+        }
         document.querySelector('#response-card .footer span:first-child').textContent =
-          'Source - ' + new URL(data.sources[0].url).hostname;
+          topSource ? ('Source - ' + new URL(topSource.url).hostname) : 'Source - helpline 14434';
         if (data.response_audio_url) {
           // Backend returns a path like /static/audio/<id>.mp3. The page is
           // served from the web static server on a different port, so prepend
-          // the API origin to keep the audio request on the backend.
+          // the API origin to keep the audio request on the backend. Route
+          // through _currentSpeakAudio so a subsequent scheme-listen tap
+          // can interrupt this mic response (and vice versa).
           const apiOrigin = new URL(VM_CONFIG.API_BASE, location.href).origin;
           const audioSrc = /^https?:\/\//.test(data.response_audio_url)
             ? data.response_audio_url
             : apiOrigin + data.response_audio_url;
-          const audio = new Audio(audioSrc);
-          audio.play().catch(e => console.warn('Audio playback failed', e));
+          _speakReqId++;             // mark this as the latest playback
+          _stopVoiceMattersAudio();
+          _currentSpeakAudio = new Audio(audioSrc);
+          _currentSpeakAudio.play().catch(e => console.warn('Audio playback failed', e));
         }
         setMicState('responded');
       } catch (err) {
@@ -3469,13 +3490,654 @@
     setTimeout(() => { toast.remove(); closeWhy(); }, 2000);
   }
 
-  // ===== Speak scheme (TTS stub) =====
-  function speakScheme() {
-    if (!('speechSynthesis' in window)) return;
-    const u = new SpeechSynthesisUtterance("Sukanya Samriddhi Yojana — beti ke bhavishya ke liye saving scheme.");
-    u.rate = 0.95;
-    speechSynthesis.cancel();
-    speechSynthesis.speak(u);
+  // ===== Schemes-list dynamic render =====
+  // Per-scheme display strings the locked card layout expects. The card
+  // chrome (best/medium/applied badges) stays static; only scheme content
+  // swaps based on the user's last voice query.
+  const SCHEME_DISPLAY = {
+    'sukanya-samriddhi-yojana': {
+      name_en: 'Sukanya Samriddhi Yojana',
+      description_en: 'Savings scheme for the girl child',
+      benefit_amount: '₹1,50,000',
+      benefit_period: ' / year',
+      effort_class: '',
+      effort_label: 'Easy to apply',
+      category: 'SAVINGS · CENTRAL',
+      detail: {
+        name_hi: 'सुकन्या समृद्धि योजना',
+        ministry: 'Ministry of Finance',
+        category_label: 'Finance · Central Govt',
+        source_host: 'india.gov.in',
+        pitch_hi: 'बेटी के भविष्य के लिए बचत खाता।',
+        pitch_en: '8.2% yearly interest, tax-free returns, matures at 21 years.',
+        stats: [
+          { val: '8.2%', lbl: 'Yearly interest' },
+          { val: '₹250', lbl: 'Min / year' },
+          { val: '21 yrs', lbl: 'Maturity' },
+        ],
+        about_hi: 'सुकन्या समृद्धि योजना 10 साल से कम उम्र की बेटियों के लिए है।',
+        about_en: "Open a savings account at any post office or bank in your daughter's name. Deposit ₹250–₹1,50,000 per year. Matures when she turns 21.",
+        benefits: [
+          { head: '8.2% tax-free interest', sub: 'Highest rate among all small savings schemes in India' },
+          { head_hi: 'धारा 80C के तहत टैक्स छूट', sub: 'Up to ₹1.5 lakh deduction under Section 80C per year' },
+          { head: '21-year maturity for daughter', sub: 'Funds released for higher education or marriage' },
+        ],
+      },
+    },
+    'pmjay': {
+      name_en: 'Ayushman Bharat — PMJAY',
+      description_en: 'Health coverage scheme',
+      benefit_amount: '₹5,00,000',
+      benefit_period: ' / family / year',
+      effort_class: 'medium',
+      effort_label: 'Medium',
+      category: 'HEALTH · CENTRAL',
+      detail: {
+        name_hi: 'आयुष्मान भारत — पीएम-जेएवाई',
+        ministry: 'Ministry of Health & Family Welfare',
+        category_label: 'Health · Central Govt',
+        source_host: 'pmjay.gov.in',
+        pitch_hi: 'गरीब परिवारों के लिए मुफ़्त इलाज।',
+        pitch_en: '₹5 lakh per family per year cashless hospitalisation at empanelled hospitals.',
+        stats: [
+          { val: '₹5L', lbl: 'Family / year' },
+          { val: '1,949', lbl: 'Procedures' },
+          { val: '27', lbl: 'Specialties' },
+        ],
+        about_hi: 'पीएम-जेएवाई SECC-2011 के आधार पर गरीब परिवारों को कैशलेस इलाज देता है।',
+        about_en: 'World\'s largest publicly funded health assurance scheme. Identifies beneficiaries from the SECC-2011 database — no fresh enrolment required.',
+        benefits: [
+          { head: '₹5 lakh / family / year cover', sub: 'No cap on family size or age; pre-existing diseases covered from day 1' },
+          { head: 'Cashless at empanelled hospitals', sub: 'Public + private hospitals across India, fully portable' },
+          { head_hi: 'मुफ़्त Ayushman card', sub: 'CSC ya empanelled hospital se banwa sakte hain' },
+        ],
+      },
+    },
+    'pm-kisan': {
+      name_en: 'PM Kisan Samman Nidhi',
+      description_en: 'Income support for farmers',
+      benefit_amount: '₹6,000',
+      benefit_period: ' / year',
+      effort_class: '',
+      effort_label: 'Easy to apply',
+      category: 'AGRICULTURE · CENTRAL',
+      detail: {
+        name_hi: 'प्रधानमंत्री किसान सम्मान निधि',
+        ministry: 'Ministry of Agriculture & Farmers\' Welfare',
+        category_label: 'Agriculture · Central Govt',
+        source_host: 'pmkisan.gov.in',
+        pitch_hi: 'किसान परिवारों को साल का ₹6,000 सीधा खाते में।',
+        pitch_en: '₹6,000 / year in three ₹2,000 instalments via DBT to Aadhaar-linked bank account.',
+        stats: [
+          { val: '₹6,000', lbl: 'Per year' },
+          { val: '3', lbl: 'Instalments' },
+          { val: 'DBT', lbl: 'Direct transfer' },
+        ],
+        about_hi: 'खेती-योग्य ज़मीन रखने वाले छोटे किसानों के लिए सीधी आय सहायता।',
+        about_en: 'All landholding farmer families with cultivable land in their name receive ₹6,000 / year directly via DBT. e-KYC mandatory.',
+        benefits: [
+          { head: '₹6,000 / year direct support', sub: 'Three ₹2,000 instalments every four months' },
+          { head: 'DBT to Aadhaar-linked bank', sub: 'No middlemen; money lands straight in your account' },
+          { head_hi: 'PM-Kisan ऐप se status track', sub: 'pmkisan.gov.in par bhi check kar sakte hain' },
+        ],
+      },
+    },
+    'e-shram': {
+      name_en: 'e-Shram Card',
+      description_en: 'Identity + insurance for unorganised workers',
+      benefit_amount: '₹2,00,000',
+      benefit_period: ' / accident cover',
+      effort_class: '',
+      effort_label: 'Easy to apply',
+      category: 'LABOUR · CENTRAL',
+      detail: {
+        name_hi: 'ई-श्रम कार्ड',
+        ministry: 'Ministry of Labour & Employment',
+        category_label: 'Labour · Central Govt',
+        source_host: 'eshram.gov.in',
+        pitch_hi: 'असंगठित मज़दूरों के लिए राष्ट्रीय पहचान पत्र।',
+        pitch_en: '12-digit lifetime UAN + free ₹2 lakh accidental insurance for the first year.',
+        stats: [
+          { val: '₹2L', lbl: 'Accident cover' },
+          { val: 'UAN', lbl: '12-digit ID' },
+          { val: '16-59', lbl: 'Age range' },
+        ],
+        about_hi: 'ई-श्रम भारत के असंगठित मज़दूरों का राष्ट्रीय डेटाबेस है।',
+        about_en: 'Free self-registration online or via CSC. Issues a lifetime Universal Account Number (UAN) and gives ₹2 lakh accidental death cover (PMSBY) for the first year.',
+        benefits: [
+          { head: '₹2 lakh accidental insurance', sub: 'Free PMSBY cover for the first year' },
+          { head: 'Lifetime UAN', sub: 'Portable national identity number for unorganised workers' },
+          { head_hi: 'मुफ़्त registration', sub: 'eshram.gov.in par khud, ya nazdeeki CSC mein - dono mufat' },
+        ],
+      },
+    },
+    'apy': {
+      name_en: 'Atal Pension Yojana',
+      description_en: 'Monthly pension from age 60',
+      benefit_amount: '₹5,000',
+      benefit_period: ' / month from 60',
+      effort_class: 'medium',
+      effort_label: 'Medium',
+      category: 'PENSION · CENTRAL',
+      detail: {
+        name_hi: 'अटल पेंशन योजना',
+        ministry: 'PFRDA — Ministry of Finance',
+        category_label: 'Pension · Central Govt',
+        source_host: 'npscra.nsdl.co.in',
+        pitch_hi: '60 साल के बाद हर महीने ₹1,000-5,000 की पेंशन।',
+        pitch_en: 'Guaranteed monthly pension between ₹1,000 and ₹5,000 from age 60. Contribution depends on entry age.',
+        stats: [
+          { val: '₹5,000', lbl: 'Max / month' },
+          { val: '18-40', lbl: 'Entry age' },
+          { val: '60+', lbl: 'Pension starts' },
+        ],
+        about_hi: 'अटल पेंशन योजना असंगठित मज़दूरों के लिए सरकार-समर्थित पेंशन है।',
+        about_en: 'Subscriber chooses pension amount (₹1k-5k); auto-debit from bank account. Pension continues to spouse on death. Government-guaranteed corpus.',
+        benefits: [
+          { head: 'Guaranteed ₹1,000-5,000 pension', sub: 'Monthly pension for life from age 60' },
+          { head: 'Spouse pension on death', sub: 'Same pension continues to spouse for life' },
+          { head_hi: 'Auto-debit from bank', sub: 'Aadhaar-linked savings account se monthly cut hota hai' },
+        ],
+      },
+    },
+  };
+
+  // Snapshot of cards 1 & 2 markup so we can restore the prototype default
+  // when there's no top_3 yet (cold reload of the schemes page).
+  const _schemeCardsContainer = document.querySelector('#screen-schemes .scheme-list, #screen-schemes .stage, #screen-schemes');
+
+  function _updateCard(card, scheme_id) {
+    const d = SCHEME_DISPLAY[scheme_id];
+    if (!d) return;
+    const nameEl = card.querySelector('.scheme-name');
+    if (nameEl) nameEl.textContent = d.name_en;
+    const enEl = card.querySelector('.scheme-en');
+    if (enEl) enEl.textContent = d.description_en;
+    const amountEl = card.querySelector('.benefit .amount');
+    if (amountEl) {
+      // Preserve the inner "/ year" span styling by rebuilding
+      amountEl.innerHTML = d.benefit_amount +
+        '<span style="font-size:12px; color:#8896A6; font-weight:500;">' +
+        d.benefit_period + '</span>';
+    }
+    const effortEl = card.querySelector('.effort');
+    if (effortEl) {
+      effortEl.className = 'effort' + (d.effort_class ? ' ' + d.effort_class : '');
+      // Preserve the dot span structure
+      const dotHtml = '<span class="dot"></span>';
+      effortEl.innerHTML = dotHtml + d.effort_label;
+    }
+    // Re-wire Listen + Go for this scheme
+    const listenBtn = card.querySelector('.btn-outline');
+    if (listenBtn) {
+      listenBtn.onclick = (e) => { e.stopPropagation(); speakScheme(scheme_id); };
+    }
+    const goBtn = card.querySelector('.btn-filled[data-nav="detail"], [data-nav="detail"]');
+    if (goBtn) {
+      goBtn.setAttribute('data-scheme', scheme_id);
+      // The card itself also navigates; tracking handled below.
+    }
+    if (card.dataset.nav === 'detail') {
+      // Replace any existing click listener that hardcoded a scheme by adding
+      // a new one that updates _currentDetailSchemeId.
+      card.addEventListener('click', () => {
+        _currentDetailSchemeId = scheme_id;
+      });
+    }
+  }
+
+  // ===== Dynamic Detail page render =====
+  function _renderDetailPage(schemeId) {
+    const d = (SCHEME_DISPLAY[schemeId] || {}).detail;
+    if (!d) return;
+    const $detail = document.getElementById('screen-detail');
+    if (!$detail) return;
+
+    // Hero
+    const catTag = $detail.querySelector('.det-cat-tag');
+    if (catTag) {
+      // preserve the inner <svg> + add the new text
+      const svgEl = catTag.querySelector('svg');
+      catTag.innerHTML = '';
+      if (svgEl) catTag.appendChild(svgEl);
+      catTag.appendChild(document.createTextNode(' ' + d.category_label));
+    }
+    const nameHi = $detail.querySelector('.det-name-hi');
+    if (nameHi) nameHi.textContent = d.name_hi;
+    const nameEn = $detail.querySelector('.det-name-en');
+    if (nameEn) nameEn.textContent = (SCHEME_DISPLAY[schemeId].name_en || '') + ' · ' + d.ministry;
+    const pitch = $detail.querySelector('.det-pitch');
+    if (pitch) {
+      pitch.innerHTML = '<span class="hi">' + d.pitch_hi + '</span> ' +
+        '<span style="font-family:\'Inter\',sans-serif; color:var(--muted-2);">' + d.pitch_en + '</span>';
+    }
+    // Official-source row: just update the host label.
+    const officialRow = $detail.querySelector('.det-official-row');
+    if (officialRow) {
+      const spans = officialRow.querySelectorAll('span');
+      // structure: [.det-tick] strong [.det-dot] <span>host</span> [.det-dot] <span>updated</span>
+      spans.forEach(sp => {
+        if (sp.classList.contains('det-tick') || sp.classList.contains('det-dot')) return;
+        if (sp.textContent.includes('.') || sp.textContent.includes('gov')) {
+          sp.textContent = d.source_host;
+        }
+      });
+    }
+
+    // Stats strip
+    const stats = $detail.querySelectorAll('.det-stat');
+    stats.forEach((stat, i) => {
+      if (!d.stats[i]) return;
+      const val = stat.querySelector('.det-stat-val');
+      const lbl = stat.querySelector('.det-stat-lbl');
+      if (val) val.textContent = d.stats[i].val;
+      if (lbl) lbl.textContent = d.stats[i].lbl;
+    });
+
+    // About
+    const desc = $detail.querySelector('.det-desc');
+    if (desc) {
+      desc.innerHTML = '<span class="hi">' + d.about_hi + '</span> ' + d.about_en;
+    }
+
+    // Benefits list
+    const benefitItems = $detail.querySelectorAll('.det-benefit-item');
+    benefitItems.forEach((item, i) => {
+      const b = d.benefits[i];
+      if (!b) {
+        item.style.display = 'none';
+        return;
+      }
+      item.style.display = '';
+      const head = item.querySelector('.det-benefit-head');
+      const sub = item.querySelector('.det-benefit-sub');
+      if (head) {
+        if (b.head_hi) {
+          head.className = 'det-benefit-head hi';
+          head.textContent = b.head_hi;
+        } else {
+          head.className = 'det-benefit-head';
+          head.textContent = b.head || '';
+        }
+      }
+      if (sub) sub.textContent = b.sub || '';
+    });
+  }
+
+  // ===== Dynamic Steps page render (uses /api/v1/schemes/{id}/apply-steps) =====
+  function _parseDocsFromText(text) {
+    if (!text) return [];
+    // Match patterns like "(1) Aadhaar card", "(2) Bank passbook with IFSC..."
+    const docs = [];
+    const re = /\((\d+)\)\s*([^.()]+?)(?=\s*\(\d+\)|\.\s|\.$|$)/g;
+    let m;
+    while ((m = re.exec(text)) !== null) {
+      const item = m[2].trim().replace(/[,.]+$/, '');
+      if (item) docs.push(item);
+      if (docs.length >= 8) break;
+    }
+    return docs;
+  }
+
+  function _truncate(s, n) {
+    if (!s) return '';
+    return s.length > n ? s.slice(0, n).trim() + '…' : s;
+  }
+
+  async function _renderStepsPage(schemeId) {
+    try {
+      const r = await fetch(`${VM_CONFIG.API_BASE}/schemes/${schemeId}/apply-steps`);
+      if (!r.ok) return;
+      const data = await r.json();
+      const steps = data.steps || [];
+
+      // Header h2: real scheme name
+      const h2 = document.querySelector('#screen-steps .steps-head-extra h2');
+      if (h2) h2.textContent = data.name_en || schemeId;
+
+      // Populate mutable globals so renderSteps() picks up fresh content
+      STEP_TITLES_HI = steps.map(s => s.title_hi);
+      STEP_DETAILS = {};
+      steps.forEach((s, i) => {
+        STEP_DETAILS[i + 1] = {
+          detail: _truncate(s.body_hi || '', 280),
+          est: '',
+        };
+      });
+
+      // Fresh visit: reset to Step 1 = current, all others locked, no progress
+      stepStates = ['current', 'locked', 'locked', 'locked', 'locked'];
+
+      // Update the .title text inside each .step li so renderSteps() reads
+      // the new title from the DOM. Strip the 'hi' class since the apply-
+      // steps API returns Hindi-Roman titles, not Devanagari.
+      const stepItems = document.querySelectorAll('#screen-steps .steps .step');
+      stepItems.forEach((stepEl, i) => {
+        const step = steps[i];
+        if (!step) return;
+        const title = stepEl.querySelector('.title');
+        if (title) {
+          title.classList.remove('hi');
+          title.textContent = step.title_hi;
+        }
+      });
+
+      // Docs row: parse documents_required text (step 2's body_hi) into a
+      // short list + chip summary. Falls back gracefully if parsing finds 0.
+      const docsStep = steps[1];
+      const docs = docsStep ? _parseDocsFromText(docsStep.body_hi) : [];
+      const docsSummary = document.querySelector('#docs-row .text .s');
+      if (docsSummary) {
+        if (docs.length) {
+          const preview = docs.slice(0, 4).map(d => d.split(/[\/(]/)[0].trim()).join(', ');
+          docsSummary.textContent = docs.length + ' documents · ' + _truncate(preview, 60);
+        } else {
+          docsSummary.textContent = 'See step 2 for documents';
+        }
+      }
+      const docsList = document.querySelector('#docs-list ul');
+      if (docsList) {
+        if (docs.length) {
+          docsList.innerHTML = docs.map(d =>
+            '<li class="missing"><span class="check"></span>' + _esc(_truncate(d, 90)) + '</li>'
+          ).join('');
+        } else {
+          docsList.innerHTML = '<li class="missing"><span class="check"></span>' +
+            _esc(_truncate(docsStep ? docsStep.body_hi : 'Documents details in step 2', 160)) + '</li>';
+        }
+      }
+
+      // Re-render the progress bar + step cards using the freshly-loaded data.
+      if (typeof renderSteps === 'function') renderSteps();
+    } catch (e) {
+      console.warn('renderSteps failed', e);
+    }
+  }
+
+  // ===== Dynamic History page render (uses /api/v1/conversations) =====
+  function _esc(s) {
+    return String(s || '').replace(/[&<>"']/g, c =>
+      ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function _formatTime(iso) {
+    if (!iso) return '';
+    try {
+      const d = new Date(iso);
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch (e) { return ''; }
+  }
+
+  function _badgeMarkup(badge) {
+    const map = {
+      answered: '<span class="hist-badge answered">✓ Answered</span>',
+      saved:    '<span class="hist-badge saved">📌 Saved</span>',
+      applied:  '<span class="hist-badge applied">▶ Applied</span>',
+      in_progress: '<span class="hist-badge applied">▶ In progress</span>',
+    };
+    return map[badge] || map.answered;
+  }
+
+  function _historyEntryHtml(s, periodKey) {
+    const time = _formatTime(s.timestamp);
+    const schemeName = s.last_scheme_name || 'Sarkari Saathi';
+    return (
+      '<div class="hist-entry" data-hperiod="' + periodKey + '" data-scheme="' + _esc(s.last_scheme_id || '') + '">' +
+      '  <div class="hist-time-row">' +
+      '    <span class="hist-time"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>' + _esc(time) + '</span>' +
+           _badgeMarkup(s.badge) +
+      '  </div>' +
+      '  <div class="hist-query">' +
+      '    <span class="q-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></span>' +
+      '    <span class="hi">"' + _esc(s.last_user_query_hi || '') + '"</span>' +
+      '  </div>' +
+      (s.last_scheme_id ?
+      ('  <div class="hist-result">' +
+      '    <span class="r-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></span>' +
+      '    <div><div class="r-name">' + _esc(schemeName) + '</div><div class="r-sub">' + _esc((SCHEME_DISPLAY[s.last_scheme_id] || {}).description_en || '') + '</div></div>' +
+      '    <span class="r-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>' +
+      '  </div>') : '') +
+      '</div>'
+    );
+  }
+
+  function _periodSeparator(label, periodKey) {
+    return (
+      '<div class="hist-sep" data-hperiod="' + periodKey + '">' +
+      '  <span class="sep-line"></span>' +
+      '  <span class="sep-label">' + _esc(label) + '</span>' +
+      '  <span class="sep-line"></span>' +
+      '</div>'
+    );
+  }
+
+  async function _renderHistoryPage() {
+    try {
+      const r = await fetch(`${VM_CONFIG.API_BASE}/conversations`);
+      if (!r.ok) return;
+      const data = await r.json();
+      const list = document.getElementById('history-list');
+      if (!list) return;
+      const parts = [];
+      if ((data.today || []).length) {
+        parts.push(_periodSeparator('Aaj · Today', 'today'));
+        data.today.forEach(s => parts.push(_historyEntryHtml(s, 'today')));
+      }
+      if ((data.week || []).length) {
+        parts.push(_periodSeparator('Pichla Hapta · This Week', 'week'));
+        data.week.forEach(s => parts.push(_historyEntryHtml(s, 'week')));
+      }
+      if ((data.all || []).length) {
+        parts.push(_periodSeparator('Sab Purane · Older', 'all'));
+        data.all.forEach(s => parts.push(_historyEntryHtml(s, 'all')));
+      }
+      if (!parts.length) {
+        list.innerHTML = '<div style="text-align:center; padding:32px; color:var(--muted);">' +
+          '<span class="hi">Abhi tak koi history nahin hai.</span><br/>' +
+          '<span style="font-size:13px;">Mic ya chat se ek query karein - yahan dikh jayegi.</span></div>';
+        return;
+      }
+      list.innerHTML = parts.join('\n');
+      // Re-apply current filter so the just-rendered entries respect Today/Week/All
+      if (typeof filterHistory === 'function') {
+        const activeChip = document.querySelector('#screen-history .hf-chip.active');
+        if (activeChip) filterHistory(activeChip.dataset.hfilter);
+      }
+      // Wire each entry to jump into the matching scheme detail.
+      list.querySelectorAll('.hist-entry').forEach(entry => {
+        const sid = entry.dataset.scheme;
+        if (!sid) return;
+        entry.style.cursor = 'pointer';
+        entry.addEventListener('click', () => {
+          _currentDetailSchemeId = sid;
+          navigate('detail');
+        });
+      });
+    } catch (e) {
+      console.warn('renderHistory failed', e);
+    }
+  }
+
+  // Monkey-patch navigate() so each screen refreshes from live data.
+  (function _hookNavigate() {
+    if (typeof navigate !== 'function') return;
+    const _origNav = navigate;
+    window.navigate = function(target) {
+      _origNav(target);
+      try {
+        if (target === 'schemes' && window.__lastTop3) {
+          _renderSchemesFromTop3(window.__lastTop3);
+        } else if (target === 'detail') {
+          _renderDetailPage(_currentDetailSchemeId);
+        } else if (target === 'steps') {
+          _renderStepsPage(_currentDetailSchemeId);
+        } else if (target === 'history') {
+          _renderHistoryPage();
+        }
+      } catch (e) { console.warn('navigate hook render failed', target, e); }
+    };
+  })();
+
+  function _renderSchemesFromTop3(top3) {
+    if (!Array.isArray(top3) || top3.length === 0) return;
+    const cards = document.querySelectorAll('#screen-schemes article.card');
+    // Cards 1 (primary) and 2 (secondary) share the same shape -- safe to swap.
+    // Card 3 ("applied" PM-Kisan) is left as the mock applied-state demo.
+    const swappable = Math.min(cards.length, top3.length, 2);
+    for (let i = 0; i < swappable; i++) {
+      const card = cards[i];
+      const sid = top3[i].scheme_id;
+      _updateCard(card, sid);
+    }
+    // Update the screen header subtitle "3 schemes mile" to match count.
+    const head = document.querySelector('#screen-schemes .head-eyebrow + h2, #screen-schemes h2');
+    if (head && head.textContent.trim().toLowerCase().includes('scheme')) {
+      head.textContent = top3.length + ' schemes mile';
+    }
+  }
+
+  // ===== Speak scheme (Sarvam Bulbul via backend /explain) =====
+  // Map the scheme-name text in the locked design to the scheme_id our
+  // backend corpus uses. Keeps the HTML untouched.
+  const SCHEME_NAME_TO_ID = {
+    'sukanya samriddhi yojana': 'sukanya-samriddhi-yojana',
+    'ayushman bharat — pmjay': 'pmjay',
+    'ayushman bharat - pmjay': 'pmjay',
+    'ayushman bharat pmjay': 'pmjay',
+    'pm kisan samman nidhi': 'pm-kisan',
+    'pradhan mantri kisan samman nidhi': 'pm-kisan',
+    'atal pension yojana': 'apy',
+    'apy': 'apy',
+    'e-shram': 'e-shram',
+    'e shram': 'e-shram',
+  };
+
+  // Detail page is currently a static Sukanya layout; default to that.
+  let _currentDetailSchemeId = 'sukanya-samriddhi-yojana';
+  let _currentSpeakAudio = null;
+  // Monotonic request id so concurrent speakScheme calls discard stale results.
+  let _speakReqId = 0;
+
+  // Stop ANY voice-matters playback (Sarvam Bulbul Audio elements + browser
+  // speech-synth fallback). Called whenever a new speak request starts so
+  // overlapping voices can't pile up.
+  function _stopVoiceMattersAudio() {
+    if (_currentSpeakAudio) {
+      try { _currentSpeakAudio.pause(); _currentSpeakAudio.currentTime = 0; }
+      catch (e) { /* ignore */ }
+      _currentSpeakAudio = null;
+    }
+    if ('speechSynthesis' in window) {
+      try { speechSynthesis.cancel(); } catch (e) { /* ignore */ }
+    }
+  }
+
+  async function speakScheme(schemeId) {
+    schemeId = schemeId || _currentDetailSchemeId || 'sukanya-samriddhi-yojana';
+    const myReq = ++_speakReqId;
+    _stopVoiceMattersAudio();
+    try {
+      const apiOrigin = new URL(VM_CONFIG.API_BASE, location.href).origin;
+      const r = await fetch(
+        `${VM_CONFIG.API_BASE}/schemes/${schemeId}/explain?length=short`
+      );
+      // A newer tap has superseded us while we were waiting on the network.
+      if (myReq !== _speakReqId) return;
+      if (!r.ok) throw new Error('explain ' + r.status);
+      const data = await r.json();
+      if (myReq !== _speakReqId) return;
+      if (data.explanation_audio_url) {
+        const src = /^https?:\/\//.test(data.explanation_audio_url)
+          ? data.explanation_audio_url
+          : apiOrigin + data.explanation_audio_url;
+        // One more freshness check just before we create the Audio object.
+        if (myReq !== _speakReqId) return;
+        _stopVoiceMattersAudio();
+        _currentSpeakAudio = new Audio(src);
+        _currentSpeakAudio.play().catch(e => console.warn('explain audio play failed', e));
+      } else if (data.explanation_text_hi && 'speechSynthesis' in window) {
+        if (myReq !== _speakReqId) return;
+        const u = new SpeechSynthesisUtterance(data.explanation_text_hi);
+        u.rate = 0.9;
+        speechSynthesis.speak(u);
+      }
+    } catch (err) {
+      console.warn('speakScheme failed', err);
+      showSysToast('Audio nahin chal raha - thodi der mein dobara koshish karein', 2400);
+    }
+  }
+
+  // Re-bind each card's Listen button so it speaks ITS scheme (not the
+  // hardcoded Sukanya line). The inline onclick is left in place; this
+  // listener simply overrides the call site to pass the scheme_id.
+  function _wireSchemeCardListeners() {
+    document.querySelectorAll('article.card').forEach(card => {
+      const nameEl = card.querySelector('.scheme-name');
+      if (!nameEl) return;
+      const key = nameEl.textContent.trim().toLowerCase();
+      const schemeId = SCHEME_NAME_TO_ID[key];
+      if (!schemeId) return;
+      // Listen button inside this card.
+      const listenBtn = card.querySelector('.btn-outline');
+      if (listenBtn) {
+        listenBtn.onclick = (e) => {
+          e.stopPropagation();
+          speakScheme(schemeId);
+        };
+      }
+      // Track which scheme the user opened so the detail page can speak it.
+      const goBtn = card.querySelector('.btn-filled[data-nav="detail"], [data-nav="detail"]');
+      if (goBtn) {
+        goBtn.addEventListener('click', () => {
+          _currentDetailSchemeId = schemeId;
+        });
+      }
+      // Tapping the card itself also navigates to detail; track scheme too.
+      if (card.dataset.nav === 'detail') {
+        card.addEventListener('click', () => {
+          _currentDetailSchemeId = schemeId;
+        });
+      }
+    });
+  }
+  _wireSchemeCardListeners();
+
+  // Detail page: Listen + Save buttons (locked HTML, JS-only wiring).
+  const detListenBtn = document.querySelector('.det-listen-btn');
+  if (detListenBtn) {
+    detListenBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      speakScheme(_currentDetailSchemeId);
+    });
+  }
+
+  const detSaveBtn = document.querySelector('.det-save-btn');
+  if (detSaveBtn) {
+    detSaveBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const wasSaved = detSaveBtn.classList.toggle('saved');
+      const svg = detSaveBtn.querySelector('svg');
+      if (svg) svg.setAttribute('fill', wasSaved ? 'currentColor' : 'none');
+      showSysToast(
+        wasSaved ? 'Scheme save kar liya' : 'Save hata diya',
+        1800
+      );
+      try {
+        await fetch(
+          `${VM_CONFIG.API_BASE}/conversation/${VM_CONFIG.conversationId}/action`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              scheme_id: _currentDetailSchemeId,
+              action: wasSaved ? 'saved' : 'unsaved',
+            }),
+          }
+        );
+      } catch (err) {
+        console.warn('save action failed', err);
+      }
+    });
   }
 
   // ===== Steps logic =====
@@ -3487,7 +4149,8 @@
   const progressName = document.getElementById('progress-name');
   const progressPct = document.getElementById('progress-pct');
 
-  const STEP_TITLES_HI = [
+  // Mutable so _renderStepsPage can swap titles/details per scheme.
+  let STEP_TITLES_HI = [
     "जन धन खाता",
     "आधार लिंक",
     "बैंक में फ़ॉर्म",
@@ -3495,7 +4158,7 @@
     "सबमिट और रसीद"
   ];
 
-  const STEP_DETAILS = {
+  let STEP_DETAILS = {
     1: { detail: "Apne nazdiki bank mein Jan Dhan account khulwaiye.", est: "20 minute · ek bank visit" },
     2: { detail: "Apna Aadhaar card lekar bank jaiye aur khaate se link karwaiye. Branch staff aapko ek chhota form denge.", est: "15 minute · ek bank visit" },
     3: { detail: "Branch se Sukanya Samriddhi ka form lekar bhariye. Maa ya pita guardian ban sakte hain.", est: "30 minute" },
@@ -3503,7 +4166,8 @@
     5: { detail: "Bharaa hua form aur documents bank ko jamaa karein. Receipt zaroor lein.", est: "15 minute" }
   };
 
-  let stepStates = ['done', 'current', 'locked', 'locked', 'locked'];
+  // Fresh visit defaults to Step 1 = current, all others locked.
+  let stepStates = ['current', 'locked', 'locked', 'locked', 'locked'];
 
   function renderSteps() {
     const items = stepsList.querySelectorAll('.step');
