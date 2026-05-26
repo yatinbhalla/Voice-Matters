@@ -128,8 +128,12 @@ def _bucket_for(ts: datetime, now: datetime) -> str:
 
 def _badge_from_actions(actions: list[UserAction], has_response: bool) -> str:
     action_names = {a.action for a in actions}
-    if "applied" in action_names:
+    # Completion wins over everything else.
+    if "applied_completed" in action_names or "applied" in action_names:
         return "applied"
+    # Anyone partway through the apply flow is in_progress.
+    if "step_completed" in action_names or "applied_started" in action_names:
+        return "in_progress"
     if "saved" in action_names:
         return "saved"
     if "in_progress" in action_names:

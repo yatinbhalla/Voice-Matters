@@ -3979,73 +3979,11 @@
     return s.length > n ? s.slice(0, n).trim() + '…' : s;
   }
 
-  async function _renderStepsPage(schemeId) {
-    try {
-      const r = await fetch(`${VM_CONFIG.API_BASE}/schemes/${schemeId}/apply-steps`);
-      if (!r.ok) return;
-      const data = await r.json();
-      const steps = data.steps || [];
-
-      // Header h2: real scheme name
-      const h2 = document.querySelector('#screen-steps .steps-head-extra h2');
-      if (h2) h2.textContent = data.name_en || schemeId;
-
-      // Populate mutable globals so renderSteps() picks up fresh content
-      STEP_TITLES_HI = steps.map(s => s.title_hi);
-      STEP_DETAILS = {};
-      steps.forEach((s, i) => {
-        STEP_DETAILS[i + 1] = {
-          detail: _truncate(s.body_hi || '', 280),
-          est: '',
-        };
-      });
-
-      // Fresh visit: reset to Step 1 = current, all others locked, no progress
-      stepStates = ['current', 'locked', 'locked', 'locked', 'locked'];
-
-      // Update the .title text inside each .step li so renderSteps() reads
-      // the new title from the DOM. Strip the 'hi' class since the apply-
-      // steps API returns Hindi-Roman titles, not Devanagari.
-      const stepItems = document.querySelectorAll('#screen-steps .steps .step');
-      stepItems.forEach((stepEl, i) => {
-        const step = steps[i];
-        if (!step) return;
-        const title = stepEl.querySelector('.title');
-        if (title) {
-          title.classList.remove('hi');
-          title.textContent = step.title_hi;
-        }
-      });
-
-      // Docs row: parse documents_required text (step 2's body_hi) into a
-      // short list + chip summary. Falls back gracefully if parsing finds 0.
-      const docsStep = steps[1];
-      const docs = docsStep ? _parseDocsFromText(docsStep.body_hi) : [];
-      const docsSummary = document.querySelector('#docs-row .text .s');
-      if (docsSummary) {
-        if (docs.length) {
-          const preview = docs.slice(0, 4).map(d => d.split(/[\/(]/)[0].trim()).join(', ');
-          docsSummary.textContent = docs.length + ' documents · ' + _truncate(preview, 60);
-        } else {
-          docsSummary.textContent = 'See step 2 for documents';
-        }
-      }
-      const docsList = document.querySelector('#docs-list ul');
-      if (docsList) {
-        if (docs.length) {
-          docsList.innerHTML = docs.map(d =>
-            '<li class="missing"><span class="check"></span>' + _esc(_truncate(d, 90)) + '</li>'
-          ).join('');
-        } else {
-          docsList.innerHTML = '<li class="missing"><span class="check"></span>' +
-            _esc(_truncate(docsStep ? docsStep.body_hi : 'Documents details in step 2', 160)) + '</li>';
-        }
-      }
-
-      // Re-render the progress bar + step cards using the freshly-loaded data.
-      if (typeof renderSteps === 'function') renderSteps();
-    } catch (e) {
-      console.warn('renderSteps failed', e);
+  // Backward-compat shim: anything that referenced the Day 9 _renderStepsPage
+  // now routes through openApplyForScheme (declared later in this script).
+  function _renderStepsPage(schemeId) {
+    if (typeof openApplyForScheme === 'function' && schemeId) {
+      return openApplyForScheme(schemeId);
     }
   }
 
@@ -4163,7 +4101,12 @@
         if (target === 'schemes') {
           renderSchemes();
         } else if (target === 'steps') {
-          _renderStepsPage(_currentDetailSchemeId);
+          // openApplyForScheme drives this. Skip when it's already running
+          // (it called navigate itself) or when we have no scheme to show.
+          if (!_openApplyInFlight && _currentDetailSchemeId
+              && typeof openApplyForScheme === 'function') {
+            openApplyForScheme(_currentDetailSchemeId);
+          }
         } else if (target === 'history') {
           _renderHistoryPage();
         }
@@ -4305,29 +4248,21 @@
   }
   _wireSchemeCardListeners();
 
-  // Detail page: tapping "आवेदन करें · How to Apply" marks the scheme as
-  // applied (adds to localStorage.vm_applied) AND POSTs action='applied'
-  // for the conversation. The existing data-nav="steps" handler still runs
-  // and navigates to the steps page.
+  // Detail page: tapping "आवेदन करें · How to Apply" hands off to
+  // openApplyForScheme, which fetches /apply-steps, hydrates progress
+  // from localStorage, POSTs action='applied_started' (first open only),
+  // then navigates to the Steps screen. stopImmediatePropagation prevents
+  // the data-nav="steps" delegated handler from also firing.
   const detApplyBtn = document.querySelector('.det-apply-btn');
   if (detApplyBtn) {
     detApplyBtn.addEventListener('click', (e) => {
       e.stopPropagation();
+      e.stopImmediatePropagation();
       const sid = _currentDetailSchemeId;
-      if (!sid) return;
-      _markSchemeApplied(sid);
-      // Persist to user_actions table - fire and forget.
-      try {
-        fetch(
-          `${VM_CONFIG.API_BASE}/conversation/${VM_CONFIG.conversationId}/action`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ scheme_id: sid, action: 'applied' }),
-          }
-        ).catch(err => console.warn('apply action POST failed', err));
-      } catch (err) { /* ignore */ }
-    });
+      if (sid && typeof openApplyForScheme === 'function') {
+        openApplyForScheme(sid);
+      }
+    }, true);  // capture phase so we win the race against the document-level data-nav delegate
   }
 
   // Detail page: Listen + Save buttons (locked HTML, JS-only wiring).
@@ -4377,36 +4312,80 @@
   const progressName = document.getElementById('progress-name');
   const progressPct = document.getElementById('progress-pct');
 
-  // Mutable so _renderStepsPage can swap titles/details per scheme.
-  let STEP_TITLES_HI = [
-    "जन धन खाता",
-    "आधार लिंक",
-    "बैंक में फ़ॉर्म",
-    "फ़ोटो और साइन",
-    "सबमिट और रसीद"
-  ];
+  // ===== Generic apply-steps state =====
+  // currentApplyScheme holds the /api/v1/schemes/{id}/apply-steps response
+  // (scheme_id, name_en, name_hi, source_url, steps[]). stepStates is a
+  // parallel array of 'done' | 'current' | 'locked', rebuilt by
+  // openApplyForScheme() for each scheme the user opens.
+  let currentApplyScheme = null;
+  let stepStates = [];
 
-  let STEP_DETAILS = {
-    1: { detail: "Apne nazdiki bank mein Jan Dhan account khulwaiye.", est: "20 minute · ek bank visit" },
-    2: { detail: "Apna Aadhaar card lekar bank jaiye aur khaate se link karwaiye. Branch staff aapko ek chhota form denge.", est: "15 minute · ek bank visit" },
-    3: { detail: "Branch se Sukanya Samriddhi ka form lekar bhariye. Maa ya pita guardian ban sakte hain.", est: "30 minute" },
-    4: { detail: "Beti ki recent photo aur guardian ki signature ki zaroorat hai.", est: "10 minute" },
-    5: { detail: "Bharaa hua form aur documents bank ko jamaa karein. Receipt zaroor lein.", est: "15 minute" }
-  };
+  function _progressKey(schemeId) { return 'vm_progress_' + schemeId; }
+  function _refKey(schemeId)      { return 'vm_ref_' + schemeId; }
 
-  // Fresh visit defaults to Step 1 = current, all others locked.
-  let stepStates = ['current', 'locked', 'locked', 'locked', 'locked'];
+  function _loadProgress(schemeId, stepCount) {
+    try {
+      const raw = localStorage.getItem(_progressKey(schemeId));
+      if (raw) {
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr) && arr.length === stepCount) return arr;
+      }
+    } catch (e) { /* fall through */ }
+    const out = new Array(stepCount).fill('locked');
+    if (stepCount > 0) out[0] = 'current';
+    return out;
+  }
+  function _saveProgress(schemeId) {
+    if (!schemeId || !Array.isArray(stepStates)) return;
+    try { localStorage.setItem(_progressKey(schemeId), JSON.stringify(stepStates)); }
+    catch (e) { /* storage full */ }
+  }
+  function _postAction(schemeId, action, extra) {
+    try {
+      const body = Object.assign({ scheme_id: schemeId, action: action }, extra || {});
+      return fetch(
+        `${VM_CONFIG.API_BASE}/conversation/${VM_CONFIG.conversationId}/action`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+      ).catch(err => console.warn('action POST failed', action, err));
+    } catch (e) { /* ignore */ }
+  }
 
   function renderSteps() {
-    const items = stepsList.querySelectorAll('.step');
-    items.forEach((li, i) => {
-      const state = stepStates[i];
+    if (!currentApplyScheme || !Array.isArray(currentApplyScheme.steps)) return;
+    const steps = currentApplyScheme.steps;
+    const total = steps.length;
+
+    // Ensure #steps-list has exactly `total` <li> items.
+    const liItems = Array.from(stepsList.querySelectorAll('.step'));
+    while (liItems.length < total) {
+      const li = document.createElement('li');
+      li.className = 'step locked';
+      li.dataset.step = String(liItems.length + 1);
+      li.innerHTML = '<span class="badge"><span class="num">' + (liItems.length + 1) + '</span></span><div class="step-card"></div>';
+      stepsList.appendChild(li);
+      liItems.push(li);
+    }
+    while (liItems.length > total) liItems.pop().remove();
+
+    // Ensure #progress-bar has exactly `total` <span class="seg"> children.
+    const segItems = Array.from(progressBar.querySelectorAll('.seg'));
+    while (segItems.length < total) {
+      const seg = document.createElement('span');
+      seg.className = 'seg';
+      progressBar.appendChild(seg);
+      segItems.push(seg);
+    }
+    while (segItems.length > total) segItems.pop().remove();
+
+    liItems.forEach((li, i) => {
+      const state = stepStates[i] || 'locked';
+      const stepData = steps[i] || {};
+      const titleHi = stepData.title_hi || ('Step ' + (i + 1));
       li.className = 'step ' + state;
       const card = li.querySelector('.step-card');
       const badge = li.querySelector('.badge');
       const num = i + 1;
 
-      // badge content
       if (state === 'done') {
         badge.classList.add('done');
         badge.classList.remove('current');
@@ -4420,77 +4399,182 @@
         badge.innerHTML = num;
       }
 
-      // step body
-      let title = li.querySelector('.title').textContent.replace(/^[^\u0900-\u097F]*/, ''); // keep hindi
-      const titleHi = li.querySelector('.title').textContent;
       if (state === 'current') {
-        card.innerHTML = `
-          <div class="head">
-            <span class="title hi">${titleHi}</span>
-            <span class="now-tag">Abhi</span>
-          </div>
-          <p class="detail">${STEP_DETAILS[num].detail}</p>
-          <span class="estimate">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
-            Lagbhag <strong>${STEP_DETAILS[num].est.split('·')[0].trim()}</strong>
-          </span>
-          <div class="actions-row">
-            <span class="help-link hi" onclick="event.stopPropagation(); toggleChat();">मदद चाहिए?</span>
-            <button class="start-btn" onclick="event.stopPropagation(); completeCurrentStep();">
-              <span class="hi">पूरा हो गया</span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            </button>
-          </div>
-        `;
+        const detail = _truncate(stepData.body_hi || '', 260);
+        card.innerHTML =
+          '<div class="head">' +
+          '  <span class="title">' + _esc(titleHi) + '</span>' +
+          '  <span class="now-tag">Abhi</span>' +
+          '</div>' +
+          (detail ? '<p class="detail">' + _esc(detail) + '</p>' : '') +
+          '<div class="actions-row">' +
+          '  <span class="help-link hi" onclick="event.stopPropagation(); helpForCurrentStep();">मदद चाहिए?</span>' +
+          '  <button class="start-btn" onclick="event.stopPropagation(); completeCurrentStep();">' +
+          '    <span class="hi">पूरा हो गया</span>' +
+          '    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
+          '  </button>' +
+          '</div>';
       } else if (state === 'done') {
-        card.innerHTML = `
-          <div class="head">
-            <span class="title hi">${titleHi}</span>
-            <span class="done-tag">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              <span class="hi">कर लिया</span>
-            </span>
-          </div>
-        `;
+        card.innerHTML =
+          '<div class="head">' +
+          '  <span class="title">' + _esc(titleHi) + '</span>' +
+          '  <span class="done-tag">' +
+          '    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
+          '    <span class="hi">कर लिया</span>' +
+          '  </span>' +
+          '</div>';
       } else {
-        card.innerHTML = `
-          <div class="head">
-            <span class="title hi">${titleHi}</span>
-            <span class="lock">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-            </span>
-          </div>
-        `;
+        card.innerHTML =
+          '<div class="head">' +
+          '  <span class="title">' + _esc(titleHi) + '</span>' +
+          '  <span class="lock">' +
+          '    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>' +
+          '  </span>' +
+          '</div>';
       }
     });
 
-    // progress
+    // Progress text
     const doneCount = stepStates.filter(s => s === 'done').length;
     const currentIdx = stepStates.indexOf('current');
-    const stepNumDisplay = currentIdx >= 0 ? currentIdx + 1 : (doneCount === 5 ? 5 : doneCount);
+    const stepNumDisplay = currentIdx >= 0 ? currentIdx + 1 : (doneCount === total ? total : doneCount);
     progressCurrent.textContent = stepNumDisplay;
-    progressName.textContent = currentIdx >= 0 ? STEP_TITLES_HI[currentIdx] : 'Done';
-    const pct = Math.round((doneCount / 5) * 100);
-    progressPct.textContent = pct;
+    progressName.textContent = currentIdx >= 0
+      ? ((steps[currentIdx] && steps[currentIdx].title_hi) || ('Step ' + (currentIdx + 1)))
+      : 'Done';
+    progressPct.textContent = total ? Math.round((doneCount / total) * 100) : 0;
     progressBar.querySelectorAll('.seg').forEach((seg, i) => {
       seg.classList.toggle('done', i < doneCount || (i === currentIdx));
     });
   }
 
+  function _generateRefNumber() {
+    return 'VM-' + Math.floor(10000 + Math.random() * 90000);
+  }
+
   function completeCurrentStep() {
+    if (!currentApplyScheme) return;
+    const sid = currentApplyScheme.scheme_id;
     const currentIdx = stepStates.indexOf('current');
     if (currentIdx < 0) return;
     stepStates[currentIdx] = 'done';
-    if (currentIdx + 1 < stepStates.length) {
-      stepStates[currentIdx + 1] = 'current';
-      toastText.textContent = 'Step ' + (currentIdx + 1) + ' pura! Ab step ' + (currentIdx + 2) + ' shuru karein.';
-    } else {
-      toastText.textContent = '🎉 Sab steps pure! Application submit ho gaya.';
+    const total = stepStates.length;
+    const nextIdx = currentIdx + 1;
+    if (nextIdx < total) {
+      stepStates[nextIdx] = 'current';
+      toastText.textContent = 'Step ' + (currentIdx + 1) + ' pura! Ab step ' + (nextIdx + 1) + ' shuru karein.';
     }
+    _saveProgress(sid);
+    _postAction(sid, 'step_completed', { step_number: currentIdx + 1 });
     renderSteps();
     stepToast.classList.add('show');
     setTimeout(() => stepToast.classList.remove('show'), 2800);
+
+    if (nextIdx >= total) {
+      _markSchemeApplied(sid);
+      let refNo;
+      try {
+        refNo = localStorage.getItem(_refKey(sid));
+        if (!refNo) {
+          refNo = _generateRefNumber();
+          localStorage.setItem(_refKey(sid), refNo);
+        }
+      } catch (e) { refNo = _generateRefNumber(); }
+      _postAction(sid, 'applied_completed', { reference_number: refNo });
+      toastText.innerHTML = '🎉 Application submit ho gaya! Bahut badhiya<br/>' +
+        '<span style="font-size:11px;opacity:0.85;">Ref: ' + _esc(refNo) + '</span>';
+      stepToast.classList.add('show');
+      setTimeout(() => {
+        stepToast.classList.remove('show');
+        navigate('schemes');
+      }, 2200);
+    }
   }
+
+  function helpForCurrentStep() {
+    if (!currentApplyScheme) { navigate('chat'); return; }
+    const idx = stepStates.indexOf('current');
+    if (idx < 0) { navigate('chat'); return; }
+    const title = (currentApplyScheme.steps[idx] || {}).title_hi || ('Step ' + (idx + 1));
+    const msg = 'Step ' + (idx + 1) + ' - ' + title + ' pe atak gaye';
+    navigate('chat');
+    const input = document.getElementById('chat-input');
+    if (input) {
+      input.value = msg;
+      try { input.focus(); } catch (e) { /* ignore */ }
+    }
+  }
+
+  // openApplyForScheme(scheme_id) - fetch /apply-steps, hydrate localStorage
+  // progress (default fresh state), update header + docs-row + step list +
+  // progress bar, then navigate to the Steps screen. First open POSTs
+  // action='applied_started' so the History badge flips to in_progress.
+  //
+  // _openApplyInFlight blocks recursion: openApplyForScheme calls
+  // navigate('steps'), which triggers the navigate hook, which calls
+  // _renderStepsPage, which would call openApplyForScheme again.
+  let _openApplyInFlight = false;
+  async function openApplyForScheme(scheme_id) {
+    if (!scheme_id || _openApplyInFlight) return;
+    // If we already have this scheme loaded, just re-render and navigate.
+    if (currentApplyScheme && currentApplyScheme.scheme_id === scheme_id
+        && Array.isArray(stepStates) && stepStates.length) {
+      _openApplyInFlight = true;
+      try { renderSteps(); navigate('steps'); }
+      finally { _openApplyInFlight = false; }
+      return;
+    }
+    _openApplyInFlight = true;
+    try {
+      const r = await fetch(`${VM_CONFIG.API_BASE}/schemes/${scheme_id}/apply-steps`);
+      if (!r.ok) throw new Error('apply-steps ' + r.status);
+      currentApplyScheme = await r.json();
+    } catch (e) {
+      console.warn('openApplyForScheme failed', e);
+      _openApplyInFlight = false;
+      return;
+    }
+    _currentDetailSchemeId = scheme_id;
+    const steps = (currentApplyScheme && currentApplyScheme.steps) || [];
+    const isFirstOpen = !localStorage.getItem(_progressKey(scheme_id));
+    stepStates = _loadProgress(scheme_id, steps.length);
+
+    // Header h2 -> scheme name
+    const h2 = document.querySelector('#screen-steps .steps-head-extra h2');
+    if (h2) h2.textContent = currentApplyScheme.name_en || scheme_id;
+
+    // Docs row + list from step 2's body (documents_required)
+    const docsStep = steps[1];
+    const docs = docsStep ? _parseDocsFromText(docsStep.body_hi || '') : [];
+    const docsSummary = document.querySelector('#docs-row .text .s');
+    if (docsSummary) {
+      if (docs.length) {
+        const preview = docs.slice(0, 4).map(d => d.split(/[\/(]/)[0].trim()).join(', ');
+        docsSummary.textContent = docs.length + ' documents · ' + _truncate(preview, 60);
+      } else {
+        docsSummary.textContent = 'See step 2 for documents';
+      }
+    }
+    const docsList = document.querySelector('#docs-list ul');
+    if (docsList) {
+      if (docs.length) {
+        docsList.innerHTML = docs.map(d =>
+          '<li class="missing"><span class="check"></span>' + _esc(_truncate(d, 90)) + '</li>'
+        ).join('');
+      } else {
+        docsList.innerHTML = '<li class="missing"><span class="check"></span>' +
+          _esc(_truncate(docsStep ? docsStep.body_hi : 'Documents details in step 2', 160)) + '</li>';
+      }
+    }
+
+    renderSteps();
+    if (isFirstOpen) {
+      _postAction(scheme_id, 'applied_started');
+    }
+    try { navigate('steps'); }
+    finally { _openApplyInFlight = false; }
+  }
+  window.openApplyForScheme = openApplyForScheme;
 
   document.getElementById('docs-row').addEventListener('click', () => {
     const row = document.getElementById('docs-row');
@@ -4683,8 +4767,36 @@
     if (saved !== 'hi') applyLangToMicState('idle');
   })();
 
-  // init
-  renderSteps();
+  // init: scan localStorage for in-progress apply flows so the History
+  // screen can show their badges as soon as the user opens it. Each
+  // vm_progress_<scheme_id> entry holds the step-state array.
+  (function _hydrateInProgress() {
+    try {
+      const inProgress = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key || !key.startsWith('vm_progress_')) continue;
+        let arr = null;
+        try { arr = JSON.parse(localStorage.getItem(key) || '[]'); }
+        catch (e) { continue; }
+        if (!Array.isArray(arr) || !arr.length) continue;
+        const sid = key.slice('vm_progress_'.length);
+        const done = arr.filter(s => s === 'done').length;
+        const total = arr.length;
+        const status = (done === total) ? 'applied' : (done > 0 ? 'in_progress' : 'started');
+        inProgress.push({
+          scheme_id: sid,
+          done: done,
+          total: total,
+          status: status,
+          ref: (function() { try { return localStorage.getItem(_refKey(sid)); } catch (e) { return null; } })(),
+        });
+      }
+      window.__inProgressSchemes = inProgress;
+    } catch (e) { window.__inProgressSchemes = []; }
+  })();
+  // renderSteps() is no-op until currentApplyScheme is set by
+  // openApplyForScheme(). Safe to skip at init.
 
   // ===== Service Worker registration (Sprint A Day 1) =====
   if ('serviceWorker' in navigator) {
