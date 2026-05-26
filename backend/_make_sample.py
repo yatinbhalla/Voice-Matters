@@ -12,7 +12,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 OUT = Path(__file__).resolve().parent / "sample_hindi.wav"
-TXT = "Meri beti ke liye kaun si yojana achi hai?"
+# Devanagari script transcribes far more reliably through Saaras than
+# transliterated Hindi-Roman (which it often mis-hears as English).
+TXT = "मेरी बेटी के लिए सुकन्या समृद्धि योजना के बारे में बताइए।"
 
 
 async def main() -> None:

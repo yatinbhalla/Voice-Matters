@@ -1,4 +1,5 @@
 import json
+import re
 import uuid
 from pathlib import Path
 
@@ -6,7 +7,7 @@ import structlog
 from fastapi import APIRouter, HTTPException, Query
 
 from clients.sarvam_client import SarvamClient
-from models import SchemeExplainCache, SchemeMeta
+from models import SchemeExplainCache
 from models.db import SessionLocal
 from services.answer_service import _sanitize_jargon
 
@@ -26,33 +27,122 @@ def _load_scheme_json(scheme_id: str) -> dict | None:
         return json.load(f)
 
 
+def _parse_docs(text: str) -> list[str]:
+    """Pull document names from "(1) X. (2) Y. (3) Z." style text.
+
+    The frontend has a similar pattern, but we tolerate parentheses INSIDE
+    the description (e.g. "(1) Aadhaar card (mandatory). (2) ...") by
+    splitting on numbered markers instead of using a character-class regex
+    that excludes parens.
+    """
+    if not text:
+        return []
+    parts = re.split(r"\((\d+)\)\s*", text)
+    # parts = [pre, "1", "Aadhaar card (mandatory). ", "2", "Land ...", ...]
+    out: list[str] = []
+    for i in range(1, len(parts) - 1, 2):
+        body = parts[i + 1] or ""
+        # Take just the first sentence so the chip text stays short.
+        first = re.split(r"\.\s|\.$", body, maxsplit=1)[0]
+        first = first.strip().rstrip(",.;")
+        if first:
+            out.append(first)
+        if len(out) >= 8:
+            break
+    return out
+
+
+# Strip a leading "Benefits of X:" / "PM-JAY benefits:" label so the first
+# benefit isn't just that label.
+_BENEFIT_LABEL_RE = re.compile(r"^[^:]{4,80}benefits[^:]{0,40}:\s*", re.IGNORECASE)
+
+
+def _split_into_benefits(text: str, limit: int = 3) -> list[dict]:
+    """Split a 'benefits' chunk body into 1-`limit` items with head + sub.
+
+    Each item is one sentence; we don't try to invent a sub-headline because
+    that previously broke "₹6,000" on the comma. Keep head short with a
+    soft 90-char cap.
+    """
+    if not text:
+        return []
+    text = _BENEFIT_LABEL_RE.sub("", text, count=1)
+    pieces = [p.strip() for p in re.split(r"\.\s+|;\s+", text) if p.strip()]
+    out: list[dict] = []
+    for piece in pieces:
+        if len(out) >= limit:
+            break
+        # Prefer an em-dash / en-dash / hyphenated split (e.g.
+        # "Faayda: kam se kam 250 - 8.2% byaaj") - but only when the head
+        # stays short. Otherwise keep the whole sentence as the head.
+        clause_split = re.split(r"\s+[-—]\s+|:\s+", piece, maxsplit=1)
+        if len(clause_split) == 2 and len(clause_split[0]) < 80:
+            head, sub = clause_split[0], clause_split[1]
+        else:
+            head, sub = piece[:90].rstrip(),  piece[90:].strip()
+        out.append({"head": head.strip(), "sub": sub.strip()})
+    return out
+
+
+def _category_label(data: dict) -> str:
+    """Best-effort human label derived from tags + ministry."""
+    tags = data.get("tags") or []
+    primary = (tags[0] if tags else "").replace("-", " ").title()
+    if not primary:
+        primary = "Government Scheme"
+    return f"{primary} · Central Govt"
+
+
+def _scheme_response(data: dict) -> dict:
+    chunks = data.get("chunks") or []
+    chunks_by_type = {c.get("chunk_type"): c for c in chunks}
+
+    benefits = _split_into_benefits((chunks_by_type.get("benefits") or {}).get("text", ""))
+    documents_needed = _parse_docs(
+        (chunks_by_type.get("documents_required") or {}).get("text", "")
+    )
+
+    rules = (data.get("eligibility_rules") or {}).get("rules", [])
+    eligibility_rules = [
+        {"field": r.get("field"), "text_hi": r.get("reason_hi", "")}
+        for r in rules
+        if r.get("reason_hi")
+    ]
+
+    source_url = data.get("source_url", "")
+    return {
+        # New richer surface
+        "scheme_id": data["scheme_id"],
+        "name_en": data["name_en"],
+        "name_hi": data["name_hi"],
+        "ministry": data.get("ministry"),
+        "summary_hi": data.get("summary_hi"),
+        "source_url": source_url,
+        "source_urls": [source_url] if source_url else [],
+        "helpline_phone": data.get("helpline_phone"),
+        "tags": data.get("tags", []),
+        "category_label": _category_label(data),
+        "benefits": benefits,
+        "eligibility_rules": eligibility_rules,
+        "documents_needed": documents_needed,
+        # Legacy short fields kept for backward compatibility
+        "name": data["name_en"],
+        "summary": data.get("summary_hi"),
+    }
+
+
 @router.get("/schemes/{scheme_id}")
 async def get_scheme(scheme_id: str):
-    """Top-level scheme metadata. Pull from schemes_meta if present, else
-    fall back to the source JSON corpus."""
-    if SessionLocal is not None:
-        async with SessionLocal() as session:
-            row = await session.get(SchemeMeta, scheme_id)
-            if row is not None:
-                return {
-                    "scheme_id": row.scheme_id,
-                    "name": row.name,
-                    "ministry": row.ministry,
-                    "summary": row.summary,
-                    "source_url": row.source_url,
-                    "tags": row.tags or [],
-                }
+    """Scheme metadata + structured fields the detail page needs.
+
+    Corpus JSON under /scheme-corpus is the source of truth here; schemes_meta
+    only holds the short-form Postgres copy and is missing the chunks /
+    eligibility_rules / helpline. So we go to the JSON directly.
+    """
     data = _load_scheme_json(scheme_id)
     if data is None:
         raise HTTPException(404, detail=f"scheme '{scheme_id}' not found")
-    return {
-        "scheme_id": data["scheme_id"],
-        "name": data["name_en"],
-        "ministry": data.get("ministry"),
-        "summary": data.get("summary_hi"),
-        "source_url": data.get("source_url"),
-        "tags": data.get("tags", []),
-    }
+    return _scheme_response(data)
 
 
 @router.get("/schemes/{scheme_id}/explain")

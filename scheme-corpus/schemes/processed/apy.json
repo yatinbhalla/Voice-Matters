@@ -5,6 +5,7 @@
   "ministry": "Ministry of Finance (PFRDA)",
   "summary_hi": "असंगठित मज़दूरों के लिए सरकार-समर्थित पेंशन योजना - 60 साल की उम्र के बाद ₹1,000 से ₹5,000 हर महीने पेंशन।",
   "source_url": "https://www.india.gov.in/spotlight/atal-pension-yojana-apy",
+  "helpline_phone": "1800-110-708",
   "tags": ["pension", "unorganised-workers", "pfrda", "retirement"],
   "eligibility_rules": {
     "requires_external_verification": false,

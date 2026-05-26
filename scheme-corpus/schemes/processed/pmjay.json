@@ -5,6 +5,7 @@
   "ministry": "Ministry of Health and Family Welfare (National Health Authority)",
   "summary_hi": "गरीब परिवारों के लिए ₹5 लाख तक का मुफ्त इलाज - सरकारी और एम्पैनल्ड निजी अस्पतालों में।",
   "source_url": "https://pmjay.gov.in/",
+  "helpline_phone": "14555",
   "tags": ["health", "insurance", "ayushman-bharat", "hospitalization"],
   "eligibility_rules": {
     "requires_external_verification": true,

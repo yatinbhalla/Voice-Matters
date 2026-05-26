@@ -20,7 +20,7 @@ import structlog
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from models import Conversation, Message, UserAction
+from models import Conversation, Feedback, Message, UserAction
 from models.db import SessionLocal
 
 log = structlog.get_logger()
@@ -191,6 +191,31 @@ async def list_conversations_grouped() -> dict[str, list[dict]]:
     for ts, summary in summaries:
         grouped[_bucket_for(ts, now)].append(summary)
     return grouped
+
+
+async def record_feedback(
+    conversation_id: str,
+    *,
+    rating: int | None = None,
+    comment: str | None = None,
+) -> Feedback:
+    """Persist a rating/comment for the given conversation.
+
+    The Feedback FK is SET NULL on conversation delete, but we still ensure
+    the conversation row exists at insert time so the link survives.
+    """
+    _require_session()
+    conv_uuid = coerce_conversation_uuid(conversation_id)
+    async with SessionLocal() as session:
+        existing = await session.get(Conversation, conv_uuid)
+        if existing is None:
+            session.add(Conversation(id=conv_uuid))
+            await session.flush()
+        fb = Feedback(conversation_id=conv_uuid, rating=rating, comment=comment)
+        session.add(fb)
+        await session.commit()
+        await session.refresh(fb)
+        return fb
 
 
 async def record_action(

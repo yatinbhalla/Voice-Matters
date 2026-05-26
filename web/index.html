@@ -3316,6 +3316,10 @@
       setTimeout(() => responseWrap.classList.add('show'), 100);
       setTimeout(() => document.getElementById('feedback-row').classList.add('show'), 350);
       micBtn.setAttribute('aria-label', L.mic_responded);     // H10
+      // Pre-render the Schemes screen from the latest top_3_schemes so it's
+      // ready the moment the user navigates there.
+      try { if (typeof renderSchemes === 'function') renderSchemes(); }
+      catch (e) { console.warn('renderSchemes post-respond failed', e); }
     }
   }
 
@@ -3415,6 +3419,35 @@
 
   // ===== Why modal =====
   function openWhy() {
+    // Populate from the latest voice response's first explanation, if any.
+    try {
+      const exp = window.__lastResponse
+        && Array.isArray(window.__lastResponse.explanations)
+        && window.__lastResponse.explanations[0];
+      const modal = document.getElementById('why-modal');
+      const para = modal.querySelector('.why-section p');
+      const sourceA = modal.querySelector('.source-section .source-url');
+      const query = (window.__lastResponse && window.__lastResponse.transcript_hi) || '';
+      if (exp && para) {
+        const userQ = query
+          ? '<span class="hi">आपने पूछा था — "' + query + '"।</span> '
+          : '';
+        const span = exp.span_text ? '<strong class="hi">' + exp.span_text + '</strong> — ' : '';
+        const why = exp.why_hi || '';
+        para.innerHTML = userQ + span + why;
+      }
+      if (exp && exp.source_url && sourceA) {
+        try {
+          const u = new URL(exp.source_url);
+          sourceA.textContent = u.hostname + u.pathname;
+        } catch (_e) {
+          sourceA.textContent = exp.source_url;
+        }
+        sourceA.setAttribute('href', exp.source_url);
+      }
+    } catch (e) {
+      console.warn('openWhy populate failed', e);
+    }
     document.getElementById('why-modal').classList.add('open');
   }
   function closeWhy() {
@@ -3462,7 +3495,10 @@
   const UP_CHIPS = ['Sahi jawaab', 'Clearly explained', 'Helpful scheme', 'Fast response'];
   const DOWN_CHIPS = ['Galat scheme bataya', 'Meri situation alag hai', 'Aur details chahiye', 'Language samajh nahi aayi'];
 
+  let _currentVote = null;  // 'up' | 'down' | null
+
   function handleVote(dir) {
+    _currentVote = dir;
     document.getElementById('vote-up').classList.toggle('active', dir === 'up');
     document.getElementById('vote-down').classList.toggle('active', dir === 'down');
     const fb = document.getElementById('vote-feedback');
@@ -3479,15 +3515,36 @@
   }
 
   function submitVoteFeedback() {
+    const selectedChips = Array.from(
+      document.querySelectorAll('#vf-chips .vf-chip.selected')
+    ).map(el => el.textContent.trim()).filter(Boolean);
+    const vote = _currentVote;
+
     document.getElementById('vote-feedback').classList.remove('open');
     document.getElementById('vote-up').classList.remove('active');
     document.getElementById('vote-down').classList.remove('active');
+    _currentVote = null;
+
     const sheet = document.getElementById('why-modal').querySelector('.sheet');
     const toast = document.createElement('div');
     toast.style.cssText = 'position:absolute;left:16px;right:16px;bottom:16px;background:#1B2A41;color:#fff;border-radius:12px;padding:12px 16px;font-size:13px;font-weight:600;z-index:99;text-align:center;animation:slidein 0.25s ease';
     toast.innerHTML = '<span style="font-family:\'Noto Sans Devanagari\',sans-serif">शुक्रिया! </span>Feedback mil gaya 🙏';
     sheet.appendChild(toast);
     setTimeout(() => { toast.remove(); closeWhy(); }, 2000);
+
+    // Persist to backend - fire and forget.
+    try {
+      fetch(
+        `${VM_CONFIG.API_BASE}/conversation/${VM_CONFIG.conversationId}/feedback`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ vote: vote, chips: selectedChips }),
+        }
+      ).catch(err => console.warn('feedback POST failed', err));
+    } catch (e) {
+      console.warn('feedback dispatch failed', e);
+    }
   }
 
   // ===== Schemes-list dynamic render =====
@@ -3642,126 +3699,264 @@
     },
   };
 
-  // Snapshot of cards 1 & 2 markup so we can restore the prototype default
-  // when there's no top_3 yet (cold reload of the schemes page).
-  const _schemeCardsContainer = document.querySelector('#screen-schemes .scheme-list, #screen-schemes .stage, #screen-schemes');
+  // Default trio shown before any voice query - keeps the Schemes screen
+  // demoable on a cold load.
+  const DEFAULT_SCHEMES_TOP3 = [
+    { scheme_id: 'pm-kisan',                 match_confidence: 0.94 },
+    { scheme_id: 'sukanya-samriddhi-yojana', match_confidence: 0.86 },
+    { scheme_id: 'e-shram',                  match_confidence: 0.78 },
+  ];
 
-  function _updateCard(card, scheme_id) {
-    const d = SCHEME_DISPLAY[scheme_id];
-    if (!d) return;
-    const nameEl = card.querySelector('.scheme-name');
-    if (nameEl) nameEl.textContent = d.name_en;
-    const enEl = card.querySelector('.scheme-en');
-    if (enEl) enEl.textContent = d.description_en;
-    const amountEl = card.querySelector('.benefit .amount');
-    if (amountEl) {
-      // Preserve the inner "/ year" span styling by rebuilding
-      amountEl.innerHTML = d.benefit_amount +
-        '<span style="font-size:12px; color:#8896A6; font-weight:500;">' +
-        d.benefit_period + '</span>';
+  // Track applied schemes via localStorage so card 3 can switch to the
+  // "applied" treatment when its scheme is in the list.
+  function _loadAppliedSchemes() {
+    try {
+      window.__appliedSchemes = JSON.parse(localStorage.getItem('vm_applied') || '[]');
+    } catch (e) {
+      window.__appliedSchemes = [];
     }
-    const effortEl = card.querySelector('.effort');
-    if (effortEl) {
-      effortEl.className = 'effort' + (d.effort_class ? ' ' + d.effort_class : '');
-      // Preserve the dot span structure
-      const dotHtml = '<span class="dot"></span>';
-      effortEl.innerHTML = dotHtml + d.effort_label;
-    }
-    // Re-wire Listen + Go for this scheme
-    const listenBtn = card.querySelector('.btn-outline');
-    if (listenBtn) {
-      listenBtn.onclick = (e) => { e.stopPropagation(); speakScheme(scheme_id); };
-    }
-    const goBtn = card.querySelector('.btn-filled[data-nav="detail"], [data-nav="detail"]');
-    if (goBtn) {
-      goBtn.setAttribute('data-scheme', scheme_id);
-      // The card itself also navigates; tracking handled below.
-    }
-    if (card.dataset.nav === 'detail') {
-      // Replace any existing click listener that hardcoded a scheme by adding
-      // a new one that updates _currentDetailSchemeId.
-      card.addEventListener('click', () => {
-        _currentDetailSchemeId = scheme_id;
-      });
+    return window.__appliedSchemes;
+  }
+  function _saveAppliedSchemes() {
+    try {
+      localStorage.setItem('vm_applied', JSON.stringify(window.__appliedSchemes || []));
+    } catch (e) { /* storage full / private mode */ }
+  }
+  _loadAppliedSchemes();
+
+  function _markSchemeApplied(scheme_id) {
+    _loadAppliedSchemes();
+    if (!window.__appliedSchemes.includes(scheme_id)) {
+      window.__appliedSchemes.push(scheme_id);
+      _saveAppliedSchemes();
     }
   }
 
-  // ===== Dynamic Detail page render =====
-  function _renderDetailPage(schemeId) {
-    const d = (SCHEME_DISPLAY[schemeId] || {}).detail;
-    if (!d) return;
+  function _cardListenAndGoMarkup(scheme_id) {
+    return (
+      '<div class="actions">' +
+      '  <button class="btn btn-outline" onclick="event.stopPropagation(); speakSchemeById(\'' + scheme_id + '\')">' +
+      '    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>' +
+      '    <span class="hi">सुन लो</span>' +
+      '  </button>' +
+      '  <button class="btn btn-filled" onclick="event.stopPropagation(); openSchemeDetail(\'' + scheme_id + '\')">' +
+      '    <span class="hi">आगे बढ़ो</span>' +
+      '    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>' +
+      '  </button>' +
+      '</div>'
+    );
+  }
+
+  function _bestCardMarkup(scheme_id, d) {
+    return (
+      '<article class="card best" data-scheme="' + scheme_id + '" style="cursor:pointer;" onclick="openSchemeDetail(\'' + scheme_id + '\')">' +
+      '  <div class="ribbon-row">' +
+      '    <span class="best-ribbon">' +
+      '      <svg viewBox="0 0 24 24" fill="white"><path d="M12 2l2.39 4.84 5.34.78-3.86 3.77.91 5.32L12 14.27l-4.78 2.51.91-5.32L4.27 7.62l5.34-.78L12 2z"/></svg>' +
+      '      Aapke liye sabse achha' +
+      '    </span>' +
+      '  </div>' +
+      '  <h3 class="scheme-name">' + d.name_en + '</h3>' +
+      '  <div class="scheme-en">' + d.description_en + '</div>' +
+      '  <div class="meta-row">' +
+      '    <div class="benefit">' +
+      '      <span class="amount">' + d.benefit_amount +
+      '        <span style="font-size:12px; color:#8896A6; font-weight:500;">' + d.benefit_period + '</span>' +
+      '      </span>' +
+      '    </div>' +
+      '    <span class="effort' + (d.effort_class ? ' ' + d.effort_class : '') + '"><span class="dot"></span>' + d.effort_label + '</span>' +
+      '  </div>' +
+      _cardListenAndGoMarkup(scheme_id) +
+      '</article>'
+    );
+  }
+
+  function _secondaryCardMarkup(scheme_id, d) {
+    return (
+      '<article class="card secondary" data-scheme="' + scheme_id + '" style="cursor:pointer;" onclick="openSchemeDetail(\'' + scheme_id + '\')">' +
+      '  <div class="ribbon-row">' +
+      '    <span style="font-size:10px; font-weight:600; color:var(--muted); letter-spacing:0.08em; text-transform:uppercase;">' + (d.category || '') + '</span>' +
+      '  </div>' +
+      '  <h3 class="scheme-name">' + d.name_en + '</h3>' +
+      '  <div class="scheme-en">' + d.description_en + '</div>' +
+      '  <div class="meta-row">' +
+      '    <div class="benefit">' +
+      '      <span class="amount">' + d.benefit_amount +
+      '        <span style="font-size:11px; color:#8896A6; font-weight:500;">' + d.benefit_period + '</span>' +
+      '      </span>' +
+      '    </div>' +
+      '    <span class="effort' + (d.effort_class ? ' ' + d.effort_class : '') + '"><span class="dot"></span>' + d.effort_label + '</span>' +
+      '  </div>' +
+      _cardListenAndGoMarkup(scheme_id) +
+      '</article>'
+    );
+  }
+
+  function _appliedCardMarkup(scheme_id, d) {
+    return (
+      '<article class="card applied" data-scheme="' + scheme_id + '" style="cursor:pointer; background:var(--green-tint); border:1px solid var(--green-line);" onclick="openSchemeDetail(\'' + scheme_id + '\')">' +
+      '  <div class="applied-badge" aria-label="Applied">' +
+      '    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
+      '  </div>' +
+      '  <div style="font-size:10px; font-weight:600; color:var(--green); letter-spacing:0.08em; text-transform:uppercase;">' + (d.category || 'APPLIED') + '</div>' +
+      '  <h3 class="scheme-name" style="padding-right:44px;">' + d.name_en + '</h3>' +
+      '  <div class="scheme-en">' + d.description_en + '</div>' +
+      '  <div class="applied-status">' +
+      '    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
+      '    <span>Apply ho gaya</span>' +
+      '  </div>' +
+      _cardListenAndGoMarkup(scheme_id) +
+      '</article>'
+    );
+  }
+
+  // Replaces the Day 9 _renderSchemesFromTop3 + _updateCard. Full innerHTML
+  // rebuild of .schemes-stack from window.__lastResponse.top_3_schemes (or
+  // a small default for cold load). Card 3 flips to "applied" treatment
+  // when its scheme_id is in localStorage.vm_applied.
+  function renderSchemes() {
+    const stack = document.querySelector('#screen-schemes .schemes-stack');
+    if (!stack) return;
+    const top3 = (window.__lastResponse && Array.isArray(window.__lastResponse.top_3_schemes) && window.__lastResponse.top_3_schemes.length)
+      ? window.__lastResponse.top_3_schemes
+      : DEFAULT_SCHEMES_TOP3;
+    _loadAppliedSchemes();
+
+    const parts = [];
+    top3.slice(0, 3).forEach((scheme, i) => {
+      const sid = scheme.scheme_id;
+      const d = SCHEME_DISPLAY[sid];
+      if (!d) return;
+      if (window.__appliedSchemes.includes(sid)) {
+        parts.push(_appliedCardMarkup(sid, d));
+      } else if (i === 0) {
+        parts.push(_bestCardMarkup(sid, d));
+      } else {
+        parts.push(_secondaryCardMarkup(sid, d));
+      }
+    });
+    if (!parts.length) return;
+    stack.innerHTML = parts.join('\n');
+
+    // Header count text
+    const head = document.querySelector('#screen-schemes h2, #screen-schemes .head-title');
+    if (head && /scheme/i.test(head.textContent)) {
+      head.textContent = top3.length + ' schemes mile';
+    }
+  }
+
+  // openSchemeDetail(scheme_id) - fetch backend, populate detail, navigate.
+  async function openSchemeDetail(scheme_id) {
+    _currentDetailSchemeId = scheme_id;
+    let data = null;
+    try {
+      const r = await fetch(`${VM_CONFIG.API_BASE}/schemes/${scheme_id}`);
+      if (r.ok) data = await r.json();
+    } catch (e) {
+      console.warn('openSchemeDetail fetch failed', e);
+    }
+    const display = SCHEME_DISPLAY[scheme_id] || {};
+    const detail = display.detail || {};
     const $detail = document.getElementById('screen-detail');
-    if (!$detail) return;
-
-    // Hero
-    const catTag = $detail.querySelector('.det-cat-tag');
-    if (catTag) {
-      // preserve the inner <svg> + add the new text
-      const svgEl = catTag.querySelector('svg');
-      catTag.innerHTML = '';
-      if (svgEl) catTag.appendChild(svgEl);
-      catTag.appendChild(document.createTextNode(' ' + d.category_label));
-    }
-    const nameHi = $detail.querySelector('.det-name-hi');
-    if (nameHi) nameHi.textContent = d.name_hi;
-    const nameEn = $detail.querySelector('.det-name-en');
-    if (nameEn) nameEn.textContent = (SCHEME_DISPLAY[schemeId].name_en || '') + ' · ' + d.ministry;
-    const pitch = $detail.querySelector('.det-pitch');
-    if (pitch) {
-      pitch.innerHTML = '<span class="hi">' + d.pitch_hi + '</span> ' +
-        '<span style="font-family:\'Inter\',sans-serif; color:var(--muted-2);">' + d.pitch_en + '</span>';
-    }
-    // Official-source row: just update the host label.
-    const officialRow = $detail.querySelector('.det-official-row');
-    if (officialRow) {
-      const spans = officialRow.querySelectorAll('span');
-      // structure: [.det-tick] strong [.det-dot] <span>host</span> [.det-dot] <span>updated</span>
-      spans.forEach(sp => {
-        if (sp.classList.contains('det-tick') || sp.classList.contains('det-dot')) return;
-        if (sp.textContent.includes('.') || sp.textContent.includes('gov')) {
-          sp.textContent = d.source_host;
-        }
-      });
-    }
-
-    // Stats strip
-    const stats = $detail.querySelectorAll('.det-stat');
-    stats.forEach((stat, i) => {
-      if (!d.stats[i]) return;
-      const val = stat.querySelector('.det-stat-val');
-      const lbl = stat.querySelector('.det-stat-lbl');
-      if (val) val.textContent = d.stats[i].val;
-      if (lbl) lbl.textContent = d.stats[i].lbl;
-    });
-
-    // About
-    const desc = $detail.querySelector('.det-desc');
-    if (desc) {
-      desc.innerHTML = '<span class="hi">' + d.about_hi + '</span> ' + d.about_en;
-    }
-
-    // Benefits list
-    const benefitItems = $detail.querySelectorAll('.det-benefit-item');
-    benefitItems.forEach((item, i) => {
-      const b = d.benefits[i];
-      if (!b) {
-        item.style.display = 'none';
-        return;
+    if ($detail) {
+      // Hero name + ministry
+      const nameHi = $detail.querySelector('.det-name-hi');
+      if (nameHi) nameHi.textContent = (data && data.name_hi) || detail.name_hi || display.name_en || scheme_id;
+      const nameEn = $detail.querySelector('.det-name-en');
+      if (nameEn) {
+        const ministry = (data && data.ministry) || detail.ministry || '';
+        nameEn.textContent = (display.name_en || scheme_id) + (ministry ? ' · ' + ministry : '');
       }
-      item.style.display = '';
-      const head = item.querySelector('.det-benefit-head');
-      const sub = item.querySelector('.det-benefit-sub');
-      if (head) {
-        if (b.head_hi) {
-          head.className = 'det-benefit-head hi';
-          head.textContent = b.head_hi;
+      // Category tag (preserve inner SVG)
+      const catTag = $detail.querySelector('.det-cat-tag');
+      if (catTag) {
+        const svgEl = catTag.querySelector('svg');
+        catTag.innerHTML = '';
+        if (svgEl) catTag.appendChild(svgEl);
+        catTag.appendChild(document.createTextNode(' ' + ((data && data.category_label) || detail.category_label || 'Government Scheme')));
+      }
+      // Match-pill from the freshest top_3_schemes entry, if any
+      const matchPill = $detail.querySelector('.det-match-pill');
+      if (matchPill) {
+        const last = window.__lastResponse && window.__lastResponse.top_3_schemes;
+        const hit = Array.isArray(last) ? last.find(s => s.scheme_id === scheme_id) : null;
+        if (hit && typeof hit.match_confidence === 'number') {
+          const pct = Math.round(hit.match_confidence * 100);
+          const bars = matchPill.querySelector('.det-bars');
+          if (bars) {
+            const filled = Math.max(1, Math.min(5, Math.round(pct / 20)));
+            bars.innerHTML = Array.from({length: 5}, (_, n) =>
+              '<span' + (n >= filled ? ' class="dim"' : '') + '></span>').join('');
+          }
+          matchPill.lastChild && (matchPill.lastChild.textContent = ' ' + pct + '% match');
+          matchPill.style.display = '';
         } else {
-          head.className = 'det-benefit-head';
-          head.textContent = b.head || '';
+          matchPill.style.display = 'none';
         }
       }
-      if (sub) sub.textContent = b.sub || '';
-    });
+      // Pitch
+      const pitch = $detail.querySelector('.det-pitch');
+      if (pitch) {
+        const summaryHi = (data && data.summary_hi) || detail.pitch_hi || '';
+        const pitchEn = detail.pitch_en || '';
+        pitch.innerHTML = '<span class="hi">' + summaryHi + '</span> ' +
+          '<span style="font-family:\'Inter\',sans-serif; color:var(--muted-2);">' + pitchEn + '</span>';
+      }
+      // Official source row host
+      const officialRow = $detail.querySelector('.det-official-row');
+      if (officialRow) {
+        const sourceUrl = (data && data.source_url) || detail.source_host || '';
+        let host = '';
+        try { host = new URL(sourceUrl).hostname; } catch (e) { host = sourceUrl || (detail.source_host || ''); }
+        officialRow.querySelectorAll('span').forEach(sp => {
+          if (sp.classList.contains('det-tick') || sp.classList.contains('det-dot')) return;
+          if (/\.[a-z]{2,}/i.test(sp.textContent) || /gov/i.test(sp.textContent)) {
+            sp.textContent = host;
+          }
+        });
+      }
+      // Stats strip - still from SCHEME_DISPLAY (per-scheme curated numbers)
+      const stats = $detail.querySelectorAll('.det-stat');
+      stats.forEach((stat, i) => {
+        if (!detail.stats || !detail.stats[i]) return;
+        const val = stat.querySelector('.det-stat-val');
+        const lbl = stat.querySelector('.det-stat-lbl');
+        if (val) val.textContent = detail.stats[i].val;
+        if (lbl) lbl.textContent = detail.stats[i].lbl;
+      });
+      // About
+      const desc = $detail.querySelector('.det-desc');
+      if (desc) {
+        desc.innerHTML = '<span class="hi">' + (detail.about_hi || '') + '</span> ' + (detail.about_en || '');
+      }
+      // Benefits list - prefer backend, fallback to SCHEME_DISPLAY.detail.benefits
+      const benefitItems = $detail.querySelectorAll('.det-benefit-item');
+      const benefits = (data && Array.isArray(data.benefits) && data.benefits.length)
+        ? data.benefits
+        : (detail.benefits || []);
+      benefitItems.forEach((item, i) => {
+        const b = benefits[i];
+        if (!b) { item.style.display = 'none'; return; }
+        item.style.display = '';
+        const head = item.querySelector('.det-benefit-head');
+        const sub = item.querySelector('.det-benefit-sub');
+        if (head) {
+          if (b.head_hi) {
+            head.className = 'det-benefit-head hi';
+            head.textContent = b.head_hi;
+          } else {
+            head.className = 'det-benefit-head';
+            head.textContent = b.head || '';
+          }
+        }
+        if (sub) sub.textContent = b.sub || '';
+      });
+      // Stash helpline_phone so the chatbot/help affordances can pick it up.
+      if (data && data.helpline_phone) {
+        $detail.dataset.helpline = data.helpline_phone;
+      }
+    }
+    navigate('detail');
   }
 
   // ===== Dynamic Steps page render (uses /api/v1/schemes/{id}/apply-steps) =====
@@ -3965,15 +4160,15 @@
     window.navigate = function(target) {
       _origNav(target);
       try {
-        if (target === 'schemes' && window.__lastTop3) {
-          _renderSchemesFromTop3(window.__lastTop3);
-        } else if (target === 'detail') {
-          _renderDetailPage(_currentDetailSchemeId);
+        if (target === 'schemes') {
+          renderSchemes();
         } else if (target === 'steps') {
           _renderStepsPage(_currentDetailSchemeId);
         } else if (target === 'history') {
           _renderHistoryPage();
         }
+        // 'detail' is handled inline by openSchemeDetail() before navigation
+        // so we don't need a re-render hook here.
       } catch (e) { console.warn('navigate hook render failed', target, e); }
     };
   })();
@@ -4032,14 +4227,15 @@
     }
   }
 
-  async function speakScheme(schemeId) {
+  async function speakSchemeById(schemeId, length) {
     schemeId = schemeId || _currentDetailSchemeId || 'sukanya-samriddhi-yojana';
+    length = length || 'short';
     const myReq = ++_speakReqId;
     _stopVoiceMattersAudio();
     try {
       const apiOrigin = new URL(VM_CONFIG.API_BASE, location.href).origin;
       const r = await fetch(
-        `${VM_CONFIG.API_BASE}/schemes/${schemeId}/explain?length=short`
+        `${VM_CONFIG.API_BASE}/schemes/${schemeId}/explain?length=` + encodeURIComponent(length)
       );
       // A newer tap has superseded us while we were waiting on the network.
       if (myReq !== _speakReqId) return;
@@ -4062,10 +4258,17 @@
         speechSynthesis.speak(u);
       }
     } catch (err) {
-      console.warn('speakScheme failed', err);
+      console.warn('speakSchemeById failed', err);
       showSysToast('Audio nahin chal raha - thodi der mein dobara koshish karein', 2400);
     }
   }
+
+  // Backward-compat: the inline onclick="speakScheme()" on the original
+  // locked-design cards (and the response card's onclick) still resolves.
+  window.speakScheme = speakSchemeById;
+  window.speakSchemeById = speakSchemeById;
+  window.openSchemeDetail = openSchemeDetail;
+  window.renderSchemes = renderSchemes;
 
   // Re-bind each card's Listen button so it speaks ITS scheme (not the
   // hardcoded Sukanya line). The inline onclick is left in place; this
@@ -4101,6 +4304,31 @@
     });
   }
   _wireSchemeCardListeners();
+
+  // Detail page: tapping "आवेदन करें · How to Apply" marks the scheme as
+  // applied (adds to localStorage.vm_applied) AND POSTs action='applied'
+  // for the conversation. The existing data-nav="steps" handler still runs
+  // and navigates to the steps page.
+  const detApplyBtn = document.querySelector('.det-apply-btn');
+  if (detApplyBtn) {
+    detApplyBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const sid = _currentDetailSchemeId;
+      if (!sid) return;
+      _markSchemeApplied(sid);
+      // Persist to user_actions table - fire and forget.
+      try {
+        fetch(
+          `${VM_CONFIG.API_BASE}/conversation/${VM_CONFIG.conversationId}/action`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ scheme_id: sid, action: 'applied' }),
+          }
+        ).catch(err => console.warn('apply action POST failed', err));
+      } catch (err) { /* ignore */ }
+    });
+  }
 
   // Detail page: Listen + Save buttons (locked HTML, JS-only wiring).
   const detListenBtn = document.querySelector('.det-listen-btn');

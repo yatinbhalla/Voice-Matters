@@ -5,6 +5,7 @@
   "ministry": "Ministry of Agriculture and Farmers' Welfare",
   "summary_hi": "खेती-योग्य ज़मीन रखने वाले छोटे किसानों के लिए ₹6,000 साल का सम्मान निधि - तीन किस्तों में सीधे बैंक खाते में।",
   "source_url": "https://pmkisan.gov.in/",
+  "helpline_phone": "155261",
   "tags": ["farmer", "income-support", "dbt", "kisan-samman-nidhi"],
   "eligibility_rules": {
     "requires_external_verification": true,

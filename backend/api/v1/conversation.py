@@ -21,6 +21,13 @@ class ActionRequest(BaseModel):
     step_number: int | None = None
 
 
+class FeedbackRequest(BaseModel):
+    rating: int | None = None
+    comment: str | None = None
+    vote: str | None = None  # "up" | "down" | None
+    chips: list[str] | None = None
+
+
 @router.post("/conversation/{conversation_id}/voice")
 async def post_voice(
     conversation_id: str,
@@ -71,6 +78,33 @@ async def list_conversations():
     except RuntimeError as e:
         raise HTTPException(503, detail=str(e))
     return grouped
+
+
+@router.post("/conversation/{conversation_id}/feedback")
+async def post_feedback(conversation_id: str, body: FeedbackRequest):
+    # Map vote -> rating if rating wasn't provided directly.
+    rating = body.rating
+    if rating is None and body.vote:
+        rating = {"up": 1, "down": -1}.get(body.vote.lower())
+    # If chips supplied, join them into the comment (preserves what the user
+    # picked: "Sahi jawaab, Helpful scheme").
+    comment = body.comment
+    if body.chips:
+        chips_text = ", ".join(c for c in body.chips if c)
+        comment = chips_text if not comment else f"{comment} | {chips_text}"
+    try:
+        fb = await conversation_service.record_feedback(
+            conversation_id, rating=rating, comment=comment
+        )
+    except RuntimeError as e:
+        raise HTTPException(503, detail=str(e))
+    return {
+        "id": fb.id,
+        "conversation_id": str(fb.conversation_id) if fb.conversation_id else None,
+        "rating": fb.rating,
+        "comment": fb.comment,
+        "created_at": fb.created_at.isoformat() if fb.created_at else None,
+    }
 
 
 @router.post("/conversation/{conversation_id}/action")
