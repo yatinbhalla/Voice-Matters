@@ -40,6 +40,7 @@ async def post_voice(
     conversation_id: str,
     audio: UploadFile = File(...),
     language_hint: str = Form("hi"),
+    bitrate: str = "high",
 ):
     audio_bytes = await audio.read()
     if len(audio_bytes) > MAX_AUDIO_BYTES:
@@ -53,6 +54,7 @@ async def post_voice(
         content_type=audio.content_type,
         bytes=len(audio_bytes),
         language_hint=language_hint,
+        bitrate=bitrate,
     )
     return await run_voice_pipeline(
         conversation_id=conversation_id,
@@ -60,6 +62,7 @@ async def post_voice(
         content_type=audio.content_type,
         filename=audio.filename,
         language_hint=language_hint,
+        bitrate=bitrate,
     )
 
 

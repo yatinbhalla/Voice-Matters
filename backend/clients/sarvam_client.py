@@ -21,6 +21,24 @@ from tenacity import (
 # to the user or pushed into TTS.
 _THINK_TAG_RE = re.compile(r"<think>.*?</think>", flags=re.DOTALL | re.IGNORECASE)
 
+
+def _truncate_for_tts(text: str, limit: int = 450) -> str:
+    """Trim TTS input at a sentence boundary <= limit chars.
+
+    Sarvam Bulbul returns 400 on inputs > ~500 chars. We aim for 450 with
+    headroom. Prefer to cut at the last `.` / `।` / `\n` so the audio
+    doesn't end mid-word.
+    """
+    if not text or len(text) <= limit:
+        return text or ""
+    head = text[:limit]
+    # Walk back to the most recent sentence terminator.
+    for sep in ("\n", "। ", "। ", ". ", "!", "?"):
+        idx = head.rfind(sep)
+        if idx >= int(limit * 0.6):  # don't cut too early
+            return head[: idx + len(sep)].rstrip()
+    return head.rstrip() + "…"
+
 log = structlog.get_logger()
 
 SARVAM_BASE = "https://api.sarvam.ai"
@@ -106,14 +124,23 @@ class SarvamClient:
         voice: str = "anushka",
         target_language_code: str = "hi-IN",
         model: str = "bulbul:v2",
+        sample_rate: int = 22050,
     ) -> bytes:
+        """sample_rate=8000 is used for the 2G low-bandwidth mode; default
+        22050 is the studio-quality setting we use otherwise.
+
+        Sarvam Bulbul has a ~500 char ceiling per `inputs` entry. We
+        truncate at the last sentence-ish boundary before that limit so
+        long LLM answers don't 400.
+        """
         self._require_key()
+        text = _truncate_for_tts(text, limit=450)
         body = {
             "inputs": [text],
             "target_language_code": target_language_code,
             "speaker": voice,
             "model": model,
-            "speech_sample_rate": 22050,
+            "speech_sample_rate": sample_rate,
             "enable_preprocessing": True,
         }
         async with httpx.AsyncClient(timeout=self._timeout) as client:

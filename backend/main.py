@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()  # must run before any local import that reads env vars
 
-from fastapi import FastAPI  # noqa: E402
+from fastapi import FastAPI, Request  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
 
@@ -39,6 +39,19 @@ async def _startup() -> None:
 
 
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+
+# Cache-Control on generated TTS audio files so the service worker (and
+# any intermediate proxy) can re-serve them without hitting the backend.
+# 24h is a safe ceiling - the filename includes a uuid so we never need
+# to invalidate, and the corpus is small enough that disk pressure isn't
+# a concern.
+@app.middleware("http")
+async def add_audio_cache_headers(request: Request, call_next):
+    response = await call_next(request)
+    if request.url.path.startswith("/static/audio/"):
+        response.headers["Cache-Control"] = "public, max-age=86400, immutable"
+    return response
 
 # In dev, accept any localhost/127.0.0.1 origin so the static web server and
 # the API can run on different ports without CORS drama. Prod stays strict.

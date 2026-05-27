@@ -47,6 +47,8 @@ backend/fb.json
 backend/sushila.json
 backend/ramesh.json
 backend/pooja.json
+backend/voice_high.json
+backend/voice_low.json
 backend/verify_tone.json
 backend/verify_tone_review.md
 backend/alembic/versions/__pycache__/

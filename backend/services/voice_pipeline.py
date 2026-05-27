@@ -73,6 +73,7 @@ async def run_voice_pipeline(
     content_type: str | None,
     filename: str | None,
     language_hint: str = "hi",
+    bitrate: str = "high",
 ) -> dict:
     sarvam = SarvamClient()
     rag = RAGService()
@@ -145,13 +146,19 @@ async def run_voice_pipeline(
             log.warning("eligibility_check_failed", error=str(e))
     elig_ms = _ms_since(elig_start)
 
-    # Stage 4: TTS
+    # Stage 4: TTS. 2G mode (bitrate=low) drops to 8 kHz sample rate so the
+    # mp3 payload shrinks ~3x. Filename gets a "-low" tag so the service
+    # worker / CDN can cache the low- and high-quality versions separately.
     tts_start = time.perf_counter()
-    audio_filename = f"{uuid.uuid4().hex}.mp3"
+    low_bitrate = (bitrate or "").lower() == "low"
+    tts_sample_rate = 8000 if low_bitrate else 22050
+    audio_filename = f"{uuid.uuid4().hex}{'-low' if low_bitrate else ''}.mp3"
     audio_url = ""
     try:
         # Sarvam retired "meera"; "anushka" is the closest current female voice.
-        tts_bytes = await sarvam.synthesize(response_text_hi, voice="anushka")
+        tts_bytes = await sarvam.synthesize(
+            response_text_hi, voice="anushka", sample_rate=tts_sample_rate
+        )
         (STATIC_AUDIO_DIR / audio_filename).write_bytes(tts_bytes)
         audio_url = f"/static/audio/{audio_filename}"
     except Exception as e:

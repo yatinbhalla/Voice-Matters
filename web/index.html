@@ -2991,6 +2991,90 @@
     }
   };
 
+  // ===== Low-data mode (2G/slow-2G) + install prompt (Sprint B Day 8) =====
+  window.__lowDataMode = false;
+  window.__deferredInstallPrompt = null;
+
+  function _isSlowConnection() {
+    const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    if (!c) return false;
+    if (c.saveData === true) return true;
+    return c.effectiveType === '2g' || c.effectiveType === 'slow-2g';
+  }
+
+  // Walk the mic stage subtree and pause any pulsing/ring animation when
+  // low-data mode is on. Re-enabled when we leave low-data mode.
+  function _setMicAnimations(paused) {
+    const stage = document.querySelector('.mic-stage');
+    if (!stage) return;
+    stage.querySelectorAll('*').forEach(el => {
+      el.style.animationPlayState = paused ? 'paused' : '';
+    });
+  }
+
+  function _applyLowDataMode(on, opts) {
+    window.__lowDataMode = !!on;
+    document.body.classList.toggle('vm-low-data', !!on);
+    _setMicAnimations(on);
+    if (on && opts !== false && typeof showSysToast === 'function') {
+      showSysToast('2G mode on - audio thoda dheere chalega', 2400);
+    }
+  }
+
+  function _detectConnection(initial) {
+    const slow = _isSlowConnection();
+    if (slow && !window.__lowDataMode) {
+      _applyLowDataMode(true, /*opts*/ initial !== true);
+    } else if (!slow && window.__lowDataMode) {
+      // Connection improved -- silently flip off.
+      _applyLowDataMode(false, false);
+    }
+  }
+
+  // Initial detect on load (silent on first paint; toast on later flips).
+  window.addEventListener('load', () => {
+    _detectConnection(true);
+    if (_isSlowConnection() && typeof showSysToast === 'function') {
+      showSysToast('2G mode on - audio thoda dheere chalega', 2400);
+    }
+    const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    if (c && c.addEventListener) {
+      c.addEventListener('change', () => _detectConnection(false));
+    }
+  });
+
+  // Re-check whenever the tab comes back to the foreground (user may have
+  // switched networks while backgrounded).
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') _detectConnection(false);
+  });
+
+  // PWA install prompt: stash the event so we can fire it from the
+  // onboarding "Shuru karein" CTA.
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    window.__deferredInstallPrompt = e;
+  });
+  window.addEventListener('appinstalled', () => {
+    try { localStorage.setItem('vm_installed', '1'); } catch (_e) { /* ignore */ }
+    window.__deferredInstallPrompt = null;
+  });
+
+  // Service-worker -> page bridge for offline events (sw.js posts these
+  // from any networkOnly path that fails).
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'vm-offline'
+          && typeof openError === 'function'
+          && !navigator.onLine) {
+        openError();
+      }
+    });
+  }
+  window.addEventListener('offline', () => {
+    if (typeof openError === 'function') openError();
+  });
+
   // ===== Mic capture (Sprint A Day 3) =====
   const Mic = {
     stream: null,
@@ -3336,10 +3420,11 @@
         const fd = new FormData();
         fd.append('audio', blob, 'query.webm');
         fd.append('language_hint', currentLang);
-        const r = await fetch(
-          `${VM_CONFIG.API_BASE}/conversation/${VM_CONFIG.conversationId}/voice`,
-          { method: 'POST', body: fd }
-        );
+        // Low-data mode tells the backend to emit smaller TTS audio.
+        const voiceUrl =
+          `${VM_CONFIG.API_BASE}/conversation/${VM_CONFIG.conversationId}/voice` +
+          (window.__lowDataMode ? '?bitrate=low' : '');
+        const r = await fetch(voiceUrl, { method: 'POST', body: fd });
         if (!r.ok) throw new Error('Backend ' + r.status);
         const data = await r.json();
         window.__lastResponse = data;
@@ -3387,7 +3472,12 @@
           _speakReqId++;             // mark this as the latest playback
           _stopVoiceMattersAudio();
           _currentSpeakAudio = new Audio(audioSrc);
-          _currentSpeakAudio.play().catch(e => console.warn('Audio playback failed', e));
+          // Low-data: don't auto-play. The response card stays visible; the
+          // user can tap the audio control or the "सुन लो" affordance to
+          // pull the audio over the slow link.
+          if (!window.__lowDataMode) {
+            _currentSpeakAudio.play().catch(e => console.warn('Audio playback failed', e));
+          }
         }
         setMicState('responded');
       } catch (err) {
@@ -3540,7 +3630,35 @@
   }
   function dismissOnboarding() {
     document.getElementById('onboarding').classList.remove('open');
+    // Persist so on re-launch we can skip the screen entirely if the app
+    // has been installed.
+    try { localStorage.setItem('vm_onboarded', '1'); } catch (_e) { /* ignore */ }
+    // If the browser handed us an install prompt event, fire it now.
+    if (window.__deferredInstallPrompt) {
+      try {
+        window.__deferredInstallPrompt.prompt();
+        window.__deferredInstallPrompt.userChoice.then(() => {
+          window.__deferredInstallPrompt = null;
+        });
+      } catch (_e) { window.__deferredInstallPrompt = null; }
+    }
   }
+
+  // If the user already installed (PWA standalone or stashed flag), skip
+  // the onboarding the next time they open the app.
+  (function _maybeSkipOnboarding() {
+    const onboarded = (() => {
+      try { return localStorage.getItem('vm_onboarded') === '1'; } catch (_e) { return false; }
+    })();
+    const installed = (() => {
+      try { return localStorage.getItem('vm_installed') === '1'; } catch (_e) { return false; }
+    })();
+    const standalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+    if (onboarded || installed || standalone) {
+      const ob = document.getElementById('onboarding');
+      if (ob) ob.classList.remove('open');
+    }
+  })();
 
   // ===== Error =====
   function openError() {
