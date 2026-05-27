@@ -4109,6 +4109,8 @@
           }
         } else if (target === 'history') {
           _renderHistoryPage();
+        } else if (target === 'chat') {
+          if (typeof loadChatHistory === 'function') loadChatHistory();
         }
         // 'detail' is handled inline by openSchemeDetail() before navigation
         // so we don't need a re-render hook here.
@@ -4596,60 +4598,7 @@
     });
   }
 
-  // ===== Chat Engine =====
-  const CHAT_FLOWS = {
-    beti: {
-      userText: 'Beti ke liye saving scheme batao',
-      delay: 1300,
-      response: { type: 'text', text: 'Aapki beti ki umar kya hai?', chips: ['0–10 saal', '10–18 saal', 'Nahin pata'] }
-    },
-    '0–10 saal': {
-      userText: '0–10 saal ki beti hai',
-      delay: 1500,
-      response: { type: 'scheme', name: 'Sukanya Samriddhi Yojana', interest: '8.2% byaj guaranteed', sub: 'Tax-free · Min ₹250/year', cta: 'Apply kaise karein →', chips: ['Aur documents kya chahiye', 'Helpline number', 'Aur schemes dikhao'] }
-    },
-    '10–18 saal': {
-      userText: '10–18 saal ki beti hai',
-      delay: 1400,
-      response: { type: 'scheme', name: 'CBSE Udaan Scheme', interest: 'Free coaching + scholarship', sub: 'Class 11–12 girls · STEM focus', cta: 'Details dekhein →', chips: ['Aur options', 'Helpline number'] }
-    },
-    kisan: {
-      userText: 'Kisan yojana ke baare mein batao',
-      delay: 1200,
-      response: { type: 'scheme', name: 'PM Kisan Samman Nidhi', interest: '₹6,000 / saal', sub: 'Direct bank transfer · 3 installments', cta: 'Apply karein →', chips: ['PM Kisan Credit Card', 'Kisan Maan Dhan Yojana', 'Documents kya chahiye'] }
-    },
-    ration: {
-      userText: 'Ration card ke baare mein',
-      delay: 1100,
-      response: { type: 'list', hi: 'राशन कार्ड के लिए ज़रूरी कागज़:', items: ['Aadhaar card (sabka)', 'Address proof', 'Income certificate', 'Passport-size photo'], chips: ['Form kahan milega', 'Helpline number'] }
-    },
-    health: {
-      userText: 'Ayushman Bharat ke baare mein',
-      delay: 1300,
-      response: { type: 'scheme', name: 'Ayushman Bharat – PMJAY', interest: '₹5 lakh free treatment', sub: '24,000+ empanelled hospitals', cta: 'Eligibility check karein', chips: ['Card kaise banein', 'Hospital list', 'Helpline'] }
-    },
-    ghar: {
-      userText: 'Ghar banane ke liye sarkari help',
-      delay: 1400,
-      response: { type: 'scheme', name: 'PM Awas Yojana (PMAY)', interest: '₹2.67 lakh subsidy', sub: 'Urban + Rural · EWS/LIG families', cta: 'Steps dekhein →', chips: ['Urban ya rural?', 'Documents', 'Eligibility'] }
-    },
-    'Aur schemes dikhao': {
-      userText: 'Aur schemes dikhao',
-      delay: 1000,
-      response: { type: 'text', hi: 'इन योजनाओं में भी eligible ho सकते हैं:', text: 'CBSE Udaan · Ladli Laxmi · Beti Bachao Beti Padhao', chips: ['Beti Bachao details', 'Home screen pe jaayein'] }
-    },
-    'Helpline number': {
-      userText: 'Helpline number batao',
-      delay: 800,
-      response: { type: 'text', hi: '📞 Toll-Free Helpline:', text: '1800-223-040\nSomvar–Shanivaar · 9AM–6PM', chips: ['Dhanyavaad 🙏'] }
-    },
-    'Dhanyavaad 🙏': {
-      userText: 'Dhanyavaad!',
-      delay: 700,
-      response: { type: 'text', hi: 'Bahut bahut dhanyavaad! 🙏', text: 'Kabhi bhi poochhiye — main hamesha hoon.', chips: ['Nayi query karo', 'Beti ke liye scheme', 'Kisan yojana'] }
-    }
-  };
-
+  // ===== Chat Engine (real backend, no CHAT_FLOWS lookup) =====
   const DEFAULT_CHIPS = ['बेटी के लिए scheme', 'Kisan yojana', 'राशन कार्ड', 'Ayushman Bharat', 'Ghar ke liye'];
 
   function chatNow() { return new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}); }
@@ -4696,51 +4645,161 @@
       return `<div class="chat-bubble" style="max-width:260px;">${resp.hi ? `<span class="cb-hi" style="font-size:12px;margin-bottom:6px;display:block;">${resp.hi}</span>` : ''}<ul style="margin:0;padding-left:16px;font-size:12px;color:var(--muted-2);line-height:1.7;">${listHtml}</ul></div>`;
     }
     if (resp.type === 'scheme') {
+      const sid = resp.scheme_id || '';
+      const detailCall = sid
+        ? `openSchemeDetail('${sid}')`
+        : "navigate('detail')";
+      const applyCall = sid
+        ? `openApplyForScheme('${sid}')`
+        : "navigate('steps')";
       return `<div class="chat-bubble" style="max-width:260px;padding:10px 12px;">
         <span class="cb-en" style="opacity:1;font-weight:700;color:var(--primary);font-size:11px;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px;display:block;">Best match mila!</span>
-        <div class="chat-scheme-mini" onclick="navigate('detail')">
+        <div class="chat-scheme-mini" onclick="${detailCall}">
           <div class="csm-head"><span class="csm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg></span><span class="csm-name">${resp.name}</span></div>
           <div class="csm-interest">${resp.interest}</div>
           <div class="csm-sub">${resp.sub}</div>
-          <button class="csm-cta" onclick="event.stopPropagation();navigate('steps')">${resp.cta}</button>
+          <button class="csm-cta" onclick="event.stopPropagation();${detailCall}">${resp.cta}</button>
         </div>
       </div>`;
     }
     return '';
   }
 
+  // sendUserText - the only chat send path. Posts to backend /chat,
+  // renders the assistant's response (scheme bubble if RAG matched,
+  // text bubble for refusals/clarifications). sendChip + sendChatText
+  // are thin wrappers so the inline onclick="sendChip(...)" handlers
+  // in the locked HTML still work.
+  async function sendUserText(text) {
+    const txt = (text || '').trim();
+    if (!txt) return;
+    appendChatMsg('user', `<div class="chat-bubble">${_esc(txt)}</div>`);
+    setChatChips([]);
+    showTyping();
+    try {
+      const r = await fetch(
+        `${VM_CONFIG.API_BASE}/conversation/${VM_CONFIG.conversationId}/chat`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: txt, language_hint: currentLang }),
+        }
+      );
+      const data = await r.json();
+      hideTyping();
+      window.__lastResponse = data;
+      if (data.top_3_schemes && data.top_3_schemes.length) {
+        const s = data.top_3_schemes[0];
+        // Cache for the detail-page handoff (scheme bubble cta navigates)
+        _currentDetailSchemeId = s.scheme_id;
+        const benefit = (SCHEME_DISPLAY[s.scheme_id] || {}).benefit_amount || '';
+        appendChatMsg('bot', buildBotBubble({
+          type: 'scheme',
+          scheme_id: s.scheme_id,
+          name: s.name_en,
+          interest: s.one_line_pitch_hi || s.summary_hi || '',
+          sub: benefit ? benefit + ' ' + ((SCHEME_DISPLAY[s.scheme_id] || {}).benefit_period || '') : '',
+          cta: 'Details dekhein →',
+        }));
+        const chips = data.follow_up_question_hi
+          ? [data.follow_up_question_hi]
+          : DEFAULT_CHIPS;
+        setChatChips(chips);
+      } else {
+        appendChatMsg('bot', buildBotBubble({
+          type: 'text',
+          text: data.response_text_hi || 'Mujhe samajh nahin aaya, dobara puchhiye.',
+        }));
+        setChatChips(DEFAULT_CHIPS);
+      }
+    } catch (err) {
+      console.warn('chat POST failed', err);
+      hideTyping();
+      appendChatMsg('bot', buildBotBubble({
+        type: 'text',
+        text: 'Sorry, abhi connection problem hai. Phir se kariye.',
+      }));
+      setChatChips(DEFAULT_CHIPS);
+    }
+  }
+
   function sendChip(btn, key) {
-    btn.classList.add('selected');
-    const flow = CHAT_FLOWS[key];
-    if (!flow) return;
-    setTimeout(() => {
-      appendChatMsg('user', `<div class="chat-bubble">${flow.userText}</div>`);
-      setChatChips([]);
-      showTyping();
-      setTimeout(() => {
-        hideTyping();
-        appendChatMsg('bot', buildBotBubble(flow.response));
-        setChatChips(flow.response.chips || DEFAULT_CHIPS);
-      }, flow.delay);
-    }, 180);
+    if (btn && btn.classList) btn.classList.add('selected');
+    // The chip's visible text is the user's utterance. Fallback to the
+    // key param if textContent is empty (e.g. detached chip).
+    const text = (btn && btn.textContent && btn.textContent.trim()) || key;
+    sendUserText(text);
   }
 
   function sendChatText() {
     const inp = document.getElementById('chat-input');
-    const txt = inp.value.trim();
-    if (!txt) return;
-    appendChatMsg('user', `<div class="chat-bubble">${txt}</div>`);
-    inp.value = '';
-    setChatChips([]);
-    showTyping();
-    setTimeout(() => {
-      hideTyping();
-      appendChatMsg('bot', buildBotBubble({ type: 'text', hi: 'Samajh gaya!', text: 'Abhi search kar raha hoon… Ek baar Schemes tab bhi dekh sakte hain.' }));
-      setChatChips(['बेटी के लिए scheme', 'Kisan yojana', 'Helpline number', 'Dhanyavaad 🙏']);
-    }, 1200);
+    const txt = inp ? inp.value : '';
+    if (inp) inp.value = '';
+    sendUserText(txt);
   }
 
   function handleChatKey(e) { if (e.key === 'Enter') sendChatText(); }
+
+  // Hydrate the chat view from /messages on each visit so the user sees
+  // their prior history (voice + chat turns share the same conversation).
+  async function loadChatHistory() {
+    const container = document.getElementById('chat-messages');
+    if (!container) return;
+    try {
+      const r = await fetch(
+        `${VM_CONFIG.API_BASE}/conversation/${VM_CONFIG.conversationId}/messages`
+      );
+      if (!r.ok) return;
+      const data = await r.json();
+      const messages = (data && data.messages) || [];
+      // Preserve the "Today" date divider; drop the rest.
+      const divider = container.querySelector('.chat-date-div');
+      container.innerHTML = '';
+      if (divider) {
+        container.appendChild(divider);
+      } else {
+        const d = document.createElement('div');
+        d.className = 'chat-date-div';
+        d.textContent = 'Today';
+        container.appendChild(d);
+      }
+      if (!messages.length) {
+        // Empty state - keep the existing greeting bubble.
+        appendChatMsg('bot', '<div class="chat-bubble">' +
+          '<span class="cb-hi">Namaskar! 🙏</span>' +
+          '<span class="cb-en">Main Vaani hoon — aapki AI Saathi.<br/>Koi bhi sarkari yojana poochhiye.</span>' +
+        '</div>');
+        return;
+      }
+      messages.forEach(m => {
+        if (m.role === 'user') {
+          appendChatMsg('user', '<div class="chat-bubble">' + _esc(m.content_text || '') + '</div>');
+        } else {
+          const schemes = m.retrieved_schemes || [];
+          if (schemes.length) {
+            const s = schemes[0];
+            const benefit = (SCHEME_DISPLAY[s.scheme_id] || {}).benefit_amount || '';
+            const period = (SCHEME_DISPLAY[s.scheme_id] || {}).benefit_period || '';
+            appendChatMsg('bot', buildBotBubble({
+              type: 'scheme',
+              scheme_id: s.scheme_id,
+              name: s.name_en,
+              interest: s.one_line_pitch_hi || s.summary_hi || '',
+              sub: benefit ? (benefit + ' ' + period) : '',
+              cta: 'Details dekhein →',
+            }));
+          } else {
+            appendChatMsg('bot', buildBotBubble({
+              type: 'text',
+              text: m.content_text || '',
+            }));
+          }
+        }
+      });
+    } catch (err) {
+      console.warn('loadChatHistory failed', err);
+    }
+  }
 
   function clearChat() {
     document.getElementById('chat-messages').innerHTML = `

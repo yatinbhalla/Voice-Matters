@@ -273,3 +273,168 @@ async def run_voice_pipeline(
         "conversation_id": canonical_conv_id,
         "message_id": persisted_message_id,
     }
+
+
+async def run_chat_pipeline(
+    conversation_id: str,
+    text: str,
+    language_hint: str = "hi",
+) -> dict:
+    """Text-only sibling of run_voice_pipeline.
+
+    Skips audio normalize, Saaras STT, and Bulbul TTS. The remaining flow
+    (RAG -> answer -> hallucination guard -> eligibility -> DB persist) is
+    identical, and the returned envelope matches /voice's shape so the
+    frontend can render either response with the same code path. Messages
+    are persisted with modality="text".
+    """
+    sarvam = SarvamClient()
+    rag = RAGService()
+    answerer = AnswerService(sarvam=sarvam)
+    eligibility = EligibilityService(sarvam=sarvam)
+
+    pipeline_start = time.perf_counter()
+    message_id = uuid.uuid4().hex
+
+    try:
+        conv = await conversation_service.get_or_create(conversation_id)
+        canonical_conv_id = str(conv.id)
+    except Exception as e:
+        log.warning("conversation_create_failed", error=str(e))
+        canonical_conv_id = conversation_id
+
+    transcript_hi = (text or "").strip()
+
+    # RAG
+    rag_start = time.perf_counter()
+    retrieved_chunks = await rag.retrieve(transcript_hi, top_k=5)
+    rag_ms = _ms_since(rag_start)
+
+    # LLM answer
+    llm_start = time.perf_counter()
+    known_names = await _all_known_scheme_names()
+    answer = await answerer.answer(
+        transcript_hi, retrieved_chunks, all_known_scheme_names=known_names
+    )
+    llm_ms = _ms_since(llm_start)
+    response_text_hi = answer.response_text_hi
+    top_schemes = answer.top_schemes
+    sources = answer.sources
+    confidence = answer.confidence
+
+    # Eligibility
+    elig_start = time.perf_counter()
+    eligibility_results: list[dict] = []
+    follow_up_question_hi: str | None = None
+    if retrieved_chunks and not answer.refused:
+        try:
+            results, follow_up_question_hi, _ = await eligibility.check(
+                transcript_hi, retrieved_chunks
+            )
+            eligibility_results = [r.to_dict() for r in results]
+        except Exception as e:
+            log.warning("eligibility_check_failed", error=str(e))
+    elig_ms = _ms_since(elig_start)
+
+    total_ms = _ms_since(pipeline_start)
+
+    log.info(
+        "chat_pipeline_done",
+        conversation_id=canonical_conv_id,
+        message_id=message_id,
+        rag_ms=rag_ms,
+        llm_ms=llm_ms,
+        elig_ms=elig_ms,
+        total_ms=total_ms,
+        transcript_chars=len(transcript_hi),
+        retrieved=len(retrieved_chunks),
+        refused=answer.refused,
+        confidence=confidence,
+        eligibility_n=len(eligibility_results),
+    )
+
+    await _persist_telemetry(
+        {
+            "modality": "text",
+            "conversation_id": canonical_conv_id,
+            "message_id": message_id,
+            "rag_ms": rag_ms,
+            "llm_ms": llm_ms,
+            "elig_ms": elig_ms,
+            "total_ms": total_ms,
+            "transcript_chars": len(transcript_hi),
+            "retrieved": len(retrieved_chunks),
+            "refused": answer.refused,
+            "confidence": confidence,
+            "eligibility_n": len(eligibility_results),
+        }
+    )
+
+    explanations: list[dict] = []
+    if top_schemes:
+        explanations = [
+            {
+                "span_text": top_schemes[0]["name_en"],
+                "why_hi": (
+                    retrieved_chunks[0].text[:280] + "…"
+                    if retrieved_chunks and len(retrieved_chunks[0].text) > 280
+                    else (retrieved_chunks[0].text if retrieved_chunks else "")
+                ),
+                "source_url": top_schemes[0]["source_url"],
+            }
+        ]
+
+    top_3_envelope = []
+    for s in top_schemes[:3]:
+        corpus = scheme_corpus.get_scheme(s["scheme_id"]) or {}
+        top_3_envelope.append(
+            {
+                "scheme_id": s["scheme_id"],
+                "name_hi": s["name_hi"],
+                "name_en": s["name_en"],
+                "summary_hi": corpus.get("summary_hi", ""),
+                "ministry": corpus.get("ministry"),
+                "tags": corpus.get("tags", []),
+                "one_line_pitch_hi": corpus.get("summary_hi", ""),
+                "benefit_amount_inr": None,
+                "effort": "low",
+                "source_url": s["source_url"],
+                "match_confidence": s["match_confidence"],
+            }
+        )
+
+    persisted_message_id = message_id
+    try:
+        await conversation_service.append_message(
+            canonical_conv_id,
+            role="user",
+            modality="text",
+            content_text=transcript_hi,
+        )
+        assistant_msg = await conversation_service.append_message(
+            canonical_conv_id,
+            role="assistant",
+            modality="text",
+            content_text=response_text_hi,
+            retrieved_schemes=top_3_envelope,
+            sources=sources,
+            confidence=confidence,
+            eligibility_results=eligibility_results,
+        )
+        persisted_message_id = str(assistant_msg.id)
+    except Exception as e:
+        log.warning("message_persist_failed", error=str(e))
+
+    return {
+        "transcript_hi": transcript_hi,
+        "response_text_hi": response_text_hi,
+        "response_audio_url": "",
+        "top_3_schemes": top_3_envelope,
+        "eligibility_results": eligibility_results,
+        "follow_up_question_hi": follow_up_question_hi,
+        "confidence": confidence,
+        "sources": sources,
+        "explanations": explanations,
+        "conversation_id": canonical_conv_id,
+        "message_id": persisted_message_id,
+    }

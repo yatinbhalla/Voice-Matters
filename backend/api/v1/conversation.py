@@ -3,7 +3,7 @@ from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel
 
 from services import conversation_service
-from services.voice_pipeline import run_voice_pipeline
+from services.voice_pipeline import run_chat_pipeline, run_voice_pipeline
 
 log = structlog.get_logger()
 router = APIRouter(tags=["conversation"])
@@ -13,6 +13,7 @@ MAX_AUDIO_BYTES = 10 * 1024 * 1024  # ~30s clip headroom
 
 class ChatRequest(BaseModel):
     text: str
+    language_hint: str = "hi"
 
 
 class ActionRequest(BaseModel):
@@ -58,8 +59,17 @@ async def post_voice(
 
 @router.post("/conversation/{conversation_id}/chat")
 async def post_chat(conversation_id: str, body: ChatRequest):
-    log.info("chat_stub", conversation_id=conversation_id)
-    return {"conversation_id": conversation_id, "status": "not_implemented"}
+    log.info(
+        "chat_received",
+        conversation_id=conversation_id,
+        chars=len(body.text or ""),
+        language_hint=body.language_hint,
+    )
+    return await run_chat_pipeline(
+        conversation_id=conversation_id,
+        text=body.text or "",
+        language_hint=body.language_hint or "hi",
+    )
 
 
 @router.get("/conversation/{conversation_id}/messages")

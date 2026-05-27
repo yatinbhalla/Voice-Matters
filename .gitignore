@@ -31,6 +31,10 @@ backend/verify_eligibility.json
 backend/verify_eligibility_10cases.json
 backend/detail_resp.json
 backend/explain_resp.json
+backend/chat_resp.json
+backend/chat_refusal.json
+backend/msgs_resp.json
+backend/msgs_chrono.json
 backend/verify_tone.json
 backend/verify_tone_review.md
 backend/alembic/versions/__pycache__/
