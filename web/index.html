@@ -69,6 +69,22 @@
   }
 
   /* ===== Phone ===== */
+  /* .phone-wrap collapses the layout footprint of the scaled .phone so
+     narrow viewports don't get horizontal scrollbars. The CSS custom
+     property --scale is the smallest of: width budget, height budget, 1
+     (never upscale). The phone interior keeps its 390x844 coordinate
+     space; transform: scale() shrinks the whole thing uniformly so
+     hundreds of absolute-positioned children stay correctly placed. */
+  .phone-wrap {
+    --scale: min(
+      1,
+      calc((100vw - 32px) / 390),
+      calc((100vh - 80px) / 844)
+    );
+    width: calc(390px * var(--scale));
+    height: calc(844px * var(--scale));
+    position: relative;
+  }
   .phone {
     width: 390px;
     height: 844px;
@@ -79,8 +95,11 @@
       0 1px 0 rgba(255,255,255,0.6) inset,
       0 36px 80px -20px rgba(20, 30, 50, 0.35),
       0 12px 32px -8px rgba(20, 30, 50, 0.15);
-    position: relative;
+    position: absolute;
+    top: 0; left: 0;
     overflow: hidden;
+    transform: scale(var(--scale));
+    transform-origin: top left;
   }
   .notch {
     position: absolute;
@@ -1574,50 +1593,6 @@
   }
   .chatbox-hint .divider-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--muted); opacity: 0.5; }
 
-  /* ===== Tweaks Panel ===== */
-  .tweaks {
-    position: fixed;
-    right: 24px; top: 24px;
-    width: 240px;
-    background: #FFFFFF;
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    box-shadow: 0 20px 40px -12px rgba(20,30,50,0.25);
-    padding: 14px 16px 16px;
-    z-index: 100;
-  }
-  .tweaks .tp-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 6px; }
-  .tweaks .tp-eyebrow { font-size: 10px; font-weight: 700; color: var(--primary); letter-spacing: 0.14em; text-transform: uppercase; }
-  .tweaks .tp-title { font-size: 14px; font-weight: 700; color: var(--navy); margin-top: 2px; letter-spacing: -0.01em; }
-  .tweaks .tp-section { padding: 10px 0 0; }
-  .tweaks .tp-section + .tp-section { border-top: 1px solid #F0F4F8; margin-top: 6px; }
-  .tweaks .tp-label { font-size: 10px; font-weight: 600; color: var(--muted-2); margin-bottom: 6px; letter-spacing: 0.06em; text-transform: uppercase; }
-  .tweaks .row { display: flex; flex-direction: column; gap: 6px; }
-  .tweaks button.tp-btn {
-    background: #fff;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 7px 10px;
-    font-size: 12px; font-weight: 600;
-    color: var(--navy);
-    cursor: pointer;
-    font-family: inherit;
-    text-align: left;
-    display: flex; align-items: center; gap: 8px;
-    transition: all 0.15s ease;
-  }
-  .tweaks button.tp-btn:hover { border-color: var(--primary); }
-  .tweaks button.tp-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-  .tweaks button.tp-btn .num {
-    width: 18px; height: 18px;
-    border-radius: 50%;
-    background: var(--primary-tint);
-    color: var(--primary);
-    font-size: 10px; font-weight: 700;
-    display: flex; align-items: center; justify-content: center;
-    font-variant-numeric: tabular-nums;
-  }
-  .tweaks button.tp-btn.active .num { background: #fff; color: var(--primary); }
 
   /* speech bubble (recording transcription preview) */
   .transcript-bubble {
@@ -1937,8 +1912,33 @@
 
   /* responsive */
   @media (max-width: 700px) {
-    .tweaks { position: relative; top: auto; right: auto; width: 320px; }
     .stage { padding-top: 20px; }
+  }
+  /* Native-PWA mode on real phones: drop the device mockup chrome
+     (notch, fake status bar, home indicator, outer header) and fill the
+     viewport edge-to-edge. */
+  @media (max-width: 480px) {
+    body { background: var(--bg); }
+    .stage {
+      padding: 0;
+      gap: 0;
+      min-height: 100dvh;
+    }
+    .branding { display: none; }
+    .phone-wrap {
+      --scale: 1;
+      width: 100vw;
+      height: 100dvh;
+    }
+    .phone {
+      width: 100vw;
+      height: 100dvh;
+      border-radius: 0;
+      border: none;
+      box-shadow: none;
+      transform: none;
+    }
+    .notch, .status-bar, .home-indicator { display: none; }
   }
 </style>
 <link rel="manifest" href="/manifest.json">
@@ -1955,6 +1955,7 @@
     <p>Interactive prototype · tap the mic to start</p>
   </div>
 
+  <div class="phone-wrap">
   <div class="phone" id="phone" data-screen-label="Voice Matters Prototype">
     <div class="notch"></div>
     <div class="status-bar">
@@ -2934,46 +2935,9 @@
     </div>
 
   </div>
+  </div>
 </div>
 
-<!-- ===== TWEAKS PANEL ===== -->
-<aside class="tweaks">
-  <div class="tp-head">
-    <div>
-      <div class="tp-eyebrow">Tweaks</div>
-      <div class="tp-title">Prototype Controls</div>
-    </div>
-  </div>
-
-  <div class="tp-section">
-    <div class="tp-label">Jump to screen</div>
-    <div class="row">
-      <button class="tp-btn" data-nav="home"><span class="num">1</span>Home</button>
-      <button class="tp-btn" data-nav="schemes"><span class="num">2</span>Schemes</button>
-      <button class="tp-btn" data-nav="detail"><span class="num">3</span>Scheme detail</button>
-      <button class="tp-btn" data-nav="steps"><span class="num">4</span>Apply steps</button>
-      <button class="tp-btn" data-nav="history"><span class="num">5</span>History</button>
-      <button class="tp-btn" data-nav="chat"><span class="num">6</span>Chatbot</button>
-    </div>
-  </div>
-
-  <div class="tp-section">
-    <div class="tp-label">Overlays</div>
-    <div class="row">
-      <button class="tp-btn" onclick="openOnboarding()">Onboarding</button>
-      <button class="tp-btn" onclick="openWhy()">Why modal</button>
-      <button class="tp-btn" onclick="openError()">No-network error</button>
-      <button class="tp-btn" onclick="toggleChat()">Chatbot popover</button>
-    </div>
-  </div>
-
-  <div class="tp-section">
-    <div class="tp-label">Mic flow</div>
-    <div class="row">
-      <button class="tp-btn" onclick="playMicFlow()">▶ Replay full flow</button>
-    </div>
-  </div>
-</aside>
 
 <script>
   // ===== VM_CONFIG (Sprint A Day 1: backend wiring) =====
@@ -3128,8 +3092,6 @@
     // detail shares the Schemes tab highlight
     const tabTarget = target === 'detail' ? 'schemes' : target;
     document.querySelectorAll('#tabbar .tab[data-nav="' + tabTarget + '"]').forEach(t => t.classList.add('active'));
-
-    document.querySelectorAll('.tweaks .tp-btn[data-nav]').forEach(b => b.classList.toggle('active', b.dataset.nav === target));
 
     State.screen = target;
 
