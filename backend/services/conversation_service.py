@@ -198,24 +198,45 @@ async def list_conversations_grouped() -> dict[str, list[dict]]:
 
 
 async def record_feedback(
-    conversation_id: str,
+    conversation_id: str | None,
     *,
+    message_id: str | None = None,
     rating: int | None = None,
     comment: str | None = None,
 ) -> Feedback:
-    """Persist a rating/comment for the given conversation.
+    """Persist a rating/comment for the given conversation/message.
 
-    The Feedback FK is SET NULL on conversation delete, but we still ensure
-    the conversation row exists at insert time so the link survives.
+    Both conversation_id and message_id are optional. If only message_id is
+    given, the conversation_id is resolved by looking up the message row.
     """
     _require_session()
-    conv_uuid = coerce_conversation_uuid(conversation_id)
+    msg_uuid: uuid.UUID | None = None
+    if message_id:
+        try:
+            msg_uuid = uuid.UUID(str(message_id))
+        except (ValueError, TypeError):
+            msg_uuid = None
+
+    conv_uuid: uuid.UUID | None = None
     async with SessionLocal() as session:
-        existing = await session.get(Conversation, conv_uuid)
-        if existing is None:
-            session.add(Conversation(id=conv_uuid))
-            await session.flush()
-        fb = Feedback(conversation_id=conv_uuid, rating=rating, comment=comment)
+        if msg_uuid is not None:
+            msg = await session.get(Message, msg_uuid)
+            if msg is not None:
+                conv_uuid = msg.conversation_id
+            else:
+                msg_uuid = None  # don't FK to a missing message
+        if conv_uuid is None and conversation_id:
+            conv_uuid = coerce_conversation_uuid(conversation_id)
+            existing = await session.get(Conversation, conv_uuid)
+            if existing is None:
+                session.add(Conversation(id=conv_uuid))
+                await session.flush()
+        fb = Feedback(
+            conversation_id=conv_uuid,
+            message_id=msg_uuid,
+            rating=rating,
+            comment=comment,
+        )
         session.add(fb)
         await session.commit()
         await session.refresh(fb)

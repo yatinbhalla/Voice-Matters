@@ -18,6 +18,14 @@ class Feedback(Base):
         ForeignKey("conversations.id", ondelete="SET NULL"),
         nullable=True,
     )
+    # New: message-scoped feedback for per-bubble Samjhao. Nullable so legacy
+    # rows (Sprint B Day 1-2) keep working.
+    message_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("messages.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     rating: Mapped[int | None] = mapped_column(Integer, nullable=True)
     comment: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(

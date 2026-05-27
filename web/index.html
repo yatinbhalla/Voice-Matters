@@ -3343,6 +3343,12 @@
         if (!r.ok) throw new Error('Backend ' + r.status);
         const data = await r.json();
         window.__lastResponse = data;
+        // Per-message Samjhao target: home response card's "यह कैसे पता
+        // चला?" link now points at THIS turn's message_id.
+        _setSamjhaoTarget(
+          data.message_id,
+          data.top_3_schemes && data.top_3_schemes[0] && data.top_3_schemes[0].scheme_id
+        );
         // Cache top_3 so the Schemes tab can render the user's results next
         // time they navigate there.
         if (Array.isArray(data.top_3_schemes) && data.top_3_schemes.length) {
@@ -3418,38 +3424,108 @@
   });
 
   // ===== Why modal =====
-  function openWhy() {
-    // Populate from the latest voice response's first explanation, if any.
-    try {
-      const exp = window.__lastResponse
-        && Array.isArray(window.__lastResponse.explanations)
-        && window.__lastResponse.explanations[0];
-      const modal = document.getElementById('why-modal');
-      const para = modal.querySelector('.why-section p');
-      const sourceA = modal.querySelector('.source-section .source-url');
-      const query = (window.__lastResponse && window.__lastResponse.transcript_hi) || '';
-      if (exp && para) {
-        const userQ = query
-          ? '<span class="hi">आपने पूछा था — "' + query + '"।</span> '
-          : '';
-        const span = exp.span_text ? '<strong class="hi">' + exp.span_text + '</strong> — ' : '';
-        const why = exp.why_hi || '';
-        para.innerHTML = userQ + span + why;
-      }
-      if (exp && exp.source_url && sourceA) {
-        try {
-          const u = new URL(exp.source_url);
-          sourceA.textContent = u.hostname + u.pathname;
-        } catch (_e) {
-          sourceA.textContent = exp.source_url;
-        }
-        sourceA.setAttribute('href', exp.source_url);
-      }
-    } catch (e) {
-      console.warn('openWhy populate failed', e);
-    }
-    document.getElementById('why-modal').classList.add('open');
+  // Track per-message context so the Samjhao modal can fetch the right
+  // /messages/{id}/explanation payload. Set from /voice and /chat responses
+  // and from chat-history hydration.
+  let _activeMessageId = null;
+  let _activeSchemeId = null;
+
+  function _setSamjhaoTarget(messageId, schemeId) {
+    _activeMessageId = messageId || null;
+    _activeSchemeId = schemeId || null;
   }
+
+  // Update DOM for the modal from either a server payload (rich) or a
+  // legacy explanations[0] object (fallback for refresh-and-re-open cases
+  // where we have no message_id yet).
+  function _populateWhyModal(payload, legacyExp, query) {
+    const modal = document.getElementById('why-modal');
+    if (!modal) return;
+    const para = modal.querySelector('.why-section p');
+    const sourceA = modal.querySelector('.source-section .source-url');
+    const social = modal.querySelector('.social .text');
+    const socialBar = modal.querySelector('.social .bar > span');
+    const confCards = modal.querySelectorAll('.conf-row .conf-card');
+
+    const whyHi = (payload && payload.why_hi)
+      || (legacyExp && legacyExp.why_hi)
+      || '';
+    const spanText = (legacyExp && legacyExp.span_text)
+      || (payload && payload.scheme_id ? (SCHEME_DISPLAY[payload.scheme_id] || {}).name_en : '')
+      || '';
+    const sources = (payload && payload.sources)
+      || (legacyExp && legacyExp.source_url ? [{url: legacyExp.source_url}] : []);
+    const sourceUrl = sources[0] && (sources[0].url || sources[0]);
+
+    if (para) {
+      const userQ = query
+        ? '<span class="hi">आपने पूछा था — "' + _esc(query) + '"।</span> '
+        : '';
+      const span = spanText ? '<strong class="hi">' + _esc(spanText) + '</strong> — ' : '';
+      para.innerHTML = userQ + span + _esc(whyHi);
+    }
+    if (sourceA && sourceUrl) {
+      try {
+        const u = new URL(sourceUrl);
+        sourceA.textContent = u.hostname + u.pathname;
+      } catch (_e) {
+        sourceA.textContent = sourceUrl;
+      }
+      sourceA.setAttribute('href', sourceUrl);
+    }
+
+    // Confidence pill - highlight green or orange based on response.
+    const confidence = (payload && payload.confidence)
+      || (window.__lastResponse && window.__lastResponse.confidence)
+      || 'medium';
+    confCards.forEach(c => c.classList.remove('active'));
+    if (confidence === 'high' || confidence === 'medium') {
+      const green = modal.querySelector('.conf-row .conf-card.green');
+      if (green) green.classList.add('active');
+    } else {
+      const orange = modal.querySelector('.conf-row .conf-card.orange');
+      if (orange) orange.classList.add('active');
+    }
+
+    // Community line + bar from the backend aggregate (zero-state when
+    // there are no votes yet).
+    if (social && payload && typeof payload.community_vote_count === 'number') {
+      if (payload.community_vote_count === 0) {
+        social.innerHTML = 'Abhi tak koi vote nahin — <strong>aap pehle votar banoge</strong>';
+      } else {
+        social.innerHTML =
+          '<strong>' + payload.community_agreement_pct + '% logon</strong> ke liye sahi tha · ' +
+          payload.community_vote_count + ' voters';
+      }
+      if (socialBar) socialBar.style.width = (payload.community_agreement_pct || 0) + '%';
+    }
+  }
+
+  async function openWhy(messageId, schemeId) {
+    const modal = document.getElementById('why-modal');
+    if (!modal) return;
+    const mid = messageId || _activeMessageId;
+    const sid = schemeId || _activeSchemeId;
+    const query = (window.__lastResponse && window.__lastResponse.transcript_hi) || '';
+    const legacyExp = window.__lastResponse
+      && Array.isArray(window.__lastResponse.explanations)
+      && window.__lastResponse.explanations[0];
+
+    // Open immediately so the user gets feedback, populate with whatever
+    // we have locally, then refine from the backend if we have a message_id.
+    modal.classList.add('open');
+    _populateWhyModal(null, legacyExp, query);
+    if (!mid) return;
+    try {
+      const r = await fetch(`${VM_CONFIG.API_BASE}/messages/${mid}/explanation`);
+      if (!r.ok) return;
+      const payload = await r.json();
+      _populateWhyModal(payload, legacyExp, query);
+    } catch (e) {
+      console.warn('openWhy fetch failed', e);
+    }
+  }
+  window.openWhy = openWhy;
   function closeWhy() {
     document.getElementById('why-modal').classList.remove('open');
   }
@@ -3532,16 +3608,23 @@
     sheet.appendChild(toast);
     setTimeout(() => { toast.remove(); closeWhy(); }, 2000);
 
-    // Persist to backend - fire and forget.
+    // Persist to backend - fire and forget. Prefer the message-scoped
+    // /feedback endpoint so /messages/{id}/explanation can aggregate
+    // community sentiment for THIS specific answer.
     try {
-      fetch(
-        `${VM_CONFIG.API_BASE}/conversation/${VM_CONFIG.conversationId}/feedback`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ vote: vote, chips: selectedChips }),
-        }
-      ).catch(err => console.warn('feedback POST failed', err));
+      const body = { vote: vote, chips: selectedChips };
+      let url;
+      if (_activeMessageId) {
+        body.message_id = _activeMessageId;
+        url = `${VM_CONFIG.API_BASE}/feedback`;
+      } else {
+        url = `${VM_CONFIG.API_BASE}/conversation/${VM_CONFIG.conversationId}/feedback`;
+      }
+      fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      }).catch(err => console.warn('feedback POST failed', err));
     } catch (e) {
       console.warn('feedback dispatch failed', e);
     }
@@ -4001,24 +4084,37 @@
     } catch (e) { return ''; }
   }
 
-  function _badgeMarkup(badge) {
-    const map = {
-      answered: '<span class="hist-badge answered">✓ Answered</span>',
-      saved:    '<span class="hist-badge saved">📌 Saved</span>',
-      applied:  '<span class="hist-badge applied">▶ Applied</span>',
-      in_progress: '<span class="hist-badge applied">▶ In progress</span>',
-    };
-    return map[badge] || map.answered;
+  // Pull step progress for in_progress badges from localStorage so we can
+  // render "Step N/5" instead of a generic "In progress".
+  function _progressBadgeLabel(schemeId) {
+    if (!schemeId) return '▶ In progress';
+    try {
+      const raw = localStorage.getItem('vm_progress_' + schemeId);
+      if (!raw) return '▶ In progress';
+      const arr = JSON.parse(raw);
+      if (!Array.isArray(arr) || !arr.length) return '▶ In progress';
+      const done = arr.filter(s => s === 'done').length;
+      return '▶ Step ' + (done + (done < arr.length ? 1 : 0)) + '/' + arr.length;
+    } catch (e) { return '▶ In progress'; }
+  }
+
+  function _badgeMarkup(badge, schemeId) {
+    if (badge === 'saved')   return '<span class="hist-badge saved">📌 Saved</span>';
+    if (badge === 'applied') return '<span class="hist-badge applied">▶ Applied</span>';
+    if (badge === 'in_progress') {
+      return '<span class="hist-badge applied">' + _esc(_progressBadgeLabel(schemeId)) + '</span>';
+    }
+    return '<span class="hist-badge answered">✓ Answered</span>';
   }
 
   function _historyEntryHtml(s, periodKey) {
     const time = _formatTime(s.timestamp);
     const schemeName = s.last_scheme_name || 'Sarkari Saathi';
     return (
-      '<div class="hist-entry" data-hperiod="' + periodKey + '" data-scheme="' + _esc(s.last_scheme_id || '') + '">' +
+      '<div class="hist-entry" data-hperiod="' + periodKey + '" data-scheme="' + _esc(s.last_scheme_id || '') + '" data-badge="' + _esc(s.badge || '') + '">' +
       '  <div class="hist-time-row">' +
       '    <span class="hist-time"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>' + _esc(time) + '</span>' +
-           _badgeMarkup(s.badge) +
+           _badgeMarkup(s.badge, s.last_scheme_id) +
       '  </div>' +
       '  <div class="hist-query">' +
       '    <span class="q-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></span>' +
@@ -4076,14 +4172,20 @@
         const activeChip = document.querySelector('#screen-history .hf-chip.active');
         if (activeChip) filterHistory(activeChip.dataset.hfilter);
       }
-      // Wire each entry to jump into the matching scheme detail.
+      // Wire each entry to jump into detail (default) or steps (for
+      // in_progress badges - the user is mid-application).
       list.querySelectorAll('.hist-entry').forEach(entry => {
         const sid = entry.dataset.scheme;
         if (!sid) return;
+        const badge = entry.dataset.badge;
         entry.style.cursor = 'pointer';
         entry.addEventListener('click', () => {
           _currentDetailSchemeId = sid;
-          navigate('detail');
+          if (badge === 'in_progress' && typeof openApplyForScheme === 'function') {
+            openApplyForScheme(sid);
+          } else {
+            openSchemeDetail(sid);
+          }
         });
       });
     } catch (e) {
@@ -4118,23 +4220,10 @@
     };
   })();
 
-  function _renderSchemesFromTop3(top3) {
-    if (!Array.isArray(top3) || top3.length === 0) return;
-    const cards = document.querySelectorAll('#screen-schemes article.card');
-    // Cards 1 (primary) and 2 (secondary) share the same shape -- safe to swap.
-    // Card 3 ("applied" PM-Kisan) is left as the mock applied-state demo.
-    const swappable = Math.min(cards.length, top3.length, 2);
-    for (let i = 0; i < swappable; i++) {
-      const card = cards[i];
-      const sid = top3[i].scheme_id;
-      _updateCard(card, sid);
-    }
-    // Update the screen header subtitle "3 schemes mile" to match count.
-    const head = document.querySelector('#screen-schemes .head-eyebrow + h2, #screen-schemes h2');
-    if (head && head.textContent.trim().toLowerCase().includes('scheme')) {
-      head.textContent = top3.length + ' schemes mile';
-    }
-  }
+  // renderHistory is the public name in the Sprint B Day 6 spec; we keep
+  // the existing async _renderHistoryPage implementation behind this alias.
+  function renderHistory() { return _renderHistoryPage(); }
+  window.renderHistory = renderHistory;
 
   // ===== Speak scheme (Sarvam Bulbul via backend /explain) =====
   // Map the scheme-name text in the locked design to the scheme_id our
@@ -4637,8 +4726,11 @@
   }
 
   function buildBotBubble(resp) {
+    const dataAttrs =
+      (resp.message_id ? ` data-message-id="${_esc(resp.message_id)}"` : '') +
+      (resp.scheme_id ? ` data-scheme-id="${_esc(resp.scheme_id)}"` : '');
     if (resp.type === 'text') {
-      return `<div class="chat-bubble">${resp.hi ? `<span class="cb-hi">${resp.hi}</span>` : ''}<span class="${resp.hi ? 'cb-en' : ''}" style="${resp.hi ? '' : 'font-size:13px;'}">${resp.text.replace(/\n/g,'<br>')}</span></div>`;
+      return `<div class="chat-bubble"${dataAttrs}>${resp.hi ? `<span class="cb-hi">${resp.hi}</span>` : ''}<span class="${resp.hi ? 'cb-en' : ''}" style="${resp.hi ? '' : 'font-size:13px;'}">${resp.text.replace(/\n/g,'<br>')}</span></div>`;
     }
     if (resp.type === 'list') {
       const listHtml = resp.items.map(i => `<li style="padding:2px 0;">${i}</li>`).join('');
@@ -4652,7 +4744,7 @@
       const applyCall = sid
         ? `openApplyForScheme('${sid}')`
         : "navigate('steps')";
-      return `<div class="chat-bubble" style="max-width:260px;padding:10px 12px;">
+      return `<div class="chat-bubble"${dataAttrs} style="max-width:260px;padding:10px 12px;">
         <span class="cb-en" style="opacity:1;font-weight:700;color:var(--primary);font-size:11px;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px;display:block;">Best match mila!</span>
         <div class="chat-scheme-mini" onclick="${detailCall}">
           <div class="csm-head"><span class="csm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg></span><span class="csm-name">${resp.name}</span></div>
@@ -4688,6 +4780,10 @@
       const data = await r.json();
       hideTyping();
       window.__lastResponse = data;
+      _setSamjhaoTarget(
+        data.message_id,
+        data.top_3_schemes && data.top_3_schemes[0] && data.top_3_schemes[0].scheme_id
+      );
       if (data.top_3_schemes && data.top_3_schemes.length) {
         const s = data.top_3_schemes[0];
         // Cache for the detail-page handoff (scheme bubble cta navigates)
@@ -4771,10 +4867,12 @@
         '</div>');
         return;
       }
+      let lastAssistant = null;
       messages.forEach(m => {
         if (m.role === 'user') {
           appendChatMsg('user', '<div class="chat-bubble">' + _esc(m.content_text || '') + '</div>');
         } else {
+          lastAssistant = m;
           const schemes = m.retrieved_schemes || [];
           if (schemes.length) {
             const s = schemes[0];
@@ -4783,6 +4881,7 @@
             appendChatMsg('bot', buildBotBubble({
               type: 'scheme',
               scheme_id: s.scheme_id,
+              message_id: m.id,
               name: s.name_en,
               interest: s.one_line_pitch_hi || s.summary_hi || '',
               sub: benefit ? (benefit + ' ' + period) : '',
@@ -4791,11 +4890,19 @@
           } else {
             appendChatMsg('bot', buildBotBubble({
               type: 'text',
+              message_id: m.id,
               text: m.content_text || '',
             }));
           }
         }
       });
+      if (lastAssistant) {
+        _setSamjhaoTarget(
+          lastAssistant.id,
+          (lastAssistant.retrieved_schemes && lastAssistant.retrieved_schemes[0]
+            && lastAssistant.retrieved_schemes[0].scheme_id) || null
+        );
+      }
     } catch (err) {
       console.warn('loadChatHistory failed', err);
     }
