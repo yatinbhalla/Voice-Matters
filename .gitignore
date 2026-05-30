@@ -49,6 +49,12 @@ backend/ramesh.json
 backend/pooja.json
 backend/voice_high.json
 backend/voice_low.json
+backend/trust.json
+backend/tests/report.html
+backend/tests/report.json
+backend/tests/snapshots/
+backend/tests/synthesized/
+backend/.pytest_cache/
 backend/verify_tone.json
 backend/verify_tone_review.md
 backend/alembic/versions/__pycache__/
