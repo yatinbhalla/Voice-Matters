@@ -38,6 +38,102 @@
       max-width: 1100px; margin: 0 auto;
       padding: 40px 24px 60px;
     }
+    /* Top-left "back to app" pill so mobile users always have a clear way
+       out of /admin.html without relying on the browser's back button. */
+    .back-pill {
+      position: fixed; top: 14px; left: 14px; z-index: 60;
+      display: inline-flex; align-items: center; gap: 6px;
+      height: 38px; padding: 0 14px; border-radius: 999px;
+      background: #fff; border: 1px solid var(--line);
+      color: var(--navy); font: 600 13px 'Inter', sans-serif;
+      text-decoration: none; box-shadow: 0 6px 16px -8px rgba(20,30,50,.18);
+      transition: transform .12s, background .15s; cursor: pointer;
+    }
+    .back-pill:hover { transform: translateY(-1px); background: var(--bg); }
+    .back-pill svg { width: 14px; height: 14px; }
+    @media (max-width: 640px) {
+      .wrap { padding: 64px 14px 40px; }
+      .hdr { flex-direction: column; align-items: flex-start; gap: 12px; margin-bottom: 18px; }
+      .hdr h1 { font-size: 22px; }
+      .hdr .meta { text-align: left; }
+      .grid { gap: 12px; }
+      .card { padding: 16px 18px; border-radius: 14px; }
+      .card .value { font-size: 30px; margin: 6px 0 4px; }
+      .card .badge { top: 12px; right: 12px; padding: 3px 8px; font-size: 10px; }
+      .refresh-btn { width: 100%; padding: 10px 14px; margin-top: 10px; }
+    }
+
+    /* ═══════ Viewport simulator parity ═══════
+       The main app stores its chosen viewport in localStorage.vm_viewport.
+       admin.html reads that on load and applies a matching layout so when
+       the user clicks "Trust metrics" while in Mobile mode, this screen
+       also renders inside a 430px mobile card. */
+    body[data-viewport="mobile"] {
+      background: #E7EDF3;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 5dvh 0 0;
+    }
+    body[data-viewport="mobile"] .back-pill { position: absolute; top: calc(5dvh + 12px); left: calc(50% - 215px + 12px); }
+    body[data-viewport="mobile"] .wrap {
+      max-width: 430px; width: 430px;
+      height: 90dvh; overflow-y: auto; -webkit-overflow-scrolling: touch;
+      background: var(--bg); border-radius: 24px;
+      box-shadow: 0 24px 60px -16px rgba(20,30,50,.25);
+      padding: 60px 18px 36px;
+      position: relative;
+    }
+    body[data-viewport="mobile"] .hdr { flex-direction: column; align-items: flex-start; gap: 12px; margin-bottom: 18px; }
+    body[data-viewport="mobile"] .hdr h1 { font-size: 22px; }
+    body[data-viewport="mobile"] .hdr .meta { text-align: left; }
+    body[data-viewport="mobile"] .grid { grid-template-columns: 1fr !important; gap: 12px; }
+    body[data-viewport="mobile"] .card { padding: 16px 18px; border-radius: 14px; }
+    body[data-viewport="mobile"] .card .value { font-size: 30px; margin: 6px 0 4px; }
+    body[data-viewport="mobile"] .refresh-btn { width: 100%; padding: 10px 14px; margin-top: 10px; }
+
+    body[data-viewport="tablet"] {
+      background: #E7EDF3; padding: 24px 0 0;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    body[data-viewport="tablet"] .back-pill { position: absolute; top: 36px; left: calc(50% - 450px + 14px); }
+    body[data-viewport="tablet"] .wrap {
+      max-width: 900px; width: 900px;
+      height: calc(100dvh - 48px); overflow-y: auto;
+      background: var(--bg); border-radius: 18px;
+      box-shadow: 0 24px 60px -16px rgba(20,30,50,.18);
+      padding: 40px 28px 40px;
+    }
+    body[data-viewport="tablet"] .grid { grid-template-columns: repeat(2, 1fr); }
+    /* desktop = default — no overrides needed */
+
+    /* Floating viewport switcher (parity with the main app's vp-fab) */
+    .vp-fab {
+      position: fixed; bottom: 20px; right: 24px; z-index: 70;
+      display: flex; align-items: center; gap: 6px;
+      height: 36px; padding: 0 12px; border-radius: 999px;
+      background: rgba(27,42,65,.92); color: #fff;
+      font: 700 12.5px 'Inter', sans-serif; cursor: pointer; border: none;
+      box-shadow: 0 8px 22px -8px rgba(20,30,50,.45);
+    }
+    .vp-fab svg { width: 15px; height: 15px; }
+    .vp-menu {
+      position: fixed; bottom: 64px; right: 24px; z-index: 71;
+      width: 200px; background: #fff; border: 1px solid var(--line);
+      border-radius: 14px; box-shadow: 0 18px 44px -22px rgba(20,30,50,.28);
+      padding: 6px; display: none;
+    }
+    .vp-menu.open { display: block; }
+    .vp-menu button {
+      display: flex; align-items: center; gap: 10px; width: 100%;
+      padding: 10px 11px; border-radius: 9px; font: 600 13px 'Inter', sans-serif;
+      color: var(--navy); background: none; border: none; cursor: pointer; text-align: left;
+    }
+    .vp-menu button:hover { background: var(--bg); }
+    .vp-menu button[aria-pressed="true"] { background: rgba(42,157,181,.12); color: var(--primary); }
+    @media (max-width: 480px) {
+      body[data-viewport="mobile"] .back-pill { left: 12px; }
+      body[data-viewport="mobile"] .wrap { width: 100%; max-width: 100vw; height: 100dvh; border-radius: 0; }
+      .vp-fab { bottom: 14px; right: 14px; height: 32px; padding: 0 10px; font-size: 11.5px; }
+    }
     header.hdr {
       display: flex; align-items: flex-end; justify-content: space-between;
       margin-bottom: 28px; gap: 16px; flex-wrap: wrap;
@@ -127,6 +223,25 @@
   </style>
 </head>
 <body>
+  <!-- Explicit back-to-app pill. Uses window.location.assign to hard-
+       navigate so any cached browser-back state pointing at the archived
+       _legacy_prototype.html is bypassed entirely. -->
+  <button class="back-pill" type="button" onclick="goToApp()" aria-label="Wapas app par">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    <span>Wapas app par</span>
+  </button>
+
+  <!-- Viewport switcher (parity with the main app). -->
+  <button id="vp-fab" class="vp-fab" type="button" title="Viewport switcher">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="2"/><line x1="8" y1="20" x2="16" y2="20"/></svg>
+    <span id="vp-label">Auto</span>
+  </button>
+  <div id="vp-menu" class="vp-menu" role="menu">
+    <button type="button" data-vp="auto">Auto · Window size</button>
+    <button type="button" data-vp="mobile">Mobile · ≤480px</button>
+    <button type="button" data-vp="tablet">Tablet · 768–1023</button>
+    <button type="button" data-vp="desktop">Desktop · ≥1024px</button>
+  </div>
   <div class="wrap">
     <header class="hdr">
       <div>
@@ -149,7 +264,7 @@
 
     <footer class="foot">
       <span id="api-base">/api/v1/admin/trust-metrics</span>
-      · <a href="/" style="color:inherit;">← back to app</a>
+      · <a href="/index.html#/home" style="color:inherit;">← back to app</a>
     </footer>
   </div>
 
@@ -240,6 +355,52 @@
 
     loadMetrics();
     setInterval(loadMetrics, 30000);
+
+    /* ───────── Back-to-app navigation ─────────
+       Build the destination URL from window.location.origin so we never
+       inherit a stale browser-history entry to the legacy prototype. */
+    function goToApp() {
+      const url = window.location.origin + '/index.html#/home';
+      window.location.assign(url);
+    }
+
+    /* ───────── Viewport simulator ─────────
+       Reads the same localStorage key (vm_viewport) the main app writes,
+       so when the user picks "Mobile" in the app and then opens Trust
+       Metrics, this screen also renders in mobile sim. */
+    (function vpInit(){
+      const fab = document.getElementById('vp-fab');
+      const menu = document.getElementById('vp-menu');
+      const label = document.getElementById('vp-label');
+      const LABEL = {auto:'Auto', mobile:'Mobile', tablet:'Tablet', desktop:'Desktop'};
+      function apply(vp){
+        if(vp === 'auto'){ document.body.removeAttribute('data-viewport'); }
+        else { document.body.setAttribute('data-viewport', vp); }
+        label.textContent = LABEL[vp] || 'Auto';
+        menu.querySelectorAll('[data-vp]').forEach(b=>{
+          b.setAttribute('aria-pressed', b.dataset.vp === vp ? 'true' : 'false');
+        });
+        try{ localStorage.setItem('vm_viewport', vp); }catch(e){}
+      }
+      fab.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        menu.classList.toggle('open');
+      });
+      menu.querySelectorAll('[data-vp]').forEach(b=>{
+        b.addEventListener('click',(e)=>{
+          e.stopPropagation();
+          apply(b.dataset.vp);
+          menu.classList.remove('open');
+        });
+      });
+      document.addEventListener('click',(e)=>{
+        if(!menu.contains(e.target) && e.target !== fab){ menu.classList.remove('open'); }
+      });
+      // Inherit the viewport choice from the main app.
+      let saved = 'auto';
+      try{ saved = localStorage.getItem('vm_viewport') || 'auto'; }catch(e){}
+      apply(saved);
+    })();
   </script>
 </body>
 </html>
