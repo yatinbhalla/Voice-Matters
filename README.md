@@ -4,7 +4,7 @@ Sarkari Saathi is a Hindi-first voice PWA that helps Indian citizens discover
 and apply for government schemes through natural conversation. The backend is
 a Python FastAPI service that orchestrates Sarvam (speech), OpenAI (reasoning),
 and Pinecone (scheme retrieval) over a curated corpus. The frontend is a
-zero-build static PWA, optimized for low-end Android devices on flaky networks.
+zero-build static PWA, optimized for low-end Android devices on flaky networks. 
 
 ## Quickstart
 
