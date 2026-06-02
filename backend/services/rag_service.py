@@ -13,10 +13,12 @@ from clients.pinecone_client import PineconeClient
 
 log = structlog.get_logger()
 
-# Cosine-similarity distributions differ between embedders. text-embedding-3-small
-# tends to score 0.75+ for clear matches; paraphrase-multilingual-MiniLM-L12-v2
-# scores more like 0.30-0.50. Default min_score adapts to whichever is active.
-DEFAULT_MIN_SCORE = 0.75 if EMBED_PROVIDER == "openai" else 0.30
+# Cosine-similarity distributions differ between embedders. On our code-mixed
+# Hindi-Roman + Devanagari corpus, text-embedding-3-small tops out around
+# 0.45-0.55 for clear matches (English-only would be 0.70+); the local
+# paraphrase-multilingual-MiniLM-L12-v2 scores 0.30-0.50. Default min_score
+# adapts to whichever is active.
+DEFAULT_MIN_SCORE = 0.36 if EMBED_PROVIDER == "openai" else 0.30
 
 
 @dataclass

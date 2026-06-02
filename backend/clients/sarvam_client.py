@@ -58,6 +58,22 @@ class SarvamClient:
     def __init__(self) -> None:
         self.api_key = os.getenv("SARVAM_API_KEY", "")
         self._timeout = httpx.Timeout(30.0, connect=10.0)
+        # Persistent httpx client so TLS / connection-pool / keep-alive get
+        # reused across calls. Recreating per-call was costing a TLS
+        # handshake to Sarvam's India endpoint on EVERY STT / generate /
+        # synth — several seconds wasted per pipeline.
+        self._http: httpx.AsyncClient | None = None
+
+    def _client(self) -> httpx.AsyncClient:
+        # Lazy-init so importing this module doesn't open sockets.
+        if self._http is None or self._http.is_closed:
+            self._http = httpx.AsyncClient(
+                timeout=self._timeout,
+                limits=httpx.Limits(
+                    max_connections=20, max_keepalive_connections=10
+                ),
+            )
+        return self._http
 
     def _require_key(self) -> None:
         if not self.api_key:
@@ -77,12 +93,12 @@ class SarvamClient:
         self._require_key()
         files = {"file": (filename, audio_bytes, content_type)}
         data = {"model": "saarika:v2.5", "language_code": language_code}
-        async with httpx.AsyncClient(timeout=self._timeout) as client:
-            resp = await client.post(
-                STT_URL, headers=self._headers(), files=files, data=data
-            )
-            resp.raise_for_status()
-            payload = resp.json()
+        client = self._client()
+        resp = await client.post(
+            STT_URL, headers=self._headers(), files=files, data=data
+        )
+        resp.raise_for_status()
+        payload = resp.json()
         transcript = payload.get("transcript") or payload.get("text") or ""
         log.info("sarvam_stt_ok", chars=len(transcript))
         return transcript
@@ -102,10 +118,10 @@ class SarvamClient:
         messages.append({"role": "user", "content": prompt})
         body = {"model": model, "messages": messages, "temperature": temperature}
         headers = {**self._headers(), "Authorization": f"Bearer {self.api_key}"}
-        async with httpx.AsyncClient(timeout=self._timeout) as client:
-            resp = await client.post(CHAT_URL, headers=headers, json=body)
-            resp.raise_for_status()
-            payload = resp.json()
+        client = self._client()
+        resp = await client.post(CHAT_URL, headers=headers, json=body)
+        resp.raise_for_status()
+        payload = resp.json()
         choices = payload.get("choices") or []
         if not choices:
             return ""
@@ -143,10 +159,10 @@ class SarvamClient:
             "speech_sample_rate": sample_rate,
             "enable_preprocessing": True,
         }
-        async with httpx.AsyncClient(timeout=self._timeout) as client:
-            resp = await client.post(TTS_URL, headers=self._headers(), json=body)
-            resp.raise_for_status()
-            payload = resp.json()
+        client = self._client()
+        resp = await client.post(TTS_URL, headers=self._headers(), json=body)
+        resp.raise_for_status()
+        payload = resp.json()
         audios = payload.get("audios") or []
         if not audios:
             raise RuntimeError("Sarvam TTS returned no audio")

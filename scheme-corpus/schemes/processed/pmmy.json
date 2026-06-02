@@ -1,0 +1,99 @@
+{
+  "scheme_id": "pmmy",
+  "name_hi": "प्रधानमंत्री मुद्रा योजना",
+  "name_en": "Pradhan Mantri Mudra Yojana",
+  "ministry": "Ministry of Finance (Department of Financial Services)",
+  "summary_hi": "प्रधानमंत्री मुद्रा योजना छोटे व्यापारियों को बिना कोई गहना रखे लोन देती है। चार श्रेणियाँ हैं - शिशु पचास हज़ार तक, किशोर पाँच लाख तक, तरुण दस लाख तक, और तरुण प्लस बीस लाख तक। दुकान खोलनी हो या चलाते हुए व्यापार बढ़ाना हो, दोनों के लिए मिलता है।",
+  "source_url": "https://www.mudra.org.in",
+  "helpline_phone": "Refer official Mudra helpline directory",
+  "tags": [
+    "business",
+    "loan",
+    "msme",
+    "mudra",
+    "self-employment",
+    "shishu",
+    "kishore",
+    "tarun"
+  ],
+  "eligibility_rules": {
+    "requires_external_verification": true,
+    "external_verification_hi": "Bank aapka credit record aur business plan dekh ke loan deta hai - default record nahi hona chahiye.",
+    "rules": [
+      {
+        "field": "age",
+        "op": "gte",
+        "value": 18,
+        "reason_hi": "Loan lene ke liye kam se kam umar 18 saal hai",
+        "ask_hi": "Kya aap 18 saal ya usse upar ke hain?"
+      },
+      {
+        "field": "has_bank_account",
+        "op": "eq",
+        "value": true,
+        "reason_hi": "Mudra loan bank khaate mein aata hai isliye bank account zaroori hai",
+        "ask_hi": "Kya aapka kisi bank mein khaata hai?"
+      },
+      {
+        "field": "occupation",
+        "op": "not_contains_any",
+        "value": [
+          "agriculture only",
+          "kheti only"
+        ],
+        "reason_hi": "Mudra non-farm sector ke liye hai - sirf kheti ke liye nahi",
+        "ask_hi": "Aap kis tarah ka kaam karte hain? Dukan, sevayein, ya manufacture?"
+      }
+    ]
+  },
+  "chunks": [
+    {
+      "id": "pmmy-summary",
+      "chunk_type": "summary",
+      "language": "hi-en",
+      "text": "प्रधानमंत्री मुद्रा योजना छोटे व्यापारियों को बिना कोई गहना रखे लोन देती है। चार श्रेणियाँ हैं - शिशु पचास हज़ार तक, किशोर पाँच लाख तक, तरुण दस लाख तक, और तरुण प्लस बीस लाख तक। दुकान खोलनी हो या चलाते हुए व्यापार बढ़ाना हो, दोनों के लिए मिलता है। Pradhan Mantri Mudra Yojana (प्रधानमंत्री मुद्रा योजना) - Chhote vyaapariyon ke liye Rs 50,000 se Rs 20 lakh tak ka collateral-free business loan - Shishu, Kishore, Tarun, Tarun Plus shreniyaan. Pradhan Mantri Mudra Yojana (PMMY) is one of the flagship financial inclusion and entrepreneurship promotion schemes of the Government of India. The scheme was launched with the objective of providing accessible and affordable credit to micro and small enterprises operating in the non farm sector. It supports individuals and businesses that wish to start a new enterprise, expand an existing business, purchase equipment, strengthen working capital, or generate sustainable income through self employment. प्रधानमंत्री मुद्रा योजना (PMMY) भारत सरकार की एक प्रमुख वित्तीय समावेशन और स्वरोजगार प्रोत्साहन योजना है, जिसका उद्देश्य छोटे व्यवसायों, सूक्ष्म उद्यमों और नए उद्यमियों को आसान ऋण उपलब्ध कराना है। यह योजना विशेष रूप से उन लोगों के लिए बनाई गई है जो स्वयं का व्यवसाय शुरू करना चाहते हैं या पहले से चल रहे व्यवसाय का विस्तार करना चाहते हैं। योजना के अंतर्गत गैर कृषि क्षेत्र में कार्यरत सूक्ष्म और लघु उद्यमों को वित्तीय सहायता प्रदान की जाती है। इसमें विनिर्माण, व्यापार, सेवा क्षेत्र तथा कृषि से संबद्ध गतिविधियाँ जैसे डेयरी, मधुमक्खी पालन, पोल्ट्री, खाद्य प्रसंस्करण आदि शामिल हैं।"
+    },
+    {
+      "id": "pmmy-overview",
+      "chunk_type": "overview",
+      "language": "hi-en",
+      "text": "Pradhan Mantri Mudra Yojana detailed overview / vistar se jaankari: Pradhan Mantri Mudra Yojana (PMMY) is one of the flagship financial inclusion and entrepreneurship promotion schemes of the Government of India. The scheme was launched with the objective of providing accessible and affordable credit to micro and small enterprises operating in the non farm sector. It supports individuals and businesses that wish to start a new enterprise, expand an existing business, purchase equipment, strengthen working capital, or generate sustainable income through self employment.\n\nThe scheme covers a wide range of economic activities including manufacturing, trading, service sector enterprises, food processing, repair shops, transport services, dairy farming, poultry farming, beekeeping, and other agriculture allied activities. Through PMMY, the government seeks to bridge the credit gap faced by small entrepreneurs who often struggle to obtain formal financing from traditional banking institutions. प्रधानमंत्री मुद्रा योजना (PMMY) भारत सरकार की एक प्रमुख वित्तीय समावेशन और स्वरोजगार प्रोत्साहन योजना है, जिसका उद्देश्य छोटे व्यवसायों, सूक्ष्म उद्यमों और नए उद्यमियों को आसान ऋण उपलब्ध कराना है। यह योजना विशेष रूप से उन लोगों के लिए बनाई गई है जो स्वयं का व्यवसाय शुरू करना चाहते हैं या पहले से चल रहे व्यवसाय का विस्तार करना चाहते हैं। योजना के अंतर्गत गैर कृषि क्षेत्र में कार्यरत सूक्ष्म और लघु उद्यमों को वित्तीय सहायता प्रदान की जाती है। इसमें विनिर्माण, व्यापार, सेवा क्षेत्र तथा कृषि से संबद्ध गतिविधियाँ जैसे डेयरी, मधुमक्खी पालन, पोल्ट्री, खाद्य प्रसंस्करण आदि शामिल हैं।\n\nमुद्रा योजना का मुख्य उद्देश्य छोटे उद्यमियों को औपचारिक बैंकिंग व्यवस्था से जोड़ना है ताकि उन्हें साहूकारों या अनौपचारिक स्रोतों पर निर्भर न रहना पड़े। योजना के अंतर्गत ऋण विभिन्न बैंकों, क्षेत्रीय ग्रामीण बैंकों, सहकारी बैंकों, सूक्ष्म वित्त संस्थानों, एनबीएफसी और स्मॉल फाइनेंस बैंकों के माध्यम से उपलब्ध कराया जाता है।"
+    },
+    {
+      "id": "pmmy-benefits",
+      "chunk_type": "benefits",
+      "language": "hi-en",
+      "text": "Pradhan Mantri Mudra Yojana ke benefits / faayde: max loan amount inr: 2000000; categories: ['Shishu', 'Kishore', 'Tarun', 'Tarun Plus']; collateral free: As per lender and PMMY norms; purpose: Micro enterprise financing"
+    },
+    {
+      "id": "pmmy-documents",
+      "chunk_type": "documents_required",
+      "language": "hi-en",
+      "text": "Documents needed for Pradhan Mantri Mudra Yojana application / Zaroori kaagaz: Identity Proof, Address Proof, Photograph, Business Address Proof, Project Report (where applicable), Bank Statements"
+    },
+    {
+      "id": "pmmy-apply",
+      "chunk_type": "application_process",
+      "language": "hi-en",
+      "text": "How to apply for Pradhan Mantri Mudra Yojana / Kaise apply karein: Step 1: Visit Udyamimitra Portal / उद्यमी मित्र पोर्टल पर जाएँ. | Step 2: Apply for Mudra Loan / मुद्रा लोन के लिए आवेदन करें. | Step 3: Register using OTP / OTP के माध्यम से पंजीकरण करें. | Step 4: Fill personal and business details / व्यक्तिगत और व्यवसायिक जानकारी भरें. | Step 5: Upload documents / दस्तावेज अपलोड करें. | Step 6: Submit application / आवेदन जमा करें."
+    },
+    {
+      "id": "pmmy-helpline",
+      "chunk_type": "helpline",
+      "language": "hi-en",
+      "text": "Pradhan Mantri Mudra Yojana helpline / madad ke liye number: Refer official Mudra helpline directory. Official portal: https://www.udyamimitra.in. Madad ke liye is number par call karein ya portal par jaayein."
+    },
+    {
+      "id": "pmmy-intents",
+      "chunk_type": "user_voice_intents",
+      "language": "hi-roman",
+      "text": "Common user voice intents for Pradhan Mantri Mudra Yojana: main vyaapar shuru karna chahta hu, loan chahiye | Mudra loan kaise milta hai | chhoti dukaan ke liye loan | collateral free business loan | main self employed hu, loan chahiye | MSME loan kaise lete hain | Shishu loan kya hai | Kishore loan | Tarun loan ke liye apply kaise karein | ₹50000 ka business loan | ₹10 lakh ka loan vyaapar ke liye | main rehri lagata hu, loan chahiye | naye business ke liye paisa chahiye | Mudra Yojana kya hai"
+    },
+    {
+      "id": "pmmy-intents-hi",
+      "chunk_type": "user_voice_intents_devanagari",
+      "language": "hi-devanagari",
+      "text": "प्रधानमंत्री मुद्रा योजना ke liye common voice queries: मुझे व्यापार शुरू करने के लिए लोन चाहिए | मुद्रा लोन कैसे मिलता है | छोटी दुकान के लिए लोन | बिना गहना रखे लोन | मैं स्वरोजगार करता हूँ लोन चाहिए | एमएसएमई लोन कैसे लेते हैं | शिशु लोन क्या है | किशोर तरुण लोन | मैं रेहड़ी लगाता हूँ लोन चाहिए | नए बिज़नेस के लिए पैसा चाहिए"
+    }
+  ]
+}

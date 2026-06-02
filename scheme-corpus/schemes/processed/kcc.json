@@ -1,0 +1,103 @@
+{
+  "scheme_id": "kcc",
+  "name_hi": "किसान क्रेडिट कार्ड योजना",
+  "name_en": "Kisan Credit Card Scheme",
+  "ministry": "Ministry of Agriculture and Farmers' Welfare",
+  "summary_hi": "किसान क्रेडिट कार्ड किसानों को सस्ती दर पर लोन देता है - खेती, फसल कटाई के बाद का ख़र्च, पशुपालन और मशीनरी सब के लिए। समय पर चुकाने पर ब्याज सिर्फ़ चार प्रतिशत के क़रीब आता है, और एक बार बना कार्ड पाँच साल तक चलता है। बटाई-दार और शेयर क्रॉपर भी ले सकते हैं।",
+  "source_url": "https://pib.gov.in/FactsheetDetails.aspx?Id=148600",
+  "helpline_phone": "1800-180-1551",
+  "tags": [
+    "farmer",
+    "credit",
+    "kisan",
+    "loan",
+    "kcc",
+    "agriculture"
+  ],
+  "eligibility_rules": {
+    "requires_external_verification": true,
+    "external_verification_hi": "Bank zameen ke kaagaz (khasra/khatauni) aur fasal pattern verify karega.",
+    "rules": [
+      {
+        "field": "occupation",
+        "op": "contains_any",
+        "value": [
+          "farmer",
+          "kisan",
+          "kheti",
+          "agriculture",
+          "किसान",
+          "खेती",
+          "batay",
+          "share crop"
+        ],
+        "reason_hi": "KCC sirf kisaano, batayi-daaron aur kheti karne waalon ke liye hai",
+        "ask_hi": "Kya aap kheti karte hain - apni zameen par ya batayi par?"
+      },
+      {
+        "field": "age",
+        "op": "gte",
+        "value": 18,
+        "reason_hi": "Aavedak ki umar kam se kam 18 saal honi chahiye",
+        "ask_hi": "Kya aap 18 saal ya usse upar ke hain?"
+      },
+      {
+        "field": "has_bank_account",
+        "op": "eq",
+        "value": true,
+        "reason_hi": "KCC ek bank credit card hai, isliye bank khaata zaroori hai",
+        "ask_hi": "Kya aapka kisi bank mein khaata hai?"
+      }
+    ]
+  },
+  "chunks": [
+    {
+      "id": "kcc-summary",
+      "chunk_type": "summary",
+      "language": "hi-en",
+      "text": "किसान क्रेडिट कार्ड किसानों को सस्ती दर पर लोन देता है - खेती, फसल कटाई के बाद का ख़र्च, पशुपालन और मशीनरी सब के लिए। समय पर चुकाने पर ब्याज सिर्फ़ चार प्रतिशत के क़रीब आता है, और एक बार बना कार्ड पाँच साल तक चलता है। बटाई-दार और शेयर क्रॉपर भी ले सकते हैं। Kisan Credit Card Scheme (किसान क्रेडिट कार्ड योजना) - Kisaano ke liye saste credit card - kheti, paludhan aur machinery ke liye 4% byaaj par loan, batayi-daar bhi paat-r. Kisan Credit Card (KCC) is one of the flagship agricultural credit initiatives of the Government of India. किसान क्रेडिट कार्ड (KCC) भारत सरकार की एक महत्वपूर्ण कृषि ऋण योजना है जिसका उद्देश्य किसानों को समय पर"
+    },
+    {
+      "id": "kcc-overview",
+      "chunk_type": "overview",
+      "language": "hi-en",
+      "text": "Kisan Credit Card Scheme detailed overview / vistar se jaankari: Kisan Credit Card (KCC) is one of the flagship agricultural credit initiatives of the Government of India.\n\nThe scheme was introduced to provide timely and adequate credit support to farmers through a simplified किसान क्रेडिट कार्ड (KCC) भारत सरकार की एक महत्वपूर्ण कृषि ऋण योजना है जिसका उद्देश्य किसानों को समय पर\n\nऔर पर्याप्त ऋण उपलब्ध कराना है। इस योजना के माध्यम से किसानों को खेती, फसल कटाई के बाद के खर्च,"
+    },
+    {
+      "id": "kcc-benefits",
+      "chunk_type": "benefits",
+      "language": "hi-en",
+      "text": "Kisan Credit Card Scheme ke benefits / faayde: interest subvention pct: 2; prompt repayment incentive pct: 3; effective interest rate pct: 4; credit for crop cultivation; credit for post harvest; credit for marketing; credit for household consumption; credit for farm maintenance; credit for allied activities; card validity years: 5"
+    },
+    {
+      "id": "kcc-documents",
+      "chunk_type": "documents_required",
+      "language": "hi-en",
+      "text": "Documents needed for Kisan Credit Card Scheme application / Zaroori kaagaz: Application Form, Passport Size Photographs, Identity Proof, Address Proof, Landholding Proof, Cropping Pattern Details"
+    },
+    {
+      "id": "kcc-apply",
+      "chunk_type": "application_process",
+      "language": "hi-en",
+      "text": "How to apply for Kisan Credit Card Scheme / Kaise apply karein: Step 1: Choose a participating bank / बैंक का चयन करें. The farmer may choose any participating commercial bank, regional rural bank, or cooperative bank. | Step 2: Fill application form / आवेदन पत्र भरें. Complete the KCC application form with required details. | Step 3: Submit required documents / दस्तावेज जमा करें. Submit identity, address and landholding documents. | Step 4: Bank verification / बैंक सत्यापन. The bank verifies eligibility and land details. | Step 5: Card issuance / कार्ड जारी. After approval, the Kisan Credit Card is issued."
+    },
+    {
+      "id": "kcc-helpline",
+      "chunk_type": "helpline",
+      "language": "hi-en",
+      "text": "Kisan Credit Card Scheme helpline / madad ke liye number: 1800-180-1551. Official portal: https://www.pmkisan.gov.in. Madad ke liye is number par call karein ya portal par jaayein."
+    },
+    {
+      "id": "kcc-intents",
+      "chunk_type": "user_voice_intents",
+      "language": "hi-roman",
+      "text": "Common user voice intents for Kisan Credit Card Scheme: main kisan hu | mai kisan hu | main kissan hu | mai kissan hu | main kishan hu | main kisaan hu | main kisan hu loan chahiye | mai kheti karta hu | kisaan ko loan kaise milta hai | Kisan Credit Card kaise banta hai | fasal ke liye paisa chahiye | khet ke liye loan chahiye | kheti ke liye sasta loan | main batayi par kheti karta hu, loan milega kya | share cropper ko KCC milta hai | kheti karta hu, mujhe credit card chahiye | kisan ke liye sarkari madad | mujhe trsctor ke liye loan chahiye kheti ke liye | paludhan ya dairy ke liye loan"
+    },
+    {
+      "id": "kcc-intents-hi",
+      "chunk_type": "user_voice_intents_devanagari",
+      "language": "hi-devanagari",
+      "text": "किसान क्रेडिट कार्ड योजना ke liye common voice queries: मैं किसान हूँ | मैं किसान हूं | मैं किसान हूँ लोन चाहिए | मैं खेती करता हूँ | किसान को लोन कैसे मिलता है | किसान क्रेडिट कार्ड कैसे बनता है | फसल के लिए पैसा चाहिए | खेत के लिए लोन चाहिए | खेती के लिए सस्ता लोन | मुझे ट्रैक्टर के लिए लोन चाहिए | मैं बटाई पर खेती करता हूँ लोन मिलेगा क्या | किसान को सरकारी मदद | किसानों के लिए सरकारी योजना"
+    }
+  ]
+}

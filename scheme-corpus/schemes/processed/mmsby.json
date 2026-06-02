@@ -1,0 +1,87 @@
+{
+  "scheme_id": "mmsby",
+  "name_hi": "मुख्यमंत्री सेहत बीमा योजना",
+  "name_en": "Mukhmantri Sehat Bima Yojana",
+  "ministry": "Government of Punjab (State Health Agency)",
+  "summary_hi": "मुख्यमंत्री सेहत बीमा योजना पंजाब राज्य की स्वास्थ्य योजना है। पात्र परिवारों को हर साल पाँच लाख तक का cashless इलाज मिलता है - सरकारी और कई empanelled निजी अस्पतालों में, अस्पताल में कोई पैसा नहीं देना पड़ता।",
+  "source_url": "https://sha.punjab.gov.in/shapunjab/index.php",
+  "helpline_phone": "104",
+  "tags": [
+    "health",
+    "insurance",
+    "punjab",
+    "cashless",
+    "ayushman",
+    "state-scheme"
+  ],
+  "eligibility_rules": {
+    "requires_external_verification": true,
+    "external_verification_hi": "Aapka pariwaar SECC 2011 ya Smart Ration Card list ya J-form farmer ya kisi paat-r shreni mein hona chahiye - State Health Agency portal par jaanch hoti hai.",
+    "rules": [
+      {
+        "field": "state",
+        "op": "eq",
+        "value": "punjab",
+        "reason_hi": "MMSBY sirf Punjab raajya ke nivaasiyon ke liye hai",
+        "ask_hi": "Kya aap Punjab mein rehte hain?"
+      },
+      {
+        "field": "has_aadhaar",
+        "op": "eq",
+        "value": true,
+        "reason_hi": "E-card ke liye Aadhaar zaroori hai",
+        "ask_hi": "Kya aapke paas Aadhaar card hai?"
+      }
+    ]
+  },
+  "chunks": [
+    {
+      "id": "mmsby-summary",
+      "chunk_type": "summary",
+      "language": "hi-en",
+      "text": "मुख्यमंत्री सेहत बीमा योजना पंजाब राज्य की स्वास्थ्य योजना है। पात्र परिवारों को हर साल पाँच लाख तक का cashless इलाज मिलता है - सरकारी और कई empanelled निजी अस्पतालों में, अस्पताल में कोई पैसा नहीं देना पड़ता। Mukhmantri Sehat Bima Yojana (मुख्यमंत्री सेहत बीमा योजना) - Punjab ke pariwaaron ke liye Rs 5 lakh ka cashless ilaaj - sarkari aur empanelled niji aspataalon mein, koi paisa nahi dena. Mukhmantri Sehat Bima Yojana, officially known as Ayushman Bharat PM-JAY Mukhmantri Sehat Bima Yojana (AB PM-JAY MMSBY), is one of the flagship health protection initiatives of the Government of Punjab. The scheme was launched on 20 August 2019 with the objective of ensuring that eligible families have access to quality healthcare services without facing financial hardship. Medical emergencies often push vulnerable households into debt, and this scheme was designed to reduce that burden through comprehensive health insurance coverage. मुख्यमंत्री सेहत बीमा योजना, जिसे आयुष्मान भारत PM-JAY मुख्यमंत्री सेहत बीमा योजना (AB PM-JAY MMSBY) के नाम से भी जाना जाता है, पंजाब सरकार की एक प्रमुख स्वास्थ्य सुरक्षा योजना है। इस योजना की शुरुआत 20 अगस्त 2019 को राज्य के नागरिकों को गुणवत्तापूर्ण स्वास्थ्य सेवाओं तक आर्थिक रूप से सुरक्षित पहुंच प्रदान करने के उद्देश्य से की गई थी। स्वास्थ्य संबंधी आपात स्थितियां अक्सर परिवारों पर भारी आर्थिक बोझ डालती हैं। इसी चुनौती को ध्यान में रखते हुए यह योजना तैयार की गई ताकि पात्र परिवारों को महंगे इलाज के कारण आर्थिक कठिनाइयों का सामना न करना पड़े।"
+    },
+    {
+      "id": "mmsby-overview",
+      "chunk_type": "overview",
+      "language": "hi-en",
+      "text": "Mukhmantri Sehat Bima Yojana detailed overview / vistar se jaankari: Mukhmantri Sehat Bima Yojana, officially known as Ayushman Bharat PM-JAY Mukhmantri Sehat Bima Yojana (AB PM-JAY MMSBY), is one of the flagship health protection initiatives of the Government of Punjab. The scheme was launched on 20 August 2019 with the objective of ensuring that eligible families have access to quality healthcare services without facing financial hardship. Medical emergencies often push vulnerable households into debt, and this scheme was designed to reduce that burden through comprehensive health insurance coverage.\n\nThe program aims to provide financial protection to nearly 65 percent of Punjab's population. Under the scheme, eligible families receive cashless health insurance coverage of up to INR 5,00,000 per family per year. The coverage is available for a wide range of secondary and tertiary hospitalization treatments, including surgeries, medical procedures, and other approved healthcare interventions. मुख्यमंत्री सेहत बीमा योजना, जिसे आयुष्मान भारत PM-JAY मुख्यमंत्री सेहत बीमा योजना (AB PM-JAY MMSBY) के नाम से भी जाना जाता है, पंजाब सरकार की एक प्रमुख स्वास्थ्य सुरक्षा योजना है। इस योजना की शुरुआत 20 अगस्त 2019 को राज्य के नागरिकों को गुणवत्तापूर्ण स्वास्थ्य सेवाओं तक आर्थिक रूप से सुरक्षित पहुंच प्रदान करने के उद्देश्य से की गई थी। स्वास्थ्य संबंधी आपात स्थितियां अक्सर परिवारों पर भारी आर्थिक बोझ डालती हैं। इसी चुनौती को ध्यान में रखते हुए यह योजना तैयार की गई ताकि पात्र परिवारों को महंगे इलाज के कारण आर्थिक कठिनाइयों का सामना न करना पड़े।\n\nयह योजना पंजाब की लगभग 65 प्रतिशत आबादी को स्वास्थ्य सुरक्षा प्रदान करने का लक्ष्य रखती है। योजना के अंतर्गत पात्र परिवारों को प्रति वर्ष प्रति परिवार पांच लाख रुपये तक का कैशलेस स्वास्थ्य बीमा कवर उपलब्ध कराया जाता है। यह कवर विभिन्न सूचीबद्ध बीमारियों, शल्य चिकित्सा प्रक्रियाओं तथा अस्पताल में भर्ती होने से संबंधित खर्चों को कवर करता है।"
+    },
+    {
+      "id": "mmsby-benefits",
+      "chunk_type": "benefits",
+      "language": "hi-en",
+      "text": "Mukhmantri Sehat Bima Yojana ke benefits / faayde: health insurance cover inr: 500000; coverage period: Per family per year; care level: Secondary and Tertiary Hospitalization; cashless; paperless"
+    },
+    {
+      "id": "mmsby-documents",
+      "chunk_type": "documents_required",
+      "language": "hi-en",
+      "text": "Documents needed for Mukhmantri Sehat Bima Yojana application / Zaroori kaagaz: Aadhaar Card, Ration Card, Family Declaration, Income Certificate, Construction Worker Card"
+    },
+    {
+      "id": "mmsby-apply",
+      "chunk_type": "application_process",
+      "language": "hi-en",
+      "text": "How to apply for Mukhmantri Sehat Bima Yojana / Kaise apply karein: Step 1: Download Ayushman App / Ayushman App डाउनलोड करें. | Step 2: Register on beneficiary portal / पोर्टल पर पंजीकरण करें. | Step 3: Generate e-card / ई-कार्ड जनरेट करें. | Step 4: Verification at empaneled hospital / सूचीबद्ध अस्पताल में सत्यापन."
+    },
+    {
+      "id": "mmsby-helpline",
+      "chunk_type": "helpline",
+      "language": "hi-en",
+      "text": "Mukhmantri Sehat Bima Yojana helpline / madad ke liye number: 104. Official portal: https://sha.punjab.gov.in/shapunjab/index.php. Madad ke liye is number par call karein ya portal par jaayein."
+    },
+    {
+      "id": "mmsby-intents",
+      "chunk_type": "user_voice_intents",
+      "language": "hi-roman",
+      "text": "Common user voice intents for Mukhmantri Sehat Bima Yojana: Punjab mein muft ilaaj | Sehat Bima Yojana Punjab | Mukhmantri sehat bima | Punjab ki health scheme | AB PM-JAY Punjab | main Punjab se hu, ilaaj ke liye yojana | Punjab mein cashless ilaaj | Punjab ke kisaano ke liye health card | 5 lakh ka muft ilaaj Punjab | Smart Ration Card par ilaaj | J-form farmer Punjab health scheme"
+    },
+    {
+      "id": "mmsby-intents-hi",
+      "chunk_type": "user_voice_intents_devanagari",
+      "language": "hi-devanagari",
+      "text": "मुख्यमंत्री सेहत बीमा योजना ke liye common voice queries: पंजाब में मुफ्त इलाज | सेहत बीमा योजना पंजाब | मुख्यमंत्री सेहत बीमा | पंजाब की हेल्थ योजना | मैं पंजाब से हूँ इलाज की योजना | पंजाब में कैशलेस इलाज | 5 लाख का मुफ्त इलाज पंजाब | स्मार्ट राशन कार्ड पर इलाज"
+    }
+  ]
+}

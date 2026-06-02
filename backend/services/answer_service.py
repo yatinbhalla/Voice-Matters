@@ -18,9 +18,10 @@ from clients.sarvam_client import SarvamClient
 from prompts.system_prompts import RAG_ANSWER_SYSTEM_HI
 from services.rag_service import Chunk
 
-# Confidence bands are likewise embedder-dependent.
+# Confidence bands are likewise embedder-dependent. Tuned for our code-mixed
+# corpus where OpenAI tops out around 0.50 even on strong matches.
 if EMBED_PROVIDER == "openai":
-    _HIGH_BAND, _MED_BAND = 0.85, 0.75
+    _HIGH_BAND, _MED_BAND = 0.55, 0.45
 else:
     _HIGH_BAND, _MED_BAND = 0.55, 0.40
 

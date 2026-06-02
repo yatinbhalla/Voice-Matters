@@ -1,0 +1,84 @@
+{
+  "scheme_id": "day-nrlm",
+  "name_hi": "दीनदयाल अंत्योदय योजना - राष्ट्रीय ग्रामीण आजीविका मिशन",
+  "name_en": "Deendayal Antyodaya Yojana - National Rural Livelihoods Mission",
+  "ministry": "Ministry of Rural Development",
+  "summary_hi": "दीनदयाल अंत्योदय योजना ग्रामीण ग़रीब परिवारों, ख़ास कर महिलाओं को स्वयं सहायता समूह से जोड़ती है। समूह के ज़रिए बचत, आपसी लोन, बैंक से कम ब्याज पर तीन लाख तक का क्रेडिट, और कौशल प्रशिक्षण - सब एक जगह मिल जाता है।",
+  "source_url": "https://aajeevika.gov.in/",
+  "helpline_phone": "1800-102-0988",
+  "tags": [
+    "women",
+    "shg",
+    "rural",
+    "livelihood",
+    "loan",
+    "nrlm"
+  ],
+  "eligibility_rules": {
+    "requires_external_verification": true,
+    "external_verification_hi": "Aapko kisi gram-stareey SHG ka sadasya hona zaroori hai - kam se kam 6 mahine purana aur panchasutra ka palan karta ho.",
+    "rules": [
+      {
+        "field": "occupation",
+        "op": "not_contains_any",
+        "value": [
+          "government employee",
+          "sarkari naukri",
+          "income tax payer"
+        ],
+        "reason_hi": "DAY-NRLM grameen garib pariwaaron ke liye hai - sarkari karmchari paat-r nahi",
+        "ask_hi": "Aap kya kaam karte hain?"
+      }
+    ]
+  },
+  "chunks": [
+    {
+      "id": "day-nrlm-summary",
+      "chunk_type": "summary",
+      "language": "hi-en",
+      "text": "दीनदयाल अंत्योदय योजना ग्रामीण ग़रीब परिवारों, ख़ास कर महिलाओं को स्वयं सहायता समूह से जोड़ती है। समूह के ज़रिए बचत, आपसी लोन, बैंक से कम ब्याज पर तीन लाख तक का क्रेडिट, और कौशल प्रशिक्षण - सब एक जगह मिल जाता है। Deendayal Antyodaya Yojana - National Rural Livelihoods Mission (दीनदयाल अंत्योदय योजना - राष्ट्रीय ग्रामीण आजीविका मिशन) - Grameen mahilaaon ke liye SHG-based bachat aur loan - kam byaaj par credit, kaushal training aur livelihood support. Deendayal Antyodaya Yojana - National Rural Livelihoods Mission (DAY-NRLM) is one of the flagship poverty reduction programmes of the Government of India. Implemented by the Ministry of Rural Development, the mission aims to organize rural poor households into strong community institutions, particularly Self Help Groups (SHGs), and enable them to access financial services, livelihood opportunities, skill development initiatives, and social empowerment mechanisms. The programme recognizes that poor households possess significant potential and capabilities, and seeks to strengthen those capabilities through collective action, capacity building, and access to resources. दीनदयाल अंत्योदय योजना राष्ट्रीय ग्रामीण आजीविका मिशन भारत सरकार की एक प्रमुख गरीबी उन्मूलन और आजीविका संवर्धन योजना है। इसका मुख्य उद्देश्य ग्रामीण गरीब परिवारों को संगठित करके उन्हें आर्थिक रूप से सशक्त बनाना, वित्तीय सेवाओं तक पहुंच दिलाना, कौशल विकास प्रदान करना तथा स्थायी आजीविका के अवसर उपलब्ध कराना है। यह योजना विशेष रूप से महिलाओं के स्वयं सहायता समूहों को मजबूत बनाने पर केंद्रित है क्योंकि अनुभव से यह सिद्ध हुआ है कि महिलाओं की सामूहिक भागीदारी परिवार और समुदाय दोनों के विकास में महत्वपूर्ण भूमिका निभाती है।"
+    },
+    {
+      "id": "day-nrlm-overview",
+      "chunk_type": "overview",
+      "language": "hi-en",
+      "text": "Deendayal Antyodaya Yojana - National Rural Livelihoods Mission detailed overview / vistar se jaankari: Deendayal Antyodaya Yojana - National Rural Livelihoods Mission (DAY-NRLM) is one of the flagship poverty reduction programmes of the Government of India. Implemented by the Ministry of Rural Development, the mission aims to organize rural poor households into strong community institutions, particularly Self Help Groups (SHGs), and enable them to access financial services, livelihood opportunities, skill development initiatives, and social empowerment mechanisms. The programme recognizes that poor households possess significant potential and capabilities, and seeks to strengthen those capabilities through collective action, capacity building, and access to resources.\n\nA central feature of DAY-NRLM is the formation and strengthening of SHGs. One member from each rural poor household, preferably a woman, is encouraged to join an SHG. Through regular meetings, savings, internal lending, timely repayment, and proper record keeping, these groups develop financial discipline and community leadership. The SHG platform serves as the foundation for wider social and economic transformation within rural communities. दीनदयाल अंत्योदय योजना राष्ट्रीय ग्रामीण आजीविका मिशन भारत सरकार की एक प्रमुख गरीबी उन्मूलन और आजीविका संवर्धन योजना है। इसका मुख्य उद्देश्य ग्रामीण गरीब परिवारों को संगठित करके उन्हें आर्थिक रूप से सशक्त बनाना, वित्तीय सेवाओं तक पहुंच दिलाना, कौशल विकास प्रदान करना तथा स्थायी आजीविका के अवसर उपलब्ध कराना है। यह योजना विशेष रूप से महिलाओं के स्वयं सहायता समूहों को मजबूत बनाने पर केंद्रित है क्योंकि अनुभव से यह सिद्ध हुआ है कि महिलाओं की सामूहिक भागीदारी परिवार और समुदाय दोनों के विकास में महत्वपूर्ण भूमिका निभाती है।\n\nयोजना के अंतर्गत ग्रामीण गरीब परिवारों की पहचान की जाती है और उन्हें स्वयं सहायता समूहों से जोड़ा जाता है। प्रत्येक पात्र परिवार से एक सदस्य, प्राथमिकता के आधार पर महिला सदस्य, SHG नेटवर्क का हिस्सा बनती है। नियमित बचत, नियमित बैठकें, आंतरिक ऋण व्यवस्था, समय पर पुनर्भुगतान और अद्यतन लेखा प्रबंधन जैसे पंचसूत्रों का पालन करके समूह वित्तीय अनुशासन विकसित करते हैं। इससे सदस्यों में आत्मविश्वास बढ़ता है और वे बैंकिंग प्रणाली से जुड़ने में सक्षम बनते हैं।"
+    },
+    {
+      "id": "day-nrlm-benefits",
+      "chunk_type": "benefits",
+      "language": "hi-en",
+      "text": "Deendayal Antyodaya Yojana - National Rural Livelihoods Mission ke benefits / faayde: social mobilization; financial inclusion; livelihood promotion; skill development; bank linkage support; revolving fund; community investment fund; interest subvention: Up to effective 7% lending rate for eligible SHGs"
+    },
+    {
+      "id": "day-nrlm-documents",
+      "chunk_type": "documents_required",
+      "language": "hi-en",
+      "text": "Documents needed for Deendayal Antyodaya Yojana - National Rural Livelihoods Mission application / Zaroori kaagaz: Aadhaar Number, Identity Proof, Residence Proof, Voter ID Card, Passport Size Photograph"
+    },
+    {
+      "id": "day-nrlm-apply",
+      "chunk_type": "application_process",
+      "language": "hi-en",
+      "text": "How to apply for Deendayal Antyodaya Yojana - National Rural Livelihoods Mission / Kaise apply karein: Step 1: Visit the official portal / पोर्टल पर जाएं. | Step 2: Create an account / पंजीकरण करें. | Step 3: Fill mandatory details / आवश्यक विवरण भरें. | Step 4: Create username and password / यूज़रनेम और पासवर्ड बनाएं. | Step 5: Submit registration / आवेदन जमा करें."
+    },
+    {
+      "id": "day-nrlm-helpline",
+      "chunk_type": "helpline",
+      "language": "hi-en",
+      "text": "Deendayal Antyodaya Yojana - National Rural Livelihoods Mission helpline / madad ke liye number: 1800-102-0988. Official portal: https://aajeevika.gov.in/. Madad ke liye is number par call karein ya portal par jaayein."
+    },
+    {
+      "id": "day-nrlm-intents",
+      "chunk_type": "user_voice_intents",
+      "language": "hi-roman",
+      "text": "Common user voice intents for Deendayal Antyodaya Yojana - National Rural Livelihoods Mission: main mahila hu, SHG kaise banaye | self help group join karna hai | grameen mahilaaon ke liye yojana | SHG se loan kaise milta hai | Aajeevika mission kya hai | mai gaon se hu, SHG mein judna chahti hu | bachat group ke liye sarkari madad | kaushal training mahilaaon ke liye | grameen garib ke liye yojana | SHG bank linkage loan"
+    },
+    {
+      "id": "day-nrlm-intents-hi",
+      "chunk_type": "user_voice_intents_devanagari",
+      "language": "hi-devanagari",
+      "text": "दीनदयाल अंत्योदय योजना - राष्ट्रीय ग्रामीण आजीविका मिशन ke liye common voice queries: मैं महिला हूँ SHG कैसे बनाएं | स्वयं सहायता समूह से जुड़ना है | ग्रामीण महिलाओं के लिए योजना | SHG से लोन कैसे मिलता है | आजीविका मिशन क्या है | बचत समूह के लिए सरकारी मदद | कौशल प्रशिक्षण महिलाओं के लिए | ग्रामीण गरीब के लिए योजना"
+    }
+  ]
+}

@@ -9,6 +9,7 @@ Stages (timings logged per-stage and persisted to telemetry):
 
 Empty retrieval triggers the refusal path inside AnswerService.
 """
+import asyncio
 import time
 import uuid
 from pathlib import Path
@@ -67,6 +68,18 @@ async def _all_known_scheme_names() -> list[tuple[str, str]]:
         return []
 
 
+# ---------------------------------------------------------------------------
+# Module-level singletons. Each of these wrappers holds a long-lived HTTPS
+# connection pool (AsyncOpenAI / httpx.AsyncClient / Pinecone Index). Spinning
+# them up per request was eating 3-5s of cold-start handshake on EVERY query.
+# Construct once, reuse across the whole process.
+# ---------------------------------------------------------------------------
+_SARVAM = SarvamClient()
+_RAG = RAGService()
+_ANSWERER = AnswerService(sarvam=_SARVAM)
+_ELIGIBILITY = EligibilityService(sarvam=_SARVAM)
+
+
 async def run_voice_pipeline(
     conversation_id: str,
     audio_bytes: bytes,
@@ -75,10 +88,10 @@ async def run_voice_pipeline(
     language_hint: str = "hi",
     bitrate: str = "high",
 ) -> dict:
-    sarvam = SarvamClient()
-    rag = RAGService()
-    answerer = AnswerService(sarvam=sarvam)
-    eligibility = EligibilityService(sarvam=sarvam)
+    sarvam = _SARVAM
+    rag = _RAG
+    answerer = _ANSWERER
+    eligibility = _ELIGIBILITY
 
     pipeline_start = time.perf_counter()
     message_id = uuid.uuid4().hex
@@ -132,38 +145,59 @@ async def run_voice_pipeline(
     sources = answer.sources
     confidence = answer.confidence
 
-    # Stage 3.5: eligibility check (separate LLM call to extract facts)
-    elig_start = time.perf_counter()
-    eligibility_results: list[dict] = []
-    follow_up_question_hi: str | None = None
-    if retrieved_chunks and not answer.refused:
-        try:
-            results, follow_up_question_hi, _ = await eligibility.check(
-                transcript_hi, retrieved_chunks
-            )
-            eligibility_results = [r.to_dict() for r in results]
-        except Exception as e:
-            log.warning("eligibility_check_failed", error=str(e))
-    elig_ms = _ms_since(elig_start)
-
-    # Stage 4: TTS. 2G mode (bitrate=low) drops to 8 kHz sample rate so the
-    # mp3 payload shrinks ~3x. Filename gets a "-low" tag so the service
-    # worker / CDN can cache the low- and high-quality versions separately.
-    tts_start = time.perf_counter()
+    # Stages 3.5 + 4 run in parallel: eligibility (LLM fact-extraction,
+    # ~5-15s) and TTS (Bulbul synth, ~3-5s) share no data — running them
+    # back-to-back wastes 3-15s on every voice query. asyncio.gather cuts
+    # the wall-clock to max(eligibility, TTS) instead of sum.
     low_bitrate = (bitrate or "").lower() == "low"
     tts_sample_rate = 8000 if low_bitrate else 22050
     audio_filename = f"{uuid.uuid4().hex}{'-low' if low_bitrate else ''}.mp3"
     audio_url = ""
-    try:
-        # Sarvam retired "meera"; "anushka" is the closest current female voice.
-        tts_bytes = await sarvam.synthesize(
-            response_text_hi, voice="anushka", sample_rate=tts_sample_rate
-        )
-        (STATIC_AUDIO_DIR / audio_filename).write_bytes(tts_bytes)
-        audio_url = f"/static/audio/{audio_filename}"
-    except Exception as e:
-        log.error("tts_failed", error=str(e))
-    tts_ms = _ms_since(tts_start)
+    eligibility_results: list[dict] = []
+    follow_up_question_hi: str | None = None
+
+    async def _do_eligibility():
+        if not (retrieved_chunks and not answer.refused):
+            return [], None, 0
+        e_start = time.perf_counter()
+        try:
+            results, follow_up, _ = await eligibility.check(
+                transcript_hi, retrieved_chunks
+            )
+            return (
+                [r.to_dict() for r in results],
+                follow_up,
+                _ms_since(e_start),
+            )
+        except Exception as e:
+            log.warning("eligibility_check_failed", error=str(e))
+            return [], None, _ms_since(e_start)
+
+    async def _do_tts():
+        t_start = time.perf_counter()
+        try:
+            # Sarvam retired "meera"; "anushka" is the closest current female voice.
+            tts_bytes = await sarvam.synthesize(
+                response_text_hi, voice="anushka", sample_rate=tts_sample_rate
+            )
+            (STATIC_AUDIO_DIR / audio_filename).write_bytes(tts_bytes)
+            return f"/static/audio/{audio_filename}", _ms_since(t_start)
+        except Exception as e:
+            log.error("tts_failed", error=str(e))
+            return "", _ms_since(t_start)
+
+    par_start = time.perf_counter()
+    (eligibility_results, follow_up_question_hi, elig_ms), (audio_url, tts_ms) = (
+        await asyncio.gather(_do_eligibility(), _do_tts())
+    )
+    par_wall_ms = _ms_since(par_start)
+    log.info(
+        "voice_parallel_done",
+        elig_ms=elig_ms,
+        tts_ms=tts_ms,
+        wall_ms=par_wall_ms,
+        saved_ms=(elig_ms + tts_ms) - par_wall_ms,
+    )
 
     total_ms = _ms_since(pipeline_start)
 
@@ -295,10 +329,10 @@ async def run_chat_pipeline(
     frontend can render either response with the same code path. Messages
     are persisted with modality="text".
     """
-    sarvam = SarvamClient()
-    rag = RAGService()
-    answerer = AnswerService(sarvam=sarvam)
-    eligibility = EligibilityService(sarvam=sarvam)
+    sarvam = _SARVAM
+    rag = _RAG
+    answerer = _ANSWERER
+    eligibility = _ELIGIBILITY
 
     pipeline_start = time.perf_counter()
     message_id = uuid.uuid4().hex
@@ -317,34 +351,60 @@ async def run_chat_pipeline(
     retrieved_chunks = await rag.retrieve(transcript_hi, top_k=5)
     rag_ms = _ms_since(rag_start)
 
-    # LLM answer
-    llm_start = time.perf_counter()
+    # Run answer + eligibility in parallel — both depend only on
+    # retrieved_chunks. Saves 5-15s per query (eligibility LLM call no
+    # longer waits for the answer LLM call). If retrieval is empty the
+    # eligibility task no-ops; if answer ends up refused, eligibility
+    # results are still computed but discarded — acceptable cost.
+    par_start = time.perf_counter()
     known_names = await _all_known_scheme_names()
-    answer = await answerer.answer(
-        transcript_hi, retrieved_chunks, all_known_scheme_names=known_names
+
+    async def _do_answer():
+        a_start = time.perf_counter()
+        a = await answerer.answer(
+            transcript_hi, retrieved_chunks, all_known_scheme_names=known_names
+        )
+        return a, _ms_since(a_start)
+
+    async def _do_eligibility():
+        if not retrieved_chunks:
+            return [], None, 0
+        e_start = time.perf_counter()
+        try:
+            results, follow_up, _ = await eligibility.check(
+                transcript_hi, retrieved_chunks
+            )
+            return (
+                [r.to_dict() for r in results],
+                follow_up,
+                _ms_since(e_start),
+            )
+        except Exception as e:
+            log.warning("eligibility_check_failed", error=str(e))
+            return [], None, _ms_since(e_start)
+
+    (answer, llm_ms), (eligibility_results, follow_up_question_hi, elig_ms) = (
+        await asyncio.gather(_do_answer(), _do_eligibility())
     )
-    llm_ms = _ms_since(llm_start)
     response_text_hi = answer.response_text_hi
     top_schemes = answer.top_schemes
     sources = answer.sources
     confidence = answer.confidence
-
-    # Eligibility
-    elig_start = time.perf_counter()
-    eligibility_results: list[dict] = []
-    follow_up_question_hi: str | None = None
-    if retrieved_chunks and not answer.refused:
-        try:
-            results, follow_up_question_hi, _ = await eligibility.check(
-                transcript_hi, retrieved_chunks
-            )
-            eligibility_results = [r.to_dict() for r in results]
-        except Exception as e:
-            log.warning("eligibility_check_failed", error=str(e))
-    elig_ms = _ms_since(elig_start)
+    # If the answer refused, drop the eligibility results — they're noise.
+    if answer.refused:
+        eligibility_results = []
+        follow_up_question_hi = None
+    par_wall_ms = _ms_since(par_start)
 
     total_ms = _ms_since(pipeline_start)
 
+    log.info(
+        "chat_parallel_done",
+        llm_ms=llm_ms,
+        elig_ms=elig_ms,
+        wall_ms=par_wall_ms,
+        saved_ms=(llm_ms + elig_ms) - par_wall_ms,
+    )
     log.info(
         "chat_pipeline_done",
         conversation_id=canonical_conv_id,

@@ -1,0 +1,98 @@
+{
+  "scheme_id": "pmjjby",
+  "name_hi": "प्रधानमंत्री जीवन ज्योति बीमा योजना",
+  "name_en": "Pradhan Mantri Jeevan Jyoti Bima Yojana",
+  "ministry": "Ministry of Finance",
+  "summary_hi": "प्रधानमंत्री जीवन ज्योति बीमा योजना सिर्फ़ चार सौ छत्तीस रुपये साल में दो लाख का जीवन बीमा देती है। कोई भी कारण हो - प्राकृतिक मौत हो या दुर्घटना - नॉमिनी को पूरा पैसा मिलता है। प्रीमियम बैंक या डाकघर के खाते से अपने आप कट जाता है।",
+  "source_url": "https://www.jansuraksha.gov.in",
+  "helpline_phone": "1800-180-1111",
+  "tags": [
+    "insurance",
+    "life-cover",
+    "low-premium",
+    "jansuraksha"
+  ],
+  "eligibility_rules": {
+    "requires_external_verification": false,
+    "rules": [
+      {
+        "field": "age",
+        "op": "gte",
+        "value": 18,
+        "reason_hi": "PMJJBY ke liye kam se kam umar 18 saal hai",
+        "ask_hi": "Kya aap 18 saal ya usse upar ke hain?"
+      },
+      {
+        "field": "age",
+        "op": "lte",
+        "value": 50,
+        "reason_hi": "PMJJBY ki maximum entry umar 50 saal hai",
+        "ask_hi": "Aapki umar kya hai? 50 saal tak hi naya enrolment hota hai."
+      },
+      {
+        "field": "has_bank_account",
+        "op": "eq",
+        "value": true,
+        "reason_hi": "Premium auto-debit hota hai isliye bank ya post office khaata zaroori hai",
+        "ask_hi": "Kya aapka bank ya post office mein khaata hai?"
+      },
+      {
+        "field": "has_aadhaar",
+        "op": "eq",
+        "value": true,
+        "reason_hi": "PMJJBY enrolment ke liye Aadhaar KYC zaroori hai",
+        "ask_hi": "Kya aapke paas Aadhaar card hai?"
+      }
+    ]
+  },
+  "chunks": [
+    {
+      "id": "pmjjby-summary",
+      "chunk_type": "summary",
+      "language": "hi-en",
+      "text": "प्रधानमंत्री जीवन ज्योति बीमा योजना सिर्फ़ चार सौ छत्तीस रुपये साल में दो लाख का जीवन बीमा देती है। कोई भी कारण हो - प्राकृतिक मौत हो या दुर्घटना - नॉमिनी को पूरा पैसा मिलता है। प्रीमियम बैंक या डाकघर के खाते से अपने आप कट जाता है। Pradhan Mantri Jeevan Jyoti Bima Yojana (प्रधानमंत्री जीवन ज्योति बीमा योजना) - Sirf Rs 436 saal mein Rs 2 lakh ka jeevan beema - bank khaata aur Aadhaar zaroori, har saal renew hota hai. Pradhan Mantri Jeevan Jyoti Bima Yojana (PMJJBY) is one of the flagship social security schemes launched by the Government of India to provide affordable life insurance coverage to citizens. The scheme aims to ensure that individuals, especially those from economically weaker and middle-income households, have access to basic life insurance protection at a very low annual premium. प्रधानमंत्री जीवन ज्योति बीमा योजना (PMJJBY) भारत सरकार द्वारा शुरू की गई एक महत्वपूर्ण सामाजिक सुरक्षा योजना है जिसका उद्देश्य देश के नागरिकों को कम लागत पर जीवन बीमा सुरक्षा प्रदान करना है। यह योजना विशेष रूप से उन परिवारों के लिए लाभकारी है जो सीमित आय वाले हैं और जिनके पास किसी प्रकार का पर्याप्त जीवन बीमा कवर उपलब्ध नहीं है। इस योजना के अंतर्गत किसी भी कारण से मृत्यु होने पर नामांकित व्यक्ति को ₹2 लाख का जीवन बीमा लाभ प्रदान किया जाता है।"
+    },
+    {
+      "id": "pmjjby-overview",
+      "chunk_type": "overview",
+      "language": "hi-en",
+      "text": "Pradhan Mantri Jeevan Jyoti Bima Yojana detailed overview / vistar se jaankari: Pradhan Mantri Jeevan Jyoti Bima Yojana (PMJJBY) is one of the flagship social security schemes launched by the Government of India to provide affordable life insurance coverage to citizens. The scheme aims to ensure that individuals, especially those from economically weaker and middle-income households, have access to basic life insurance protection at a very low annual premium.\n\nPMJJBY offers a life insurance cover of ₹2 lakh in the event of the death of the insured person due to any reason. The policy provides one-year term insurance coverage and is renewable every year. The scheme is administered through participating banks and post offices in collaboration with life insurance companies. Individuals between the ages of 18 and 50 years who maintain a savings bank account or post office account are eligible to enroll. प्रधानमंत्री जीवन ज्योति बीमा योजना (PMJJBY) भारत सरकार द्वारा शुरू की गई एक महत्वपूर्ण सामाजिक सुरक्षा योजना है जिसका उद्देश्य देश के नागरिकों को कम लागत पर जीवन बीमा सुरक्षा प्रदान करना है। यह योजना विशेष रूप से उन परिवारों के लिए लाभकारी है जो सीमित आय वाले हैं और जिनके पास किसी प्रकार का पर्याप्त जीवन बीमा कवर उपलब्ध नहीं है। इस योजना के अंतर्गत किसी भी कारण से मृत्यु होने पर नामांकित व्यक्ति को ₹2 लाख का जीवन बीमा लाभ प्रदान किया जाता है।\n\nयह योजना बैंक और डाकघर खाताधारकों के लिए उपलब्ध है और इसका संचालन जीवन बीमा कंपनियों के सहयोग से किया जाता है। 18 से 50 वर्ष की आयु के व्यक्ति इस योजना में शामिल हो सकते हैं। योजना का प्रीमियम मात्र ₹436 प्रति वर्ष है, जो लाभार्थी के बैंक या डाकघर खाते से स्वतः डेबिट कर लिया जाता है। कम प्रीमियम और सरल प्रक्रिया के कारण यह देश की सबसे लोकप्रिय सामाजिक सुरक्षा योजनाओं में से एक बन चुकी है।"
+    },
+    {
+      "id": "pmjjby-benefits",
+      "chunk_type": "benefits",
+      "language": "hi-en",
+      "text": "Pradhan Mantri Jeevan Jyoti Bima Yojana ke benefits / faayde: life insurance cover inr: 200000; premium per year inr: 436; renewable every year; death due to any reason covered; scheme type: Term Life Insurance; enrollment mode: ['bank', 'post_office', 'net_banking']"
+    },
+    {
+      "id": "pmjjby-documents",
+      "chunk_type": "documents_required",
+      "language": "hi-en",
+      "text": "Documents needed for Pradhan Mantri Jeevan Jyoti Bima Yojana application / Zaroori kaagaz: Aadhaar Card, Bank Passbook, Mobile Number"
+    },
+    {
+      "id": "pmjjby-apply",
+      "chunk_type": "application_process",
+      "language": "hi-en",
+      "text": "How to apply for Pradhan Mantri Jeevan Jyoti Bima Yojana / Kaise apply karein: Step 1: Download Consent-Cum-Declaration Form / सहमति-सह-घोषणा पत्र डाउनलोड करें. Download the application form from the official portal and take a printout. | Step 2: Fill the Application Form / फॉर्म भरें. Fill all required details accurately and sign the form. | Step 3: Attach Required Documents / दस्तावेज संलग्न करें. Attach self-attested copies of the required documents. | Step 4: Submit at Bank/Post Office / बैंक/डाकघर में जमा करें. Submit the form to the authorized official and obtain acknowledgement. | Step 5: Online Enrollment / ऑनलाइन नामांकन. Subscribers may enroll online through internet banking facilities."
+    },
+    {
+      "id": "pmjjby-helpline",
+      "chunk_type": "helpline",
+      "language": "hi-en",
+      "text": "Pradhan Mantri Jeevan Jyoti Bima Yojana helpline / madad ke liye number: 1800-180-1111. Official portal: https://www.jansuraksha.gov.in. Madad ke liye is number par call karein ya portal par jaayein."
+    },
+    {
+      "id": "pmjjby-intents",
+      "chunk_type": "user_voice_intents",
+      "language": "hi-roman",
+      "text": "Common user voice intents for Pradhan Mantri Jeevan Jyoti Bima Yojana: sasta jeevan beema chahiye | kam premium par insurance | PMJJBY kya hai | Jeevan Jyoti yojana | ₹436 wala beema | 2 lakh ka jeevan beema | mujhe life insurance chahiye sasta | ek saal ka beema | auto debit wala beema | agar mai mar gaya to parivar ko paisa milega | term insurance gareebon ke liye"
+    },
+    {
+      "id": "pmjjby-intents-hi",
+      "chunk_type": "user_voice_intents_devanagari",
+      "language": "hi-devanagari",
+      "text": "प्रधानमंत्री जीवन ज्योति बीमा योजना ke liye common voice queries: सस्ता जीवन बीमा चाहिए | कम प्रीमियम पर इंश्योरेंस | जीवन ज्योति योजना | 436 रुपये वाला बीमा | 2 लाख का जीवन बीमा | मुझे लाइफ इंश्योरेंस चाहिए सस्ता | एक साल का बीमा | अगर मैं मर गया तो परिवार को पैसा मिलेगा"
+    }
+  ]
+}

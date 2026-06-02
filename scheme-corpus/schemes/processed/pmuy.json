@@ -1,0 +1,93 @@
+{
+  "scheme_id": "pmuy",
+  "name_hi": "प्रधानमंत्री उज्ज्वला योजना 2.0",
+  "name_en": "Pradhan Mantri Ujjwala Yojana 2.0",
+  "ministry": "Ministry of Petroleum and Natural Gas",
+  "summary_hi": "प्रधानमंत्री उज्ज्वला योजना 2.0 ग़रीब परिवारों की महिलाओं को बिल्कुल मुफ्त एलपीजी कनेक्शन देती है। साथ में चूल्हा और पहला सिलेंडर रिफिल भी मुफ्त मिलता है - कोई security deposit नहीं देना। सब इंतज़ाम सरकार और गैस कंपनी मिल कर करती है।",
+  "source_url": "https://www.pmuy.gov.in/",
+  "helpline_phone": "1800-266-6696",
+  "tags": [
+    "lpg",
+    "women",
+    "household",
+    "clean-fuel",
+    "ujjwala"
+  ],
+  "eligibility_rules": {
+    "requires_external_verification": true,
+    "external_verification_hi": "Aapka pariwaar SECC list, AAY, PMAY-G ya kisi pat-r shreni mein hona chahiye - LPG vitarak ya sarkari portal par jaanch hoti hai.",
+    "rules": [
+      {
+        "field": "gender",
+        "op": "eq",
+        "value": "female",
+        "reason_hi": "PMUY 2.0 sirf mahilaaon ke naam par connection deti hai",
+        "ask_hi": "Kya aap mahilaa hain? Connection mahilaa ke naam par hi banta hai."
+      },
+      {
+        "field": "age",
+        "op": "gte",
+        "value": 18,
+        "reason_hi": "Aavedika ki umar kam se kam 18 saal honi chahiye",
+        "ask_hi": "Kya aap 18 saal ya usse upar ki hain?"
+      },
+      {
+        "field": "has_aadhaar",
+        "op": "eq",
+        "value": true,
+        "reason_hi": "PMUY 2.0 ke liye Aadhaar zaroori hai",
+        "ask_hi": "Kya aapke paas Aadhaar card hai?"
+      }
+    ]
+  },
+  "chunks": [
+    {
+      "id": "pmuy-summary",
+      "chunk_type": "summary",
+      "language": "hi-en",
+      "text": "प्रधानमंत्री उज्ज्वला योजना 2.0 ग़रीब परिवारों की महिलाओं को बिल्कुल मुफ्त एलपीजी कनेक्शन देती है। साथ में चूल्हा और पहला सिलेंडर रिफिल भी मुफ्त मिलता है - कोई security deposit नहीं देना। सब इंतज़ाम सरकार और गैस कंपनी मिल कर करती है। Pradhan Mantri Ujjwala Yojana 2.0 (प्रधानमंत्री उज्ज्वला योजना 2.0) - Garib pariwaron ki mahilaaon ke liye free LPG connection - pehla refill aur chulha bhi muft, koi deposit nahi lagta. Pradhan Mantri Ujjwala Yojana 2.0 (PMUY 2.0) is one of the flagship social welfare initiatives of the Government of India aimed at improving the quality of life of women belonging to poor and deprived households. The scheme was originally launched in May 2016 by the Ministry of Petroleum and Natural Gas with the objective of providing clean cooking fuel in the form of Liquefied Petroleum Gas (LPG) to households that traditionally relied on firewood, coal, crop residue, and cow-dung cakes for cooking. These traditional fuels generate harmful smoke inside homes, exposing women and children to severe health risks such as respiratory diseases, eye irritation, and other long-term illnesses. PMUY 2.0 was introduced as an expanded version of the scheme to extend the benefits to additional eligible households, including migrant families who often face difficulties in producing standard residential documentation. प्रधानमंत्री उज्ज्वला योजना 2.0 (PMUY 2.0) भारत सरकार की एक महत्वपूर्ण सामाजिक कल्याण योजना है, जिसका उद्देश्य गरीब और वंचित परिवारों की महिलाओं को स्वच्छ खाना पकाने का ईंधन उपलब्ध कराना है। इस योजना की शुरुआत मई 2016 में पेट्रोलियम और प्राकृतिक गैस मंत्रालय द्वारा की गई थी। योजना का मुख्य उद्देश्य उन परिवारों को एलपीजी (LPG) कनेक्शन उपलब्ध कराना है जो वर्षों से लकड़ी, कोयला, फसल अवशेष और गोबर के उपलों जैसे पारंपरिक ईंधनों पर निर्भर रहे हैं। इन ईंधनों से निकलने वाला धुआँ महिलाओं और बच्चों के स्वास्थ्य पर गंभीर प्रभाव डालता है तथा श्वसन संबंधी रोगों, आँखों की समस्याओं और अन्य स्वास्थ्य जोखिमों को बढ़ाता है। उज्ज्वला योजना 2.0 के माध्यम से सरकार ने इस पहल का विस्तार करते हुए अधिक पात्र परिवारों तक इसका लाभ पहुँचाने का लक्ष्य निर्धारित किया।"
+    },
+    {
+      "id": "pmuy-overview",
+      "chunk_type": "overview",
+      "language": "hi-en",
+      "text": "Pradhan Mantri Ujjwala Yojana 2.0 detailed overview / vistar se jaankari: Pradhan Mantri Ujjwala Yojana 2.0 (PMUY 2.0) is one of the flagship social welfare initiatives of the Government of India aimed at improving the quality of life of women belonging to poor and deprived households. The scheme was originally launched in May 2016 by the Ministry of Petroleum and Natural Gas with the objective of providing clean cooking fuel in the form of Liquefied Petroleum Gas (LPG) to households that traditionally relied on firewood, coal, crop residue, and cow-dung cakes for cooking. These traditional fuels generate harmful smoke inside homes, exposing women and children to severe health risks such as respiratory diseases, eye irritation, and other long-term illnesses. PMUY 2.0 was introduced as an expanded version of the scheme to extend the benefits to additional eligible households, including migrant families who often face difficulties in producing standard residential documentation.\n\nThe scheme has played a transformative role in India's clean energy transition. One of its major achievements was the release of more than 8 crore LPG connections to eligible beneficiaries by 2020. The expansion under Ujjwala 2.0 included an additional allocation of 1.6 crore LPG connections, enabling more families across rural and economically weaker sections to access clean cooking fuel. The initiative significantly increased LPG coverage in the country and contributed to improving public health, environmental sustainability, and women's empowerment. प्रधानमंत्री उज्ज्वला योजना 2.0 (PMUY 2.0) भारत सरकार की एक महत्वपूर्ण सामाजिक कल्याण योजना है, जिसका उद्देश्य गरीब और वंचित परिवारों की महिलाओं को स्वच्छ खाना पकाने का ईंधन उपलब्ध कराना है। इस योजना की शुरुआत मई 2016 में पेट्रोलियम और प्राकृतिक गैस मंत्रालय द्वारा की गई थी। योजना का मुख्य उद्देश्य उन परिवारों को एलपीजी (LPG) कनेक्शन उपलब्ध कराना है जो वर्षों से लकड़ी, कोयला, फसल अवशेष और गोबर के उपलों जैसे पारंपरिक ईंधनों पर निर्भर रहे हैं। इन ईंधनों से निकलने वाला धुआँ महिलाओं और बच्चों के स्वास्थ्य पर गंभीर प्रभाव डालता है तथा श्वसन संबंधी रोगों, आँखों की समस्याओं और अन्य स्वास्थ्य जोखिमों को बढ़ाता है। उज्ज्वला योजना 2.0 के माध्यम से सरकार ने इस पहल का विस्तार करते हुए अधिक पात्र परिवारों तक इसका लाभ पहुँचाने का लक्ष्य निर्धारित किया।\n\nयह योजना भारत में स्वच्छ ऊर्जा को बढ़ावा देने की दिशा में एक ऐतिहासिक कदम साबित हुई है। योजना के अंतर्गत 2020 तक 8 करोड़ से अधिक एलपीजी कनेक्शन जारी किए गए। इसके बाद उज्ज्वला 2.0 के तहत अतिरिक्त 1.6 करोड़ एलपीजी कनेक्शन स्वीकृत किए गए ताकि अधिक से अधिक ग्रामीण और आर्थिक रूप से कमजोर परिवारों को स्वच्छ ईंधन उपलब्ध कराया जा सके। इस योजना ने देश में एलपीजी कवरेज बढ़ाने में महत्वपूर्ण भूमिका निभाई है और महिलाओं के स्वास्थ्य, पर्यावरण संरक्षण तथा सामाजिक सशक्तिकरण में उल्लेखनीय योगदान दिया है।"
+    },
+    {
+      "id": "pmuy-benefits",
+      "chunk_type": "benefits",
+      "language": "hi-en",
+      "text": "Pradhan Mantri Ujjwala Yojana 2.0 ke benefits / faayde: cash assistance 14 2kg inr: 1600; cash assistance 5kg inr: 1150; free first refill; free stove; security deposit 14 2kg inr: 1250; security deposit 5kg inr: 800"
+    },
+    {
+      "id": "pmuy-documents",
+      "chunk_type": "documents_required",
+      "language": "hi-en",
+      "text": "Documents needed for Pradhan Mantri Ujjwala Yojana 2.0 application / Zaroori kaagaz: KYC Document, Ration Card, Aadhaar Card"
+    },
+    {
+      "id": "pmuy-apply",
+      "chunk_type": "application_process",
+      "language": "hi-en",
+      "text": "How to apply for Pradhan Mantri Ujjwala Yojana 2.0 / Kaise apply karein: Step 1: Obtain application form / आवेदन पत्र प्राप्त करें. आधिकारिक वेबसाइट या नजदीकी LPG वितरक से फॉर्म प्राप्त करें। | Step 2: Fill application form / फॉर्म भरें. व्यक्तिगत, बैंक और LPG वितरक संबंधी जानकारी भरें। | Step 3: Attach documents / दस्तावेज़ संलग्न करें. KYC, आधार, राशन कार्ड और बैंक विवरण संलग्न करें। | Step 4: Submit application / आवेदन जमा करें. निकटतम LPG वितरक के पास आवेदन जमा करें।"
+    },
+    {
+      "id": "pmuy-helpline",
+      "chunk_type": "helpline",
+      "language": "hi-en",
+      "text": "Pradhan Mantri Ujjwala Yojana 2.0 helpline / madad ke liye number: 1800-266-6696. Official portal: https://www.pmuy.gov.in/. Madad ke liye is number par call karein ya portal par jaayein."
+    },
+    {
+      "id": "pmuy-intents",
+      "chunk_type": "user_voice_intents",
+      "language": "hi-roman",
+      "text": "Common user voice intents for Pradhan Mantri Ujjwala Yojana 2.0: mujhe gas connection chahiye | main mahila hu gas chahiye | mai mahila hu | main aurat hu | free LPG chahiye | Ujjwala yojana mein naam likhwana hai | mai mahila hu, gas kaise milegi | ghar mein chulha aur gas nahi hai | lakdi ka chulha hai, gas chahiye | gareeb mahila ke liye gas | free cylinder kaise milta hai | Ujjwala 2.0 kya hai | BPL parivaar ke liye gas yojana | humare ghar mein dhuaan bahut hota hai, gas chahiye | rasoi ke liye saaf eindhan chahiye"
+    },
+    {
+      "id": "pmuy-intents-hi",
+      "chunk_type": "user_voice_intents_devanagari",
+      "language": "hi-devanagari",
+      "text": "प्रधानमंत्री उज्ज्वला योजना 2.0 ke liye common voice queries: मुझे गैस कनेक्शन चाहिए | मुफ्त एलपीजी चाहिए | उज्ज्वला योजना में नाम लिखवाना है | मैं महिला हूँ गैस कैसे मिलेगी | घर में चूल्हा और गैस नहीं है | लकड़ी का चूल्हा है गैस चाहिए | गरीब महिला के लिए गैस | मुफ्त सिलेंडर कैसे मिलता है | रसोई के लिए साफ ईंधन चाहिए | बीपीएल परिवार के लिए गैस योजना"
+    }
+  ]
+}

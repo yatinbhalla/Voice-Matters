@@ -879,147 +879,200 @@ let lastResponse = store.get('last_response', null);
 
 /* ─────────── SEEDED CORPUS (mirrors live backend) ─────────── */
 const SCHEMES = {
-  'pm-kisan':{
-    scheme_id:'pm-kisan', name_en:'PM-KISAN Samman Nidhi', name_hi:'पीएम-किसान सम्मान निधि',
-    ministry:'Ministry of Agriculture & Farmers Welfare', ministry_hi:'कृषि एवं किसान कल्याण मंत्रालय',
-    category_label:'Kisan · Farmer income', match_confidence:0.94,
-    one_line_pitch_hi:'₹6,000 saal — har 4 mahine ₹2,000 seedhe khaate mein',
-    helpline_phone:'1800-115-526', helpline_hours:'Sub din · 9am–6pm',
-    source_url:'https://pmkisan.gov.in', pdf_url:'https://pmkisan.gov.in/Documents/guidelines.pdf',
-    tags:['Kheti','Saalana madad','DBT'],
-    summary_hi:'PM-KISAN chhote aur seemant kisaano ko har saal ₹6,000 ki madad deti hai. Yeh paisa teen kishton mein, seedhe aapke bank khaate mein DBT se aata hai. Iske liye koi beech ka aadmi nahi chahiye.',
-    summary_en:'PM-KISAN gives small and marginal farmer families ₹6,000 a year in three equal instalments, paid straight to the bank account by Direct Benefit Transfer.',
-    stats:[['₹6,000','Saal mein'],['11 crore','Kisaan'],['Aasaan','Apply karna']],
-    benefits:[
-      {head:'₹6,000 har saal', sub:'Teen barabar kishton mein — ₹2,000 har 4 mahine.'},
-      {head:'Seedhe khaate mein', sub:'DBT se paisa aata hai, koi dalaal nahi.'},
-      {head:'Poore parivaar ke liye ek khaata', sub:'Pati-patni aur naabaalig bachche ek unit mane jaate hain.'},
-      {head:'Online status dekho', sub:'Apna naam aur kisht ka haal khud check kar sakte ho.'},
-      {head:'Koi fees nahi', sub:'Naam darj karne ke liye ek bhi rupaya nahi lagta.'},
-    ],
-    eligibility:[
-      {field:'land', text_hi:'Aapke naam kheti ki zameen ho', status:'yes', rank_hi:'Aapke records mein zameen darj hai'},
-      {field:'farmer', text_hi:'Chhota ya seemant kisaan', status:'yes', rank_hi:'2 hectare se kam zameen'},
-      {field:'citizen', text_hi:'Bharat ka naagrik ho', status:'yes'},
-      {field:'tax', text_hi:'Income tax na bharte ho', status:'unk', rank_hi:'Yeh jaankari abhi nahi mili'},
-      {field:'govt', text_hi:'Sarkari naukri / pension na ho', status:'no', rank_hi:'Pension record mila — verify karo'},
-    ],
-    documents_needed:['Aadhaar card','Bank passbook','Zameen ke kaagaz','Mobile number','Passport photo'],
-  },
-  'sukanya-samriddhi-yojana':{
-    scheme_id:'sukanya-samriddhi-yojana', name_en:'Sukanya Samriddhi Yojana', name_hi:'सुकन्या समृद्धि योजना',
+  'pmjdy':{
+    scheme_id:'pmjdy', name_en:'Pradhan Mantri Jan Dhan Yojana', name_hi:'प्रधानमंत्री जन धन योजना',
     ministry:'Ministry of Finance', ministry_hi:'वित्त मंत्रालय',
-    category_label:'Beti · Savings', match_confidence:0.88,
-    one_line_pitch_hi:'Beti ke liye 8.2% byaj — tax-free, sirf ₹250 se shuru',
-    helpline_phone:'1800-266-6868', helpline_hours:'Sub din · 8am–8pm',
-    source_url:'https://www.india.gov.in/sukanya-samriddhi-yojana',
-    pdf_url:'https://www.nsiindia.gov.in/writereaddata/sukanya.pdf',
-    tags:['Bachat','Beti','Tax-free'],
-    summary_hi:'Sukanya Samriddhi Yojana beti ke naam khulne wala bachat khaata hai. Ispe abhi 8.2% byaj milta hai jo tax-free hai. Sirf ₹250 se khaata khul jaata hai aur beti ke 21 saal hone par poora paisa milta hai.',
-    summary_en:'Sukanya Samriddhi is a savings account opened in a daughter\u2019s name. It currently earns 8.2% tax-free interest, opens with just ₹250, and matures when she turns 21.',
-    stats:[['8.2%','Byaj / saal'],['₹250','Kam se kam'],['21 saal','Maturity']],
+    category_label:'Banking · Zero-balance khata', match_confidence:0.92,
+    one_line_pitch_hi:'Zero-balance khata + ₹2 lakh durghatna beema + ₹10,000 overdraft - sab muft',
+    helpline_phone:'011-23361571', helpline_hours:'Sub din · 9am–6pm',
+    source_url:'https://www.pmjdy.gov.in/', pdf_url:'https://www.pmjdy.gov.in/files/E-Documents/PMJDY_BROCHURE_ENG.pdf',
+    tags:['Banking','Muft khata','Beema','RuPay'],
+    summary_hi:'PMJDY hai un sab logon ke liye jinka abhi tak bank khaata nahi khula. Khaata zero-balance par khulta hai, koi minimum amount nahi rakhna. Saath mein muft RuPay card aur ₹2 lakh ka durghatna beema bhi milta hai.',
+    summary_en:'PMJDY is a national financial inclusion mission. It opens a basic savings account with zero minimum balance, a free RuPay debit card with ₹2 lakh accident insurance, and an overdraft facility up to ₹10,000.',
+    stats:[['₹2 lakh','Durghatna beema'],['₹10,000','Overdraft'],['₹0','Minimum balance']],
     benefits:[
-      {head:'8.2% byaj, tax-free', sub:'Sarkar har timahi byaj dar tay karti hai — abhi 8.2%.'},
-      {head:'Sirf ₹250 se shuru', sub:'Saal mein ₹250 se ₹1.5 lakh tak jama kar sakte ho.'},
-      {head:'Poora paisa tax-free', sub:'Jama, byaj aur maturity — teeno par tax nahi.'},
-      {head:'Padhai ke liye nikaal sakte ho', sub:'Beti ke 18 saal hone par aadha paisa nikaal sakte ho.'},
-      {head:'Post office ya bank', sub:'Kisi bhi post office ya bank shaakha mein khul jaata hai.'},
+      {head:'Zero-balance khaata', sub:'Khaate mein paisa rakhna zaroori nahi - kabhi bhi kholo aur chalu rakho.'},
+      {head:'Muft RuPay debit card', sub:'Card par ₹2 lakh ka durghatna beema bhi milta hai.'},
+      {head:'₹10,000 ka overdraft', sub:'Khaate mein paisa kam padne par bhi nikaal sakte ho.'},
+      {head:'Mobile aur ATM se sahi', sub:'Bank shaakha, ATM ya Bank Mitr - jahan se chahe paisa nikalo.'},
+      {head:'Chhota khaata bhi', sub:'Kaagaz na hone par bhi 12 mahine ke liye chhota khaata khul sakta hai.'},
     ],
     eligibility:[
-      {field:'girl', text_hi:'Beti ki umar 10 saal se kam ho', status:'yes', rank_hi:'Aapki beti 7 saal ki hai'},
-      {field:'guardian', text_hi:'Maa-baap ya abhibhaavak ka khaata', status:'yes'},
-      {field:'citizen', text_hi:'Bharat ki niwaasi beti', status:'yes'},
-      {field:'count', text_hi:'Ek parivaar mein 2 khaate tak', status:'unk', rank_hi:'Dusre khaate ki jaankari nahi mili'},
+      {field:'citizen', text_hi:'Bharat ka naagrik ho', status:'yes'},
+      {field:'aadhaar', text_hi:'Aadhaar ya koi sarkari ID', status:'yes'},
+      {field:'age', text_hi:'10 saal se upar ke bachche bhi (guardian ke saath)', status:'yes'},
     ],
-    documents_needed:['Beti ka janm praman','Maa-baap ka Aadhaar','Pata praman','Passport photo','Bank/Post office form'],
+    documents_needed:['Aadhaar card','Sarkari pehchan patra','Pata ka praman','Passport photo'],
   },
-  'e-shram':{
-    scheme_id:'e-shram', name_en:'e-Shram Card', name_hi:'ई-श्रम कार्ड',
-    ministry:'Ministry of Labour & Employment', ministry_hi:'श्रम एवं रोज़गार मंत्रालय',
-    category_label:'Mazdoor · Registration', match_confidence:0.81,
-    one_line_pitch_hi:'Asangathit mazdooron ka pehchaan card — ₹2 lakh ka beema muft',
-    helpline_phone:'1800-118-979', helpline_hours:'Som–Shani · 8am–8pm',
-    source_url:'https://eshram.gov.in', pdf_url:'https://eshram.gov.in/eshram-faq.pdf',
-    tags:['Mazdoor','Beema','Pehchaan'],
-    summary_hi:'e-Shram card un mazdooron ke liye hai jo kisi company ke records mein nahi hain — jaise rehri-patri wale, gharelu kaam karne wale, kisaan mazdoor. Card banwane par ₹2 lakh ka durghatna beema muft milta hai.',
-    summary_en:'e-Shram is a national ID for unorganised workers — street vendors, domestic workers, farm labour. Registering brings free ₹2 lakh accidental insurance and links you to welfare schemes.',
-    stats:[['₹2 lakh','Muft beema'],['12 digit','UAN number'],['Muft','Card banwana']],
+  'pmuy':{
+    scheme_id:'pmuy', name_en:'Pradhan Mantri Ujjwala Yojana 2.0', name_hi:'प्रधानमंत्री उज्ज्वला योजना 2.0',
+    ministry:'Ministry of Petroleum and Natural Gas', ministry_hi:'पेट्रोलियम एवं प्राकृतिक गैस मंत्रालय',
+    category_label:'Mahila · Free LPG', match_confidence:0.88,
+    one_line_pitch_hi:'Mahilaaon ke liye free LPG connection - chulha aur pehla refill bhi muft',
+    helpline_phone:'1800-266-6696', helpline_hours:'Sub din · 24 ghante',
+    source_url:'https://www.pmuy.gov.in/', pdf_url:'',
+    tags:['Mahila','LPG','Saaf-suthra eindhan','Ghar'],
+    summary_hi:'PMUY 2.0 paat-r pariwaaron ki mahilaaon ko bilkul muft LPG gas connection deti hai. Sath mein chulha aur pehla cylinder refill bhi muft milta hai - koi security deposit nahi lagta.',
+    summary_en:'PMUY 2.0 provides eligible women from poor and deprived households a deposit-free LPG connection, free first refill, and free cooking stove.',
+    stats:[['Free','Connection'],['Free','Pehla refill'],['Free','Chulha']],
     benefits:[
-      {head:'₹2 lakh ka durghatna beema', sub:'Saal bhar ke liye muft — koi premium nahi.'},
-      {head:'Ek desh, ek pehchaan', sub:'Poore Bharat mein chalne wala 12-ank ka UAN number.'},
-      {head:'Yojanaon se jud jao', sub:'Pension, beema aur rozgaar yojnaayein ek jagah.'},
-      {head:'Ghar baithe ban jaata hai', sub:'Mobile se khud register kar sakte ho ya CSC se.'},
+      {head:'Deposit-free LPG connection', sub:'14.2 kg cylinder par ₹1,600 ki sahaayata, koi paisa upfront nahi.'},
+      {head:'Muft chulha aur pehla refill', sub:'Oil companies aapko gas chulha aur ek refill cylinder muft deti hain.'},
+      {head:'Pravaasi pariwaaron ke liye bhi', sub:'Ration card nahi to self-declaration chalega - migrant workers ko aasaani.'},
+      {head:'Mahila ke naam par hi', sub:'Connection saaf-suthre eindhan se mahilaa aur bachchon ke swaasthya ke liye.'},
+      {head:'Indane, Bharatgas, HP - sab', sub:'Kisi bhi gas vitarak se le sakte ho, online ya offline apply.'},
     ],
     eligibility:[
-      {field:'age', text_hi:'Umar 16 se 59 saal ke beech', status:'yes', rank_hi:'Aapki umar is daayre mein hai'},
-      {field:'unorg', text_hi:'Asangathit kaam karte ho', status:'yes'},
-      {field:'epfo', text_hi:'EPFO/ESIC member na ho', status:'unk', rank_hi:'Yeh jaankari nahi mili'},
-      {field:'tax', text_hi:'Income tax na bharte ho', status:'yes'},
+      {field:'gender', text_hi:'Aavedika mahilaa ho', status:'yes'},
+      {field:'age', text_hi:'Umar 18 saal ya zyaada', status:'yes'},
+      {field:'lpg', text_hi:'Pehle se LPG connection na ho', status:'unk'},
+      {field:'category', text_hi:'SC/ST/PMAY-G/AAY/SECC ya gareeb pariwaar', status:'unk', rank_hi:'List mein naam check karna hoga'},
     ],
-    documents_needed:['Aadhaar card','Aadhaar se juda mobile','Bank account number','Umar ka praman'],
+    documents_needed:['Aadhaar card','Ration card','KYC dastaavej','Bank passbook','Photo'],
   },
-  'pmjay':{
-    scheme_id:'pmjay', name_en:'Ayushman Bharat (PM-JAY)', name_hi:'आयुष्मान भारत',
-    ministry:'Ministry of Health & Family Welfare', ministry_hi:'स्वास्थ्य एवं परिवार कल्याण मंत्रालय',
-    category_label:'Sehat · Health cover', match_confidence:0.85,
-    one_line_pitch_hi:'Har parivaar ko ₹5 lakh tak ka muft ilaaj, saal bhar',
-    helpline_phone:'1800-111-565', helpline_hours:'Sab din · 24 ghante',
-    source_url:'https://pmjay.gov.in', pdf_url:'https://pmjay.gov.in/sites/default/files/pmjay-faq.pdf',
-    tags:['Sehat','Aspataal','Beema'],
-    summary_hi:'Ayushman Bharat har patra parivaar ko har saal ₹5 lakh tak ka muft ilaaj deti hai. Sarkari aur kai niji aspataalon mein cashless ilaaj hota hai — paisa nahi dena padta.',
-    summary_en:'Ayushman Bharat gives each eligible family up to ₹5 lakh of free hospital treatment a year, cashless at empanelled government and private hospitals.',
-    stats:[['₹5 lakh','Har saal'],['Cashless','Ilaaj'],['Muft','Card']],
+  'kcc':{
+    scheme_id:'kcc', name_en:'Kisan Credit Card', name_hi:'किसान क्रेडिट कार्ड',
+    ministry:'Ministry of Agriculture & Farmers’ Welfare', ministry_hi:'कृषि एवं किसान कल्याण मंत्रालय',
+    category_label:'Kisaan · Credit card', match_confidence:0.90,
+    one_line_pitch_hi:'Kheti aur paludhan ke liye 4% byaaj par loan - 5 saal ka credit card',
+    helpline_phone:'1800-180-1551', helpline_hours:'Sub din · 9am–6pm',
+    source_url:'https://pib.gov.in/FactsheetDetails.aspx?Id=148600',
+    pdf_url:'https://rbidocs.rbi.org.in/rdocs/notification/PDFs/04MCKCC030720171E79A08735884C429CF26F5414AB36D9.PDF',
+    tags:['Kisaan','Loan','Kheti','Credit'],
+    summary_hi:'Kisan Credit Card kisaano ko sasti dar par loan deta hai - kheti, fasal kataai ke baad, paludhan aur farm machinery ke liye. Time par chukane par byaaj sirf 4% ke karib aata hai aur card 5 saal ke liye valid hota hai.',
+    summary_en:'Kisan Credit Card provides farmers timely and affordable credit for crop cultivation, post-harvest, farm maintenance, and allied activities. Interest subvention and prompt-repayment incentive bring the effective rate to about 4%.',
+    stats:[['~4%','Effective byaaj'],['5 saal','Card validity'],['Aasaan','Apply']],
     benefits:[
-      {head:'₹5 lakh tak muft ilaaj', sub:'Har parivaar ko har saal — bada operation bhi cover.'},
-      {head:'Cashless, paisa nahi', sub:'Aspataal mein card dikhao, bill sarkar bharti hai.'},
-      {head:'Pehle se bimaari bhi cover', sub:'Pehle din se purani bimaariyaan bhi shaamil.'},
-      {head:'Poore desh mein chalega', sub:'Kisi bhi rajya ke empanelled aspataal mein.'},
-      {head:'1,900+ ilaaj package', sub:'Operation, dawai, jaanch sab package mein.'},
+      {head:'Sasta byaaj - ~4% effective', sub:'2% subvention + 3% prompt-repayment incentive milake byaaj ghat jaata hai.'},
+      {head:'Kheti se jude sab kharch', sub:'Beej, khaad, machinery, paludhan, mandi - sab cover.'},
+      {head:'Batayi-daar aur kiraayedaar bhi', sub:'Zameen apne naam na ho to bhi SHG/JLG ke through mil sakta hai.'},
+      {head:'5 saal valid', sub:'Card 5 saal ke liye chalta hai - har baar apply nahi karna.'},
+      {head:'ATM, mobile aur BC', sub:'ATM, micro-ATM, mobile banking, Aadhaar-enabled - sab se nikaalo.'},
     ],
     eligibility:[
-      {field:'secc', text_hi:'SECC 2011 list mein parivaar ho', status:'unk', rank_hi:'List mein naam check karna hoga'},
-      {field:'income', text_hi:'Kam aay wala parivaar', status:'yes'},
-      {field:'citizen', text_hi:'Bharat ka naagrik', status:'yes'},
-      {field:'card', text_hi:'Ration card ya Aadhaar ho', status:'yes', rank_hi:'Dono records mein darj hain'},
+      {field:'farmer', text_hi:'Kheti karte ho (apni ya batayi)', status:'yes'},
+      {field:'age', text_hi:'Umar 18 saal ya zyaada', status:'yes'},
+      {field:'bank', text_hi:'Bank khaata zaroori', status:'yes'},
+      {field:'default', text_hi:'Bank default record nahi', status:'unk'},
     ],
-    documents_needed:['Aadhaar card','Ration card','Mobile number','Parivaar ka byora','Passport photo'],
+    documents_needed:['Aavedan patra','Pehchaan praman','Pata praman','Zameen ke kaagaz','Fasal pattern','Photo'],
   },
-  'apy':{
-    scheme_id:'apy', name_en:'Atal Pension Yojana', name_hi:'अटल पेंशन योजना',
-    ministry:'Ministry of Finance (PFRDA)', ministry_hi:'वित्त मंत्रालय (PFRDA)',
-    category_label:'Pension · Budhaapa', match_confidence:0.79,
-    one_line_pitch_hi:'60 saal ke baad ₹1,000–₹5,000 mahina pakki pension',
-    helpline_phone:'1800-110-069', helpline_hours:'Som–Shani · 9am–6pm',
-    source_url:'https://www.npscra.nsdl.co.in/scheme-details.php', pdf_url:'https://www.pfrda.org.in/apy-faq.pdf',
-    tags:['Pension','Buazurg','Bachat'],
-    summary_hi:'Atal Pension Yojana mein aaj thoda-thoda jama karke, 60 saal ke baad har mahine pakki pension milti hai — ₹1,000 se ₹5,000 tak. Jitni jaldi shuru karo, utna kam jama karna padta hai.',
-    summary_en:'Atal Pension Yojana lets you pay small amounts now to receive a guaranteed monthly pension of ₹1,000–₹5,000 after age 60. The earlier you join, the less you contribute.',
-    stats:[['₹5,000','Tak pension'],['60 saal','Ke baad'],['Pakki','Guarantee']],
+  'day-nrlm':{
+    scheme_id:'day-nrlm', name_en:'Deendayal Antyodaya Yojana - NRLM', name_hi:'दीनदयाल अंत्योदय योजना',
+    ministry:'Ministry of Rural Development', ministry_hi:'ग्रामीण विकास मंत्रालय',
+    category_label:'Grameen · SHG livelihood', match_confidence:0.82,
+    one_line_pitch_hi:'SHG ke through grameen mahilaaon ko bachat aur loan - kam byaaj par credit',
+    helpline_phone:'1800-102-0988', helpline_hours:'Som–Shani · 10am–6pm',
+    source_url:'https://aajeevika.gov.in/', pdf_url:'',
+    tags:['Grameen','Mahila','SHG','Loan','Livelihood'],
+    summary_hi:'DAY-NRLM grameen garib pariwaaron, khaaskar mahilaaon ko SHG (Self-Help Group) se jodta hai. Group ke through bachat, internal loan aur fir bank-linkage milti hai - kam byaaj par 3 lakh tak ka credit aur kaushal training.',
+    summary_en:'DAY-NRLM is a flagship rural poverty reduction programme. It organizes rural poor households into Self Help Groups for collective savings, financial inclusion, skill development, and access to bank credit at concessional rates.',
+    stats:[['7%','Effective byaaj'],['SHG','Group savings'],['Grameen','Mahila focus']],
     benefits:[
-      {head:'Pakki mahina pension', sub:'₹1,000, ₹2,000, ₹3,000, ₹4,000 ya ₹5,000 chuno.'},
-      {head:'Sarkar bhi jodti hai', sub:'Kuch logon ke liye sarkar apna hissa daalti hai.'},
-      {head:'Jeevan saathi ko bhi pension', sub:'Aapke baad pati/patni ko wahi pension milti hai.'},
-      {head:'Apne aap kat jaata hai', sub:'Bank khaate se har mahine paisa khud kat jaata hai.'},
+      {head:'SHG bachat aur internal loan', sub:'Group regular bachat karta hai aur sadasyon ko aapas mein loan deta hai.'},
+      {head:'Bank-linkage credit', sub:'Sahi SHG ko bank se ₹3 lakh tak ka loan kam byaaj par milta hai.'},
+      {head:'Revolving Fund aur CIF', sub:'Group ko sarkar revolving aur community-investment fund deti hai.'},
+      {head:'Kaushal training', sub:'Yuvaaon ke liye skill training aur livelihood opportunities.'},
+      {head:'Vishesh dhyaan', sub:'Vidhwa, single mahila, divyaangjan, bhoomi-heen mazdoor - prathmikta.'},
     ],
     eligibility:[
-      {field:'age', text_hi:'Umar 18 se 40 saal ke beech', status:'yes', rank_hi:'Aapki umar is daayre mein hai'},
-      {field:'bank', text_hi:'Bank ya post office khaata ho', status:'yes'},
-      {field:'tax', text_hi:'Income tax na bharte ho', status:'unk', rank_hi:'Tax record nahi mila'},
-      {field:'nps', text_hi:'Pehle se APY mein na ho', status:'yes'},
+      {field:'rural', text_hi:'Grameen pariwaar ho', status:'yes'},
+      {field:'shg', text_hi:'Sahi SHG ka sadasya 6+ mahine purana', status:'unk', rank_hi:'SHG record check karna hoga'},
+      {field:'panchasutra', text_hi:'Panchasutra ka palan kare', status:'unk'},
+    ],
+    documents_needed:['Aadhaar number','Pehchaan praman','Niwaas praman','Voter ID','Passport photo'],
+  },
+  'pmjjby':{
+    scheme_id:'pmjjby', name_en:'Pradhan Mantri Jeevan Jyoti Bima Yojana', name_hi:'प्रधानमंत्री जीवन ज्योति बीमा योजना',
+    ministry:'Ministry of Finance', ministry_hi:'वित्त मंत्रालय',
+    category_label:'Beema · Jeevan suraksha', match_confidence:0.85,
+    one_line_pitch_hi:'Sirf ₹436 saal mein ₹2 lakh ka jeevan beema - sab tarah ki maut cover',
+    helpline_phone:'1800-180-1111', helpline_hours:'Sub din · 24 ghante',
+    source_url:'https://www.jansuraksha.gov.in',
+    pdf_url:'https://www.jansuraksha.gov.in/Files/PMJJBY/English/Rules.pdf',
+    tags:['Beema','Jeevan suraksha','Saste premium'],
+    summary_hi:'PMJJBY ek 1-saal ka renewable jeevan beema hai jisme sirf ₹436 saalana premium par ₹2 lakh ka cover milta hai. Kisi bhi karan se maut hone par poora paisa nominee ko milta hai. Bank/post office se auto-debit ho jaata hai.',
+    summary_en:'PMJJBY is a one-year renewable term life insurance scheme. For a premium of just ₹436 per year, it provides a ₹2 lakh cover on death from any cause. Premium is auto-debited from the bank/post office account.',
+    stats:[['₹2 lakh','Cover'],['₹436','Saal mein'],['18-50','Umar']],
+    benefits:[
+      {head:'₹2 lakh cover', sub:'Sab tarah ki maut par nominee ko ₹2 lakh milte hain - natural ya accidental.'},
+      {head:'Sirf ₹436 saalana', sub:'Bank/post office khaate se auto-debit ho jaata hai - bharna nahi padta.'},
+      {head:'Har saal renew', sub:'Premium chalta rahe to cover bhi chalta rahe - 50+ tak.'},
+      {head:'Aasaan nominee claim', sub:'Maut hone par nominee bank/post office mein form bhar ke claim karta hai.'},
+      {head:'Net banking se bhi join', sub:'Bank ki branch jaane ki zaroorat nahi - online enrollment.'},
+    ],
+    eligibility:[
+      {field:'age', text_hi:'Umar 18 se 50 saal', status:'yes'},
+      {field:'bank', text_hi:'Bank ya post office mein savings khaata', status:'yes'},
+      {field:'aadhaar', text_hi:'Aadhaar KYC', status:'yes'},
+      {field:'autodebit', text_hi:'Auto-debit ki sahmati', status:'yes'},
     ],
     documents_needed:['Aadhaar card','Bank passbook','Mobile number','Nominee ka byora'],
   },
+  'pmmy':{
+    scheme_id:'pmmy', name_en:'Pradhan Mantri Mudra Yojana', name_hi:'प्रधानमंत्री मुद्रा योजना',
+    ministry:'Ministry of Finance (DFS)', ministry_hi:'वित्त मंत्रालय',
+    category_label:'Vyaapar · Collateral-free loan', match_confidence:0.87,
+    one_line_pitch_hi:'Chhote vyaapar ke liye ₹50,000 se ₹20 lakh tak collateral-free loan',
+    helpline_phone:'1800-180-1111', helpline_hours:'Sub din · 24 ghante',
+    source_url:'https://www.mudra.org.in',
+    pdf_url:'https://www.mudra.org.in/Default/DownloadFile/MudraLoan-SalientFeatures-English.pdf',
+    tags:['Vyaapar','MSME','Loan','Mudra','Self-employment'],
+    summary_hi:'Mudra Yojana sookshma aur laghu udyamiyon ko bina kisi gehna rakhe loan deti hai. Char shreniyaan hain - Shishu (50,000 tak), Kishore (5 lakh tak), Tarun (10 lakh tak) aur Tarun Plus (20 lakh tak). Vyaapar shuru karna ho ya badhana - sab ke liye.',
+    summary_en:'PMMY provides collateral-free loans to micro and small enterprises in the non-farm sector. Four categories: Shishu (up to ₹50,000), Kishore (up to ₹5 lakh), Tarun (up to ₹10 lakh), and Tarun Plus (up to ₹20 lakh) for those who have repaid a Tarun loan.',
+    stats:[['₹20 lakh','Tak loan'],['No','Collateral'],['4','Shreniyaan']],
+    benefits:[
+      {head:'Collateral-free loan', sub:'Koi gehna ya zameen rakhne ki zaroorat nahi.'},
+      {head:'4 shreniyaan', sub:'Shishu 50k, Kishore 5L, Tarun 10L, Tarun Plus 20L - apni zaroorat chuno.'},
+      {head:'Vyaapar ke har kharch ke liye', sub:'Machinery, working capital, dukaan ka setup, vistaar - sab.'},
+      {head:'Online apply', sub:'Udyamimitra portal par OTP se register karke apply karo.'},
+      {head:'Saari banks par available', sub:'Sarkari bank, RRB, sahakari bank, NBFC, MFI - kahin bhi.'},
+    ],
+    eligibility:[
+      {field:'enterprise', text_hi:'Vyaapar shuru karna ya chala rahe ho (non-farm)', status:'yes'},
+      {field:'age', text_hi:'Umar 18 saal ya zyaada', status:'yes'},
+      {field:'bank', text_hi:'Bank khaata zaroori', status:'yes'},
+      {field:'default', text_hi:'Pehle ka bank default record nahi', status:'unk'},
+    ],
+    documents_needed:['Pehchaan praman','Pata praman','Photo','Vyaapar ka pata','Project report','Bank statements'],
+  },
+  'mmsby':{
+    scheme_id:'mmsby', name_en:'Mukhmantri Sehat Bima Yojana', name_hi:'मुख्यमंत्री सेहत बीमा योजना',
+    ministry:'Government of Punjab (SHA)', ministry_hi:'पंजाब सरकार · राज्य स्वास्थ्य एजेंसी',
+    category_label:'Sehat · Cashless ilaaj (Punjab)', match_confidence:0.83,
+    one_line_pitch_hi:'Punjab pariwaaron ke liye ₹5 lakh ka cashless ilaaj - sarkari aur niji aspataalon mein',
+    helpline_phone:'104', helpline_hours:'Sub din · 24 ghante',
+    source_url:'https://sha.punjab.gov.in/shapunjab/index.php',
+    pdf_url:'',
+    tags:['Sehat','Punjab','Cashless','Beema','State scheme'],
+    summary_hi:'MMSBY (AB PM-JAY MMSBY) Punjab raajya ki swaasthya yojana hai. Pat-r pariwaaron ko har saal ₹5 lakh tak ka cashless ilaaj milta hai - sarkari aur empanelled niji aspataalon mein, paisa nahi dena. Punjab ki 65% aabaadi cover hai.',
+    summary_en:'Mukhmantri Sehat Bima Yojana (AB PM-JAY MMSBY) is Punjab’s flagship health protection scheme. Eligible families receive ₹5 lakh per year of cashless treatment at empanelled government and private hospitals.',
+    stats:[['₹5 lakh','Saal mein'],['Cashless','Ilaaj'],['65%','Punjab cover']],
+    benefits:[
+      {head:'₹5 lakh ka cover', sub:'Har pat-r pariwaar ko har saal - bada operation bhi cover.'},
+      {head:'Cashless aur paperless', sub:'Aspataal mein paisa nahi dena - bill sarkar bhar deti hai.'},
+      {head:'Secondary aur tertiary care', sub:'Aspataal mein bharti hone wali bimaariyaan - operation, ICU, dawai.'},
+      {head:'Sarkari aur niji aspataal', sub:'Sirf sarkari nahi - sahi niji aspataal bhi shaamil.'},
+      {head:'Aasaan e-card', sub:'Ayushman App ya portal par khud register karke e-card banaa lo.'},
+    ],
+    eligibility:[
+      {field:'state', text_hi:'Punjab raajya ke nivaasi', status:'yes'},
+      {field:'category', text_hi:'SECC/Smart Ration/J-form/etc shreni', status:'unk', rank_hi:'List mein naam check karna hoga'},
+      {field:'aadhaar', text_hi:'Aadhaar zaroori', status:'yes'},
+    ],
+    documents_needed:['Aadhaar card','Ration card','Pariwaar ghoshna patra','Aay praman','Shreni ke anusaar (e.g. construction worker card)'],
+  },
 };
-const SCHEME_ORDER = ['pm-kisan','sukanya-samriddhi-yojana','pmjay','e-shram','apy'];
-const top3 = ()=> ['pm-kisan','pmjay','sukanya-samriddhi-yojana'].map(id=>{ const s=SCHEMES[id]; return {scheme_id:id,name_en:s.name_en,name_hi:s.name_hi,one_line_pitch_hi:s.one_line_pitch_hi,match_confidence:s.match_confidence}; });
+const SCHEME_ORDER = ['pmjdy','kcc','pmuy','pmjjby','pmmy','day-nrlm','mmsby'];
+const top3 = ()=> ['pmjdy','kcc','pmjjby'].map(id=>{ const s=SCHEMES[id]; return {scheme_id:id,name_en:s.name_en,name_hi:s.name_hi,one_line_pitch_hi:s.one_line_pitch_hi,match_confidence:s.match_confidence}; });
 
 /* sample seeded conversation (for History fallback) */
 const SAMPLE_MESSAGES = [
-  {id:'m-301', role:'user', modality:'voice', content_text:'Kisan ke liye paise wali yojana batao', retrieved_schemes:['pm-kisan'], created_at:Date.now()-1000*60*42, status:'Searched', scheme_id:'pm-kisan'},
-  {id:'m-298', role:'user', modality:'voice', content_text:'Beti ke liye saving scheme', retrieved_schemes:['sukanya-samriddhi-yojana'], created_at:Date.now()-1000*60*180, status:'Saved', scheme_id:'sukanya-samriddhi-yojana'},
-  {id:'m-280', role:'user', modality:'text', content_text:'Bimari ke kharche ke liye kya hai', retrieved_schemes:['pmjay'], created_at:Date.now()-1000*60*60*26, status:'Applied', scheme_id:'pmjay'},
-  {id:'m-265', role:'user', modality:'voice', content_text:'Mazdoor ka card kaise banta hai', retrieved_schemes:['e-shram'], created_at:Date.now()-1000*60*60*30, status:'In progress', scheme_id:'e-shram'},
-  {id:'m-240', role:'user', modality:'text', content_text:'Buddhe hone par pension kaise milegi', retrieved_schemes:['apy'], created_at:Date.now()-1000*60*60*24*4, status:'Searched', scheme_id:'apy'},
+  {id:'m-301', role:'user', modality:'voice', content_text:'Bank khaata kaise khulwayein muft mein', retrieved_schemes:['pmjdy'], created_at:Date.now()-1000*60*42, status:'Searched', scheme_id:'pmjdy'},
+  {id:'m-298', role:'user', modality:'voice', content_text:'Mujhe kheti ke liye loan chahiye', retrieved_schemes:['kcc'], created_at:Date.now()-1000*60*180, status:'Saved', scheme_id:'kcc'},
+  {id:'m-280', role:'user', modality:'text', content_text:'LPG connection free mein kaise milega', retrieved_schemes:['pmuy'], created_at:Date.now()-1000*60*60*26, status:'Applied', scheme_id:'pmuy'},
+  {id:'m-265', role:'user', modality:'voice', content_text:'Sasta jeevan beema chahiye', retrieved_schemes:['pmjjby'], created_at:Date.now()-1000*60*60*30, status:'In progress', scheme_id:'pmjjby'},
+  {id:'m-240', role:'user', modality:'text', content_text:'Chhota vyaapar shuru karne ke liye loan', retrieved_schemes:['pmmy'], created_at:Date.now()-1000*60*60*24*4, status:'Searched', scheme_id:'pmmy'},
 ];
 
 /* ─────────── VM_API (live + fallback) ─────────── */
@@ -1071,7 +1124,7 @@ const VM_API = {
   },
   async explain(id, length='short'){
     try{ return await apiFetch(`/schemes/${id}/explain?length=${length}`); }
-    catch(e){ const s=SCHEMES[id]||SCHEMES['pm-kisan']; return {explanation_text_hi:s.summary_hi, explanation_audio_url:`/static/audio/explain-${id}.mp3`}; }
+    catch(e){ const s=SCHEMES[id]||SCHEMES['pmjdy']; return {explanation_text_hi:s.summary_hi, explanation_audio_url:`/static/audio/explain-${id}.mp3`}; }
   },
   async applySteps(id){
     try{ return await apiFetch(`/schemes/${id}/apply-steps`); }
@@ -1094,11 +1147,14 @@ const VM_API = {
 };
 function mockChat(text){
   const t=(text||'').toLowerCase();
-  let order=['pm-kisan','pmjay','sukanya-samriddhi-yojana'];
-  if(/bet|ladk|daughter|sukanya|saving|bachat/.test(t)) order=['sukanya-samriddhi-yojana','apy','pmjay'];
-  else if(/bimar|health|ilaaj|aspataal|ayushman/.test(t)) order=['pmjay','e-shram','pm-kisan'];
-  else if(/mazdoor|worker|shram|labour/.test(t)) order=['e-shram','pmjay','apy'];
-  else if(/pension|budhap|buazurg|atal/.test(t)) order=['apy','sukanya-samriddhi-yojana','pm-kisan'];
+  let order=['pmjdy','kcc','pmjjby'];
+  if(/kheti|kisan|farmer|fasal|khet/.test(t)) order=['kcc','pmjdy','pmmy'];
+  else if(/lpg|gas|chulha|cylinder|ujjwala/.test(t)) order=['pmuy','pmjdy','pmjjby'];
+  else if(/bank|khata|khaata|account|jan dhan/.test(t)) order=['pmjdy','pmjjby','pmmy'];
+  else if(/beema|insurance|jeevan|life cover|maut/.test(t)) order=['pmjjby','pmjdy','mmsby'];
+  else if(/loan|udhar|business|vyaapar|dukaan|mudra/.test(t)) order=['pmmy','kcc','pmjdy'];
+  else if(/shg|grameen|mahila|self.help|livelihood|nrlm/.test(t)) order=['day-nrlm','pmjdy','kcc'];
+  else if(/sehat|ilaaj|hospital|aspataal|punjab|health/.test(t)) order=['mmsby','pmjjby','pmjdy'];
   const top=order.map(id=>{const s=SCHEMES[id];return {scheme_id:id,name_en:s.name_en,name_hi:s.name_hi,one_line_pitch_hi:s.one_line_pitch_hi,match_confidence:s.match_confidence};});
   const main=SCHEMES[order[0]];
   return {
@@ -1113,19 +1169,19 @@ function mockChat(text){
 }
 function mockSteps(id){
   const S={
-    'pm-kisan':[
-      {title_hi:'Aadhaar aur bank khaata taiyaar rakho', body_hi:'Apna Aadhaar card aur bank passbook paas mein rakho. Khaata Aadhaar se juda hona chahiye.'},
-      {title_hi:'pmkisan.gov.in par naam darj karo', body_hi:'Website par "New Farmer Registration" pe jao ya apne CSC kendra se madad lo.'},
-      {title_hi:'Zameen ke kaagaz ka byora bharo', body_hi:'Khasra/khatauni number aur zameen ka byora form mein bharo.'},
-      {title_hi:'Patwari se taiyaad karwao', body_hi:'Gaon ke patwari aapki zameen ka record milaayenge.'},
-      {title_hi:'Kisht ka intezaar karo', body_hi:'Naam manzoor hone par har 4 mahine ₹2,000 khaate mein aayega.'},
+    'pmjdy':[
+      {title_hi:'Aadhaar aur pehchaan le jao', body_hi:'Apna Aadhaar card ya koi sarkari ID, ek photo aur pata praman taiyaar rakho.'},
+      {title_hi:'Nazdeeki bank ya CSC jao', body_hi:'Apni nazdeeki bank shaakha ya CSC mein jao - Jan Dhan ke liye PMJDY form maango.'},
+      {title_hi:'Form bharo aur jama karo', body_hi:'Form mein naam, gaon/shahar, mobile, aay aur nominee likho aur dastakhat karo.'},
+      {title_hi:'RuPay card lo', body_hi:'Khaata khulne par RuPay debit card aur passbook mil jaate hain.'},
+      {title_hi:'Overdraft aur beema active', body_hi:'6 mahine khaata chalane par ₹10,000 ka overdraft aur ₹2 lakh ka beema chalu ho jaata hai.'},
     ],
-    'sukanya-samriddhi-yojana':[
-      {title_hi:'Post office ya bank chuno', body_hi:'Nazdeeki post office ya kisi bhi bank shaakha mein jao jahan yeh khaata khulta hai.'},
-      {title_hi:'Beti ka janm praman le jao', body_hi:'Beti ka birth certificate aur apna Aadhaar saath le jao.'},
-      {title_hi:'Khaata kholne ka form bharo', body_hi:'Form bharo aur kam se kam ₹250 jama karo.'},
-      {title_hi:'Photo aur dastakhat lagao', body_hi:'Apni photo chipkao aur form par dastakhat karo.'},
-      {title_hi:'Passbook lo', body_hi:'Khaata khulne par passbook le lo — usmein jama paisa dikhega.'},
+    'kcc':[
+      {title_hi:'Bank chuno', body_hi:'Apna bank, RRB ya sahakari bank chuno jahan KCC milta hai.'},
+      {title_hi:'Aavedan patra bharo', body_hi:'KCC form mein zameen, fasal aur banking ki jaankari bharo.'},
+      {title_hi:'Zameen ke kaagaz le jao', body_hi:'Khasra, khatauni ya patta record, Aadhaar aur photo bank mein jama karo.'},
+      {title_hi:'Bank sat-yapan', body_hi:'Bank zameen aur eligibility verify karega - kuch din lag sakte hain.'},
+      {title_hi:'Card aur loan', body_hi:'Manzoori ke baad credit card aur loan limit mil jaati hai - 5 saal valid.'},
     ],
   };
   return S[id] || [
@@ -1137,7 +1193,7 @@ function mockSteps(id){
   ];
 }
 function mockExplanation(){
-  return {span_text:SCHEMES['pm-kisan'].name_hi, why_hi:'Aapne kisaan ki madad ke baare mein poochha tha. PM-KISAN seedhe chhote kisaano ko paisa deti hai, isliye yeh sabse upar dikhayi. Jaankari pmkisan.gov.in se li gayi hai.', source_url:'https://pmkisan.gov.in', feedback_summary:{up:3812, down:218}};
+  return {span_text:SCHEMES['pmjdy'].name_hi, why_hi:'Aapne bank khaata aur muft suvidhaaon ke baare mein poochha tha. PMJDY har vyakti ko zero-balance khaata, muft RuPay card aur Rs 2 lakh ka beema deti hai, isliye yeh sabse upar dikhayi. Jaankari pmjdy.gov.in se li gayi hai.', source_url:'https://www.pmjdy.gov.in/', feedback_summary:{up:3812, down:218}};
 }
 function mockConversations(){
   const msgs = store.get('messages', SAMPLE_MESSAGES);
@@ -1336,6 +1392,9 @@ function openLangMenu(anchor){
   menu.querySelectorAll('.lm-item').forEach(b=>b.addEventListener('click',()=>{
     if(b.classList.contains('soon')){ toast(b.querySelector('.lm-en').textContent+' jaldi aa rahi hai · coming soon'); return; }
     lang=b.dataset.code; store.set('lang',lang); closeLangMenu(); renderShell();
+    // Re-render the active screen so scheme cards / response cards flip
+    // their primary script (Hindi mode shows Devanagari names first).
+    try{ if(typeof router === 'function') router(); }catch(e){}
     toast('भाषा · '+(LANGS.find(L=>L.code===lang)||{}).native);
   }));
   setTimeout(()=>{ document.addEventListener('click',langOutside); document.addEventListener('keydown',langEsc); },0);
@@ -1532,7 +1591,7 @@ async function runAskFlow(){
   HOME.resp=resp; HOME.vote=null; lastResponse=resp; store.set('last_response',resp);
   // log message to local history
   const msgs=store.get('messages',SAMPLE_MESSAGES.slice());
-  const sid=(resp.top_3_schemes&&resp.top_3_schemes[0])?resp.top_3_schemes[0].scheme_id:'pm-kisan';
+  const sid=(resp.top_3_schemes&&resp.top_3_schemes[0])?resp.top_3_schemes[0].scheme_id:'pmjdy';
   msgs.unshift({id:resp.message_id,role:'user',modality:lowData?'voice':'text',content_text:resp.transcript_hi,retrieved_schemes:(resp.top_3_schemes||[]).map(s=>s.scheme_id),created_at:Date.now(),status:'Searched',scheme_id:sid});
   store.set('messages',msgs);
   // For voice path the user is already waiting — go straight to 'answered'
@@ -1617,10 +1676,13 @@ function capFor(st){
 function responseCard(resp){
   if(!resp) return '';
   const top=(resp.top_3_schemes||[])[0]||{}; const src=(resp.sources||[])[0]||{};
+  const hiMode = (typeof lang !== 'undefined') && lang === 'HI';
+  const primary = hiMode ? (top.name_hi||top.name_en) : (top.name_en||top.name_hi);
+  const secondary = hiMode ? (top.name_en||'') : (top.name_hi||'');
   return `<article class="resp card" style="padding:18px">
-    <div class="top"><span class="dot"></span>Aapke liye sabse achha</div>
-    <h3>${esc(top.name_en||'')}</h3>
-    <div class="nh hi">${esc(top.name_hi||'')}</div>
+    <div class="top"><span class="dot"></span>${hiMode?'आपके लिए सबसे अच्छा':'Aapke liye sabse achha'}</div>
+    <h3 class="${hiMode?'hi':''}">${esc(primary)}</h3>
+    <div class="nh ${hiMode?'':'hi'}">${esc(secondary)}</div>
     <p class="pitch hi">${esc(top.one_line_pitch_hi||resp.response_text_hi||'')}</p>
     <div class="srcrow"><span class="tick">${svg(I.check,10,3.5)}</span><span>सरकारी स्रोत · ${esc(src.title||'Official')}</span></div>
     <a class="why-link" id="resp-why" role="button" tabindex="0">${svg(I.q,15)}<span class="hi">यह कैसे पता चला?</span> · How do I know this?</a>
@@ -1669,11 +1731,17 @@ async function screenSchemes(){
 function schemeCard(sm,best){
   const s=SCHEMES[sm.scheme_id]||{}; const applied=isApplied(sm.scheme_id);
   const effort=(s.stats&&s.stats[2])?s.stats[2][0]:'Aasaan';
+  // Lang-aware ordering: in Hindi mode the Devanagari name is the title
+  // and English is the subtitle. In English mode the opposite. This is
+  // why Hindi users were complaining their scheme cards read in English.
+  const hiMode = (typeof lang !== 'undefined') && lang === 'HI';
+  const primaryName = hiMode ? sm.name_hi : sm.name_en;
+  const secondaryName = hiMode ? sm.name_en : sm.name_hi;
   const c=el(`<article class="sc-card card ${best?'best':''} ${applied?'applied':''}">
-    ${best?`<span class="sc-ribbon">${svg(I.bolt,13)} Aapke liye sabse achha</span>`:''}
-    ${applied?`<span class="applied-tag" style="margin-bottom:10px">${svg(I.check,13,3)} Arzi shuru ki</span>`:''}
-    <h3>${esc(sm.name_en)}</h3>
-    <div class="nh hi">${esc(sm.name_hi)}</div>
+    ${best?`<span class="sc-ribbon">${svg(I.bolt,13)} ${hiMode?'आपके लिए सबसे अच्छा':'Aapke liye sabse achha'}</span>`:''}
+    ${applied?`<span class="applied-tag" style="margin-bottom:10px">${svg(I.check,13,3)} ${hiMode?'अर्ज़ी शुरू की':'Arzi shuru ki'}</span>`:''}
+    <h3 class="${hiMode?'hi':''}">${esc(primaryName)}</h3>
+    <div class="nh ${hiMode?'':'hi'}">${esc(secondaryName)}</div>
     <div class="benefit hi">${esc(sm.one_line_pitch_hi||'')}</div>
     <div class="sc-meta">
       <span class="badge ${effort.match(/aasaan|easy/i)?'green':'amber'}">${esc(effort)} apply</span>
@@ -2088,7 +2156,7 @@ function wireHistFilters(wrap){
   if(open){ open.addEventListener('click',()=> location.hash='#/scheme/'+selSchemeFromHist()); }
   if(listen){ listen.addEventListener('click',async()=>{ const id=selSchemeFromHist(); const ex=await VM_API.explain(id,'short'); speak(ex.explanation_text_hi,ex.explanation_audio_url); toast('Sun rahe ho…',I.speaker); }); }
 }
-function selSchemeFromHist(){ const msgs=store.get('messages',SAMPLE_MESSAGES); const m=msgs.find(x=>x.id===histSel); return m?m.scheme_id:'pm-kisan'; }
+function selSchemeFromHist(){ const msgs=store.get('messages',SAMPLE_MESSAGES); const m=msgs.find(x=>x.id===histSel); return m?m.scheme_id:'pmjdy'; }
 
 /* ═══════════════════ CHAT (VAANI) ═══════════════════ */
 function chatThread(){ return store.get('chat_thread', [
@@ -2158,7 +2226,7 @@ async function sendChat(wrap,text,voice){
   saveThread(t2);
   // log to messages history
   const msgs=store.get('messages',SAMPLE_MESSAGES.slice());
-  msgs.unshift({id:resp.message_id,role:'user',modality:voice?'voice':'text',content_text:text,retrieved_schemes:(resp.top_3_schemes||[]).map(s=>s.scheme_id),created_at:Date.now(),status:'Searched',scheme_id:top.scheme_id||'pm-kisan'});
+  msgs.unshift({id:resp.message_id,role:'user',modality:voice?'voice':'text',content_text:text,retrieved_schemes:(resp.top_3_schemes||[]).map(s=>s.scheme_id),created_at:Date.now(),status:'Searched',scheme_id:top.scheme_id||'pmjdy'});
   store.set('messages',msgs);
   paintThread(wrap);
 }

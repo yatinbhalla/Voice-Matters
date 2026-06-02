@@ -1,0 +1,78 @@
+{
+  "scheme_id": "pmjdy",
+  "name_hi": "प्रधानमंत्री जन धन योजना",
+  "name_en": "Pradhan Mantri Jan Dhan Yojana",
+  "ministry": "Ministry of Finance",
+  "summary_hi": "प्रधानमंत्री जन धन योजना उन सब लोगों के लिए है जिनका अभी तक बैंक खाता नहीं खुला। ज़ीरो बैलेंस पर खाता खुलता है - कोई न्यूनतम राशि नहीं रखनी। साथ में मुफ्त रुपे डेबिट कार्ड और दो लाख का दुर्घटना बीमा भी मिलता है, और ज़रूरत पड़ने पर दस हज़ार का ओवरड्राफ्ट।",
+  "source_url": "https://www.pmjdy.gov.in/",
+  "helpline_phone": "011-23361571",
+  "tags": [
+    "banking",
+    "financial-inclusion",
+    "savings",
+    "rupay",
+    "jan-dhan"
+  ],
+  "eligibility_rules": {
+    "requires_external_verification": false,
+    "rules": [
+      {
+        "field": "has_aadhaar",
+        "op": "eq",
+        "value": true,
+        "reason_hi": "PMJDY khaata kholne ke liye Aadhaar ya koi sarkari pehchaan zaroori hai",
+        "ask_hi": "Kya aapke paas Aadhaar card ya koi sarkari ID hai?"
+      }
+    ]
+  },
+  "chunks": [
+    {
+      "id": "pmjdy-summary",
+      "chunk_type": "summary",
+      "language": "hi-en",
+      "text": "प्रधानमंत्री जन धन योजना उन सब लोगों के लिए है जिनका अभी तक बैंक खाता नहीं खुला। ज़ीरो बैलेंस पर खाता खुलता है - कोई न्यूनतम राशि नहीं रखनी। साथ में मुफ्त रुपे डेबिट कार्ड और दो लाख का दुर्घटना बीमा भी मिलता है, और ज़रूरत पड़ने पर दस हज़ार का ओवरड्राफ्ट। Pradhan Mantri Jan Dhan Yojana (प्रधानमंत्री जन धन योजना) - Har vyakti ke liye zero-balance bank khaata - free RuPay card, Rs 2 lakh ka durghatna beema aur Rs 10,000 ka overdraft. Pradhan Mantri Jan Dhan Yojana (PMJDY) is a National Mission for Financial Inclusion launched by the Government of India in August 2014. Its objective is to provide banking services to every citizen who remains outside the formal banking system. Through the scheme, beneficiaries receive access to a basic savings bank account, need-based credit, remittances, insurance, and pension services. After 14.08.2018, the focus of the scheme shifted from 'every household' to 'every unbanked adult'. The overdraft limit was increased from INR 5,000 to INR 10,000, and the accidental insurance cover for RuPay card holders was raised from INR 1 lakh to INR 2 lakhs. A BSBDA account does not require any minimum balance. Account holders can deposit and withdraw cash through bank branches, ATMs, and Banking Correspondents, though cash withdrawals are limited to four times a month. Small accounts can also be opened without legal documents and are typically valid for 12 months, with extension possible on submission of the required proof. Under PMJDY, eligible beneficiaries receive a RuPay debit card, overdraft access, and banking support through Bank Mitras in remote and rural areas. प्रधानमंत्री जन धन योजना (PMJDY) भारत सरकार की एक राष्ट्रीय वित्तीय समावेशन पहल है, जिसे अगस्त 2014 में शुरू किया गया था। इसका उद्देश्य हर ऐसे नागरिक तक बैंकिंग सेवाएँ पहुँचाना है जिसके पास बैंक खाता नहीं है। योजना के माध्यम से बुनियादी बचत बैंक खाता, ज़रूरत के अनुसार ऋण, रेमिटेंस, बीमा और पेंशन जैसी वित्तीय सेवाएँ उपलब्ध कराई जाती हैं। 14.08.2018 के बाद योजना का ध्यान 'हर परिवार' से बदलकर 'हर वयस्क जो बैंकिंग से बाहर है' पर केंद्रित किया गया। योजना के अंतर्गत ओवरड्राफ्ट सीमा 5,000 रुपये से बढ़ाकर 10,000 रुपये की गई और RuPay कार्ड धारकों के लिए दुर्घटना बीमा कवर 1 लाख रुपये से बढ़ाकर 2 लाख रुपये किया गया। BSBDA खाते में न्यूनतम शेष राशि की आवश्यकता नहीं होती। खाताधारक बैंक शाखा, ATM और बैंकिंग कॉरेस्पोंडेंट के माध्यम से जमा और निकासी कर सकते हैं, हालांकि एक महीने में नकद निकासी चार बार से अधिक नहीं हो सकती। बिना कानूनी दस्तावेज़ के छोटे खाते भी खोले जा सकते हैं, जो सामान्यतः 12 महीने के लिए वैध होते हैं और उपयुक्त दस्तावेज़ जमा करने पर आगे बढ़ाए जा सकते हैं। PMJDY के तहत पात्र लाभार्थियों को RuPay डेबिट कार्ड, ओवरड्राफ्ट सुविधा और दूरदराज़ क्षेत्रों में बैंक मित्रों के माध्यम से बैंकिंग सहायता प्राप्त होती है।"
+    },
+    {
+      "id": "pmjdy-overview",
+      "chunk_type": "overview",
+      "language": "hi-en",
+      "text": "Pradhan Mantri Jan Dhan Yojana detailed overview / vistar se jaankari: Pradhan Mantri Jan Dhan Yojana (PMJDY) is a National Mission for Financial Inclusion launched by the Government of India in August 2014. Its objective is to provide banking services to every citizen who remains outside the formal banking system. Through the scheme, beneficiaries receive access to a basic savings bank account, need-based credit, remittances, insurance, and pension services. After 14.08.2018, the focus of the scheme shifted from 'every household' to 'every unbanked adult'. The overdraft limit was increased from INR 5,000 to INR 10,000, and the accidental insurance cover for RuPay card holders was raised from INR 1 lakh to INR 2 lakhs. A BSBDA account does not require any minimum balance. Account holders can deposit and withdraw cash through bank branches, ATMs, and Banking Correspondents, though cash withdrawals are limited to four times a month. Small accounts can also be opened without legal documents and are typically valid for 12 months, with extension possible on submission of the required proof. Under PMJDY, eligible beneficiaries receive a RuPay debit card, overdraft access, and banking support through Bank Mitras in remote and rural areas. प्रधानमंत्री जन धन योजना (PMJDY) भारत सरकार की एक राष्ट्रीय वित्तीय समावेशन पहल है, जिसे अगस्त 2014 में शुरू किया गया था। इसका उद्देश्य हर ऐसे नागरिक तक बैंकिंग सेवाएँ पहुँचाना है जिसके पास बैंक खाता नहीं है। योजना के माध्यम से बुनियादी बचत बैंक खाता, ज़रूरत के अनुसार ऋण, रेमिटेंस, बीमा और पेंशन जैसी वित्तीय सेवाएँ उपलब्ध कराई जाती हैं। 14.08.2018 के बाद योजना का ध्यान 'हर परिवार' से बदलकर 'हर वयस्क जो बैंकिंग से बाहर है' पर केंद्रित किया गया। योजना के अंतर्गत ओवरड्राफ्ट सीमा 5,000 रुपये से बढ़ाकर 10,000 रुपये की गई और RuPay कार्ड धारकों के लिए दुर्घटना बीमा कवर 1 लाख रुपये से बढ़ाकर 2 लाख रुपये किया गया। BSBDA खाते में न्यूनतम शेष राशि की आवश्यकता नहीं होती। खाताधारक बैंक शाखा, ATM और बैंकिंग कॉरेस्पोंडेंट के माध्यम से जमा और निकासी कर सकते हैं, हालांकि एक महीने में नकद निकासी चार बार से अधिक नहीं हो सकती। बिना कानूनी दस्तावेज़ के छोटे खाते भी खोले जा सकते हैं, जो सामान्यतः 12 महीने के लिए वैध होते हैं और उपयुक्त दस्तावेज़ जमा करने पर आगे बढ़ाए जा सकते हैं। PMJDY के तहत पात्र लाभार्थियों को RuPay डेबिट कार्ड, ओवरड्राफ्ट सुविधा और दूरदराज़ क्षेत्रों में बैंक मित्रों के माध्यम से बैंकिंग सहायता प्राप्त होती है।"
+    },
+    {
+      "id": "pmjdy-benefits",
+      "chunk_type": "benefits",
+      "language": "hi-en",
+      "text": "Pradhan Mantri Jan Dhan Yojana ke benefits / faayde: basic savings bank deposit account; small account available; rupay debit card with accident insurance; accident insurance cover inr: 200000; accident insurance cover inr before 2018 08 28: 100000; overdraft limit inr: 10000; cash withdrawal limit per month: 4"
+    },
+    {
+      "id": "pmjdy-documents",
+      "chunk_type": "documents_required",
+      "language": "hi-en",
+      "text": "Documents needed for Pradhan Mantri Jan Dhan Yojana application / Zaroori kaagaz: Aadhaar, Government ID proof, Permanent address proof, Passport-size photograph, Filled and signed PMJDY account opening form"
+    },
+    {
+      "id": "pmjdy-apply",
+      "chunk_type": "application_process",
+      "language": "hi-en",
+      "text": "How to apply for Pradhan Mantri Jan Dhan Yojana / Kaise apply karein: Step 1: Go to the official PMJDY portal / आधिकारिक पोर्टल पर जाएँ. Open the PMJDY official website and go to the e-documents section. | Step 2: Download the account opening form / खाता खोलने का फॉर्म डाउनलोड करें. Click the appropriate English or Hindi Account Opening Form link and download the PDF. | Step 3: Fill the form manually / फ़ॉर्म को हाथ से भरें. Fill in the bank branch, town/village, block/district, Aadhaar number, profession, annual income, KCC details, and other required information. | Step 4: Submit it at the nearest bank branch / निकटतम बैंक शाखा में जमा करें. Take the completed form, mobile number or email ID, and required documents to your nearest bank branch and submit them. | Step 5: Use the account and services after activation / खाता सक्रिय होने पर सेवाएँ उपयोग करें. After activation, use BSBDA, RuPay debit card, overdraft, and other financial services."
+    },
+    {
+      "id": "pmjdy-helpline",
+      "chunk_type": "helpline",
+      "language": "hi-en",
+      "text": "Pradhan Mantri Jan Dhan Yojana helpline / madad ke liye number: 011-23361571. Official portal: https://www.pmjdy.gov.in/. Madad ke liye is number par call karein ya portal par jaayein."
+    },
+    {
+      "id": "pmjdy-intents",
+      "chunk_type": "user_voice_intents",
+      "language": "hi-roman",
+      "text": "Common user voice intents for Pradhan Mantri Jan Dhan Yojana: main bank khaata kholna chahta hu | muft bank khaata | muft bank khaata kaise khulwayein | mera bank khaata nahi hai | muft bank account kaise khulta hai | Jan Dhan yojana mein naam likhwana hai | zero balance khaata chahiye | RuPay card chahiye | main garib hu, bank khaata kholo | mujhe muft mein savings account chahiye | Jan Dhan account kya hai | mere paas paisa kam hai, bank khaata kaise kholun | bank mein mera account nahi hai, kya karu | overdraft chahiye bina paisa diye"
+    },
+    {
+      "id": "pmjdy-intents-hi",
+      "chunk_type": "user_voice_intents_devanagari",
+      "language": "hi-devanagari",
+      "text": "प्रधानमंत्री जन धन योजना ke liye common voice queries: मुझे बैंक खाता खुलवाना है | मेरा बैंक खाता नहीं है | मुफ्त में बैंक खाता कैसे खुलता है | जन धन योजना में नाम लिखवाना है | जीरो बैलेंस खाता चाहिए | रुपे कार्ड चाहिए | मैं गरीब हूँ बैंक खाता खोलो | मुझे मुफ्त सेविंग्स अकाउंट चाहिए | मेरे पास बैंक खाता नहीं है क्या करूँ | ओवरड्राफ्ट चाहिए बिना पैसे के"
+    }
+  ]
+}
