@@ -7,8 +7,15 @@ sqlalchemy
 asyncpg
 alembic
 pinecone
-sentence-transformers
 openai
 python-dotenv
 pydantic-settings
 python-multipart
+
+# `sentence-transformers` is intentionally NOT in this list.
+# It pulls in PyTorch (~2 GB) which blows past Render's free-tier disk
+# during the build and isn't needed when EMBED_PROVIDER=openai (prod
+# default). Local-embedder code lazy-imports it inside _load_model(), so
+# the package is only required if you flip EMBED_PROVIDER=local — in
+# which case install it explicitly:
+#   pip install sentence-transformers
