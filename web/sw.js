@@ -16,7 +16,7 @@
 // page can pop the No-network overlay. We also serve a JSON 503 fallback
 // for write paths that miss network so JS catch() can branch correctly.
 
-const VERSION = 'v5-prod-deploy';
+const VERSION = 'v6-cross-origin-passthrough';
 const STATIC_CACHE = 'vm-static-' + VERSION;
 const SCHEMES_CACHE = 'vm-schemes-' + VERSION;
 const MESSAGES_CACHE = 'vm-messages-' + VERSION;
@@ -155,6 +155,13 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET' && req.method !== 'POST') return;
   const url = new URL(req.url);
+  // Pass through CROSS-ORIGIN requests entirely. The path-only routing
+  // below would otherwise match /api/v1/... on the backend's origin
+  // (voice-matters-n66k.onrender.com) and the SW's fetch() of those can
+  // throw on cross-origin POSTs, falsely triggering the "backend offline"
+  // toast. Browser CORS + the backend's allow-list handle cross-origin
+  // calls correctly when the SW stays out of the way.
+  if (url.origin !== self.location.origin) return;
   const path = url.pathname;
 
   // Write paths: never cache.

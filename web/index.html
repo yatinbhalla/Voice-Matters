@@ -1313,12 +1313,18 @@ function speak(text, audioPath){
   };
   if(src){
     const a=new Audio(src); curAudio=a;
-    a.addEventListener('playing',()=>{ if(myId===reqAudioId) setSpeaking(true); });
+    // `started` flag so the speech-synthesis fallback only fires when the
+    // Bulbul MP3 actually fails to start. Without it, any mid-stream
+    // 'error' event triggered useSynth() AFTER playback had already begun
+    // — the browser then re-read the same text via speechSynthesis, so
+    // the user heard the response twice ("voice repeats the info").
+    let started = false;
+    a.addEventListener('playing',()=>{ started = true; if(myId===reqAudioId) setSpeaking(true); });
     a.addEventListener('ended',()=>{ if(myId===reqAudioId) setSpeaking(false); });
     a.addEventListener('pause',()=>{ if(myId===reqAudioId && a.ended) setSpeaking(false); });
-    a.addEventListener('error',()=>{ curAudio=null; useSynth(); });
+    a.addEventListener('error',()=>{ if(started) return; curAudio=null; useSynth(); });
     setSpeaking(true);
-    a.play().catch(()=>{ curAudio=null; useSynth(); });
+    a.play().catch(()=>{ if(started) return; curAudio=null; useSynth(); });
   } else { useSynth(); }
 }
 
