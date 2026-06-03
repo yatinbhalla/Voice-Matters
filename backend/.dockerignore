@@ -1,0 +1,54 @@
+# Local dev artifacts the prod image should never see.
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Secrets — Render injects via env vars.
+.env
+.env.local
+.env.*
+!.env.example
+
+# Test scratch + persona snapshots (not needed at runtime).
+tests/report.html
+tests/report.json
+tests/snapshots/
+tests/synthesized/
+.pytest_cache/
+
+# One-shot dev helper scripts (kept in git for reproducibility but not
+# needed in the running container).
+_verify_openai.py
+_inject_hallucination.py
+_convert_new_schemes.py
+_enrich_voice_intents.py
+_devanagari_summaries.py
+_patch_frontend_schemes.py
+
+# Runtime audio cache rebuilt on every TTS call.
+static/audio/*
+!static/audio/.gitkeep
+
+# Pre-canned API response fixtures left over from local debugging.
+*_resp.json
+*_chrono.json
+*_full.json
+verify_*.json
+verify_*.md
+sample_*.wav
+chat_*.json
+explain_*.json
+expl_*.json
+msgs_*.json
+detail_*.json
+voice_*.json
+fb.json
+sushila.json
+ramesh.json
+pooja.json
+trust.json
+
+# Migrations cache.
+alembic/versions/__pycache__/

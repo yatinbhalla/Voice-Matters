@@ -1,0 +1,68 @@
+# Render Blueprint — declarative two-service deploy.
+# https://render.com/docs/blueprint-spec
+#
+# Push this file to the main branch, then in the Render dashboard:
+#   New + → Blueprint → connect this repo → Apply.
+# Render creates both services and asks you to fill the secret env vars.
+
+services:
+  # ─────────────────────────────────────────────────────────────────
+  # Backend: FastAPI on Docker (Dockerfile installs ffmpeg + deps).
+  # ─────────────────────────────────────────────────────────────────
+  - type: web
+    name: voice-matters-api
+    runtime: docker
+    plan: free                         # 512 MB RAM, sleeps after 15min idle
+    region: singapore                  # closest to India for Sarvam latency
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      # Render injects PORT automatically; uvicorn reads $PORT.
+      - key: ENVIRONMENT
+        value: production
+      - key: EMBED_PROVIDER
+        value: openai
+
+      # Secrets — filled in via the Render dashboard, NOT committed here.
+      - key: SARVAM_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: PINECONE_API_KEY
+        sync: false
+      - key: PINECONE_INDEX_NAME
+        value: voice-matters-schemes
+      - key: DATABASE_URL
+        sync: false
+
+      # CORS — set to the static-site URL once it's live.
+      # (Default in main.py allows localhost in dev; this overrides for prod.)
+      - key: FRONTEND_ORIGIN
+        sync: false
+
+  # ─────────────────────────────────────────────────────────────────
+  # Frontend: static HTML/CSS/JS hosted on Render's free static site.
+  # ─────────────────────────────────────────────────────────────────
+  - type: web
+    name: voice-matters-web
+    runtime: static
+    plan: free
+    rootDir: web
+    buildCommand: echo "no build step"   # vanilla HTML — nothing to build
+    staticPublishPath: .
+    autoDeploy: true
+    headers:
+      # Service-worker needs an explicit scope header so / can register sw.js.
+      - path: /sw.js
+        name: Service-Worker-Allowed
+        value: "/"
+    routes:
+      - type: rewrite
+        source: /api/*
+        # If you'd rather have same-origin API calls (avoiding CORS), proxy
+        # /api/* on the static site over to the backend. Uncomment + replace
+        # the destination once the backend URL is known:
+        # destination: https://voice-matters-api.onrender.com/api/:splat
+        destination: /api/:splat
