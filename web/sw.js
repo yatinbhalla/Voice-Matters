@@ -16,7 +16,7 @@
 // page can pop the No-network overlay. We also serve a JSON 503 fallback
 // for write paths that miss network so JS catch() can branch correctly.
 
-const VERSION = 'v4-mobile-shell';
+const VERSION = 'v5-prod-deploy';
 const STATIC_CACHE = 'vm-static-' + VERSION;
 const SCHEMES_CACHE = 'vm-schemes-' + VERSION;
 const MESSAGES_CACHE = 'vm-messages-' + VERSION;
