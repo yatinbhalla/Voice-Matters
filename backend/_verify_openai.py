@@ -66,7 +66,6 @@ async def main() -> int:
         f"· model={resp.model}"
     )
     # Cheap sanity: cosine self-similarity should be 1.0 +/- float noise
-    import math
     a = vecs[0]
     sim_self = sum(x * x for x in a) ** 0.5
     print(f"sanity · ||v[0]|| = {sim_self:.4f}  (should be ~1.0 for L2-normalized)")

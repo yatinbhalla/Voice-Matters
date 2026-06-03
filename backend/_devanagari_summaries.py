@@ -8,7 +8,6 @@ URLs don't keep getting served.
 """
 import asyncio
 import json
-import os
 import sys
 from pathlib import Path
 
@@ -72,8 +71,9 @@ async def _truncate_cache_table() -> None:
     """Drop any old explain-cache rows so a fresh Devanagari summary is
     served, not stale Hindi-Roman text + audio URL."""
     try:
-        from models.db import SessionLocal
         from sqlalchemy import text as sql_text
+
+        from models.db import SessionLocal
     except Exception as e:
         print(f"  (skipping cache truncate: {e})")
         return

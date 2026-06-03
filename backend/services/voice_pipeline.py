@@ -329,7 +329,8 @@ async def run_chat_pipeline(
     frontend can render either response with the same code path. Messages
     are persisted with modality="text".
     """
-    sarvam = _SARVAM
+    # Chat path doesn't call STT or TTS, so no `sarvam` local alias needed;
+    # _ANSWERER / _ELIGIBILITY already hold the singleton client internally.
     rag = _RAG
     answerer = _ANSWERER
     eligibility = _ELIGIBILITY
