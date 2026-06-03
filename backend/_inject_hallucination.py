@@ -34,20 +34,20 @@ async def main(count: int) -> None:
                 role=Role.assistant,
                 modality=Modality.text,
                 content_text=(
-                    "Sukanya Samriddhi Yojana aapki beti ke liye sabse achi hai - "
-                    "8.2% byaaj milta hai. Aap PM-KISAN bhi check kar sakte hain."
+                    "PMJDY ke saath aap turant 20,000 rupaye ka loan le sakte "
+                    "hain bina kisi documentation ke. Bas mobile number dena hai."
                     + HALLUCINATION_SUFFIX_HI
                 ),
                 retrieved_schemes=[{
-                    "scheme_id": "sukanya-samriddhi-yojana",
-                    "name_en": "Sukanya Samriddhi Yojana",
-                    "name_hi": "सुकन्या समृद्धि योजना",
-                    "source_url": "https://www.india.gov.in/spotlight/sukanya-samriddhi-yojana",
+                    "scheme_id": "pmjdy",
+                    "name_en": "Pradhan Mantri Jan Dhan Yojana",
+                    "name_hi": "प्रधानमंत्री जन धन योजना",
+                    "source_url": "https://www.pmjdy.gov.in/",
                 }],
                 sources=[{
-                    "url": "https://www.india.gov.in/spotlight/sukanya-samriddhi-yojana",
-                    "title": "SSY",
-                    "scheme_id": "sukanya-samriddhi-yojana",
+                    "url": "https://www.pmjdy.gov.in/",
+                    "title": "PMJDY",
+                    "scheme_id": "pmjdy",
                 }],
                 eligibility_results=[],
             )

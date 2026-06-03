@@ -21,15 +21,21 @@ backend/tests/report.html.
 """
 
 # Persona cases - happy path coverage for the three target users.
+# Persona expectations remapped from the original 5-scheme corpus
+# (PM-KISAN / Sukanya / e-Shram / PMJAY / APY) to the current 7-scheme
+# corpus (PMJDY / PMUY / KCC / DAY-NRLM / PMJJBY / PMMY / MMSBY).
+#   sushila (daughter savings)  -> PMJDY (open a bank account)
+#   ramesh  (farmer aid)        -> KCC   (farmer credit card)
+#   pooja   (pension)           -> PMJJBY (cheap life insurance)
 PERSONA_CASES = [
     {
-        "id": "sushila_save_for_daughter",
+        "id": "sushila_bank_account",
         "category": "persona",
         "transcript_hi": (
-            "Mera naam Sushila hai, main 35 saal ki hoon. Meri beti chhoti hai. "
-            "Uske liye koi achhi saving scheme batayein."
+            "Mera naam Sushila hai, main 35 saal ki hoon. Mere paas bank "
+            "khaata nahi hai. Muft mein khulwa sakti hoon?"
         ),
-        "expected_scheme_in_top_3": ["sukanya-samriddhi-yojana"],
+        "expected_scheme_in_top_3": ["pmjdy"],
         "must_have_source": True,
         "must_have_eligibility_status": True,
         "must_not_contain": [
@@ -40,12 +46,13 @@ PERSONA_CASES = [
         "max_response_seconds": 180,
     },
     {
-        "id": "ramesh_kisan_paisa",
+        "id": "ramesh_kisan_credit",
         "category": "persona",
         "transcript_hi": (
-            "Main kisaan hoon, mere paas zameen hai. Sarkar se kya paisa milta hai?"
+            "Main kisaan hoon, mere paas zameen hai. Kheti ke liye sasta "
+            "loan kahan se milega?"
         ),
-        "expected_scheme_in_top_3": ["pm-kisan"],
+        "expected_scheme_in_top_3": ["kcc"],
         "must_have_source": True,
         "must_have_eligibility_status": True,
         "must_not_contain": [
@@ -55,12 +62,13 @@ PERSONA_CASES = [
         "max_response_seconds": 180,
     },
     {
-        "id": "pooja_pension",
+        "id": "pooja_life_insurance",
         "category": "persona",
         "transcript_hi": (
-            "Main 28 saal ki domestic worker hoon. Bude hone par koi pension milegi kya?"
+            "Main 28 saal ki domestic worker hoon. Sasta jeevan beema "
+            "chahiye taaki parivar surakshit rahe."
         ),
-        "expected_scheme_in_top_3": ["apy"],
+        "expected_scheme_in_top_3": ["pmjjby"],
         "must_have_source": True,
         "must_have_eligibility_status": True,
         "must_not_contain": [
