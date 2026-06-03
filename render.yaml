@@ -14,8 +14,12 @@ services:
     runtime: docker
     plan: free                         # 512 MB RAM, sleeps after 15min idle
     region: singapore                  # closest to India for Sarvam latency
-    rootDir: backend
-    dockerfilePath: ./Dockerfile
+    # dockerfilePath and dockerContext are BOTH resolved from the repo
+    # root, not from rootDir — Render's Blueprint spec is non-obvious here.
+    # Setting both keeps the build context inside backend/ so COPY . .
+    # only ships backend files, not the whole monorepo.
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
     healthCheckPath: /health
     autoDeploy: true
     envVars:
