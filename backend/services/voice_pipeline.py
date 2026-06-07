@@ -127,17 +127,23 @@ async def run_voice_pipeline(
         transcript_hi = ""
     stt_ms = _ms_since(stt_start)
 
-    # Stage 2: RAG retrieval
+    # Stage 2: RAG retrieval (returns both passing chunks and top-3
+    # candidates regardless of threshold, so the refusal path can cite
+    # the closest considered scheme).
     rag_start = time.perf_counter()
-    # Let RAGService pick the provider-appropriate default (0.30 local, 0.75 openai).
-    retrieved_chunks = await rag.retrieve(transcript_hi, top_k=5)
+    retrieved_chunks, retrieval_candidates = await rag.retrieve_with_candidates(
+        transcript_hi, top_k=5
+    )
     rag_ms = _ms_since(rag_start)
 
     # Stage 3: LLM answer
     llm_start = time.perf_counter()
     known_names = await _all_known_scheme_names()
     answer = await answerer.answer(
-        transcript_hi, retrieved_chunks, all_known_scheme_names=known_names
+        transcript_hi,
+        retrieved_chunks,
+        all_known_scheme_names=known_names,
+        candidates=retrieval_candidates,
     )
     llm_ms = _ms_since(llm_start)
     response_text_hi = answer.response_text_hi
@@ -347,9 +353,12 @@ async def run_chat_pipeline(
 
     transcript_hi = (text or "").strip()
 
-    # RAG
+    # RAG — also captures top-3 candidates regardless of threshold so the
+    # answer_service refusal path can attach a "we looked at this" source.
     rag_start = time.perf_counter()
-    retrieved_chunks = await rag.retrieve(transcript_hi, top_k=5)
+    retrieved_chunks, retrieval_candidates = await rag.retrieve_with_candidates(
+        transcript_hi, top_k=5
+    )
     rag_ms = _ms_since(rag_start)
 
     # Run answer + eligibility in parallel — both depend only on
@@ -363,7 +372,10 @@ async def run_chat_pipeline(
     async def _do_answer():
         a_start = time.perf_counter()
         a = await answerer.answer(
-            transcript_hi, retrieved_chunks, all_known_scheme_names=known_names
+            transcript_hi,
+            retrieved_chunks,
+            all_known_scheme_names=known_names,
+            candidates=retrieval_candidates,
         )
         return a, _ms_since(a_start)
 

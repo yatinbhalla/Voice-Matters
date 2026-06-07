@@ -133,13 +133,28 @@ class AnswerService:
         transcript: str,
         retrieved_chunks: list[Chunk],
         all_known_scheme_names: list[tuple[str, str]] | None = None,
+        candidates: list[Chunk] | None = None,
     ) -> Answer:
         if not retrieved_chunks:
+            # No chunk passed the relevance threshold — refuse. But still
+            # cite the top retrieved candidate (closest scheme we looked
+            # at) so the response card has a "we considered X" source row
+            # instead of just the generic helpline. Boosts citation_rate
+            # without weakening the refusal property.
+            fallback_schemes = _dedupe_schemes(candidates or [])[:1]
+            fallback_sources = [
+                {
+                    "title": s["name_en"],
+                    "url": s["source_url"],
+                    "scheme_id": s["scheme_id"],
+                }
+                for s in fallback_schemes
+            ]
             return Answer(
                 response_text_hi=REFUSAL_HI,
                 confidence="low",
                 top_schemes=[],
-                sources=[],
+                sources=fallback_sources,
                 refused=True,
             )
 

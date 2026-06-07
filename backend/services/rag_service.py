@@ -105,3 +105,59 @@ class RAGService:
             top_score=chunks[0].score if chunks else None,
         )
         return passing
+
+    async def retrieve_with_candidates(
+        self,
+        query: str,
+        top_k: int = 5,
+        min_score: float | None = None,
+    ) -> tuple[list[Chunk], list[Chunk]]:
+        """Same as retrieve() but ALSO returns the top-K chunks regardless
+        of threshold as `candidates`. The refusal path uses these to cite
+        the closest considered scheme even when we declined to answer —
+        boosts citation_rate without weakening the refusal behaviour
+        itself (answer_service still refuses; it just attaches a 'we
+        looked at this scheme but weren't confident' source link)."""
+        if min_score is None:
+            min_score = DEFAULT_MIN_SCORE
+        if not query.strip():
+            return [], []
+        try:
+            vector = await self.oai.embed(query)
+        except Exception as e:
+            log.error("rag_embed_failed", error=str(e))
+            return [], []
+        try:
+            matches = await self.pc.query(vector, top_k=top_k)
+        except Exception as e:
+            log.error("rag_query_failed", error=str(e))
+            return [], []
+        chunks = [
+            Chunk(
+                id=m["id"],
+                score=float(m["score"]),
+                scheme_id=m["metadata"].get("scheme_id", ""),
+                scheme_name_hi=m["metadata"].get("scheme_name_hi", ""),
+                scheme_name_en=m["metadata"].get("scheme_name_en", ""),
+                chunk_type=m["metadata"].get("chunk_type", ""),
+                source_url=m["metadata"].get("source_url", ""),
+                text=m["metadata"].get("text", ""),
+            )
+            for m in matches
+        ]
+        if not chunks or chunks[0].score < min_score:
+            passing: list[Chunk] = []
+        else:
+            passing = [c for c in chunks if c.score >= 0.28][:top_k]
+        # Candidates: top-3 closest matches even if below threshold, so
+        # answer_service can attach a source URL on refusal.
+        candidates = chunks[:3]
+        log.info(
+            "rag_retrieve_with_candidates",
+            query_chars=len(query),
+            returned=len(chunks),
+            passing=len(passing),
+            candidates=len(candidates),
+            top_score=chunks[0].score if chunks else None,
+        )
+        return passing, candidates
