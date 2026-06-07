@@ -1,0 +1,77 @@
+# Docker context is the repo root (set via render.yaml's dockerContext).
+# This file keeps unnecessary directories out of the build context so the
+# image stays small and builds stay fast on Render's free tier.
+
+# Git + GitHub workflow files
+.git/
+.github/
+.gitignore
+.gitattributes
+
+# Frontend — has its own Render Static Site deploy
+web/
+docs/
+
+# Top-level docs not needed in the API image
+README.md
+*.md
+
+# Local dev / scratch
+.vscode/
+.idea/
+__pycache__/
+*.pyc
+*.pyo
+
+# Backend-specific exclusions (mirror of backend/.dockerignore so we still
+# skip these even with the wider context)
+backend/.venv/
+backend/venv/
+backend/__pycache__/
+backend/.env
+backend/.env.local
+backend/.env.*
+!backend/.env.example
+backend/tests/report.html
+backend/tests/report.json
+backend/tests/snapshots/
+backend/tests/synthesized/
+backend/.pytest_cache/
+
+# One-shot dev helper scripts — kept in git for reproducibility but the
+# running container never needs them.
+backend/_verify_openai.py
+backend/_inject_hallucination.py
+backend/_convert_new_schemes.py
+backend/_enrich_voice_intents.py
+backend/_devanagari_summaries.py
+backend/_patch_frontend_schemes.py
+
+# Runtime audio cache rebuilt on every TTS call
+backend/static/audio/*
+!backend/static/audio/.gitkeep
+
+# Local debug response fixtures
+backend/*_resp.json
+backend/*_chrono.json
+backend/*_full.json
+backend/verify_*.json
+backend/verify_*.md
+backend/sample_*.wav
+backend/chat_*.json
+backend/explain_*.json
+backend/expl_*.json
+backend/msgs_*.json
+backend/detail_*.json
+backend/voice_*.json
+backend/fb.json
+backend/sushila.json
+backend/ramesh.json
+backend/pooja.json
+backend/trust.json
+
+# Alembic migrations cache
+backend/alembic/versions/__pycache__/
+
+# Raw scheme corpus sources — only the processed/ subset is needed
+scheme-corpus/schemes/raw/

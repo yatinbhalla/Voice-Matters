@@ -16,10 +16,12 @@ services:
     region: singapore                  # closest to India for Sarvam latency
     # dockerfilePath and dockerContext are BOTH resolved from the repo
     # root, not from rootDir — Render's Blueprint spec is non-obvious here.
-    # Setting both keeps the build context inside backend/ so COPY . .
-    # only ships backend files, not the whole monorepo.
+    # Build context is now the REPO ROOT (was ./backend) so the Dockerfile
+    # can COPY both backend/ AND scheme-corpus/ — the corpus JSONs live at
+    # the repo root and the backend needs them at runtime for eligibility,
+    # explain, and the synth-fallback answers.
     dockerfilePath: ./backend/Dockerfile
-    dockerContext: ./backend
+    dockerContext: .
     healthCheckPath: /health
     autoDeploy: true
     envVars:
