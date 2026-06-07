@@ -18,7 +18,7 @@ log = structlog.get_logger()
 # 0.45-0.55 for clear matches (English-only would be 0.70+); the local
 # paraphrase-multilingual-MiniLM-L12-v2 scores 0.30-0.50. Default min_score
 # adapts to whichever is active.
-DEFAULT_MIN_SCORE = 0.36 if EMBED_PROVIDER == "openai" else 0.30
+DEFAULT_MIN_SCORE = 0.40 if EMBED_PROVIDER == "openai" else 0.30
 
 
 @dataclass
@@ -84,7 +84,19 @@ class RAGService:
             )
             for m in matches
         ]
-        passing = [c for c in chunks if c.score >= min_score]
+        # "Top-anchor" retrieval: refuse if the TOP match doesn't clear the
+        # query-relevance threshold (filters off-topic queries like Bitcoin).
+        # When it does pass, we hand the LLM ALL top_k chunks rather than
+        # only those individually above threshold — even chunks at 0.30 are
+        # useful context once we know the query is in-scope, and the LLM
+        # generates much better answers with 4-5 chunks than with 1.
+        # Without this, queries that match a single intent chunk strongly
+        # but have weaker supporting chunks cause the LLM to default to the
+        # refusal template (it sees only one chunk and gives up).
+        if not chunks or chunks[0].score < min_score:
+            passing = []
+        else:
+            passing = [c for c in chunks if c.score >= 0.28][:top_k]
         log.info(
             "rag_retrieve",
             query_chars=len(query),
