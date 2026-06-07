@@ -107,11 +107,20 @@ def _build_user_prompt(transcript: str, chunks: list[Chunk]) -> str:
             f"{c.text}\n"
         )
     context = "\n".join(blocks) if blocks else "(no chunks)"
+    # IMPORTANT: this prompt previously said "Hindi-Roman mein" — the
+    # legacy phrasing from when the whole response path was transliterated
+    # Hindi. The system prompt was later switched to Devanagari output, but
+    # this user-side instruction wasn't updated. The conflict ("system: use
+    # Devanagari" vs "user: use Hindi-Roman") confused Sarvam-m enough that
+    # it defaulted to the safer fake_scheme refusal template instead of
+    # producing an answer. The system prompt already covers script + format
+    # rules; this prompt only needs to feed the data + a short instruction.
     return (
-        f"USER QUERY (Hindi/Devanagari):\n{transcript}\n\n"
-        f"RETRIEVED CONTEXT (only use this — nothing else):\n{context}\n\n"
-        f"Ab user ki query ka jawab Hindi-Roman mein, format ke hisaab se, "
-        f"sirf upar diye context se dein."
+        f"USER QUERY (Devanagari Hindi):\n{transcript}\n\n"
+        f"RETRIEVED CONTEXT (use ONLY this, nothing else):\n{context}\n\n"
+        f"Ab is context se user ki query ka jawab Devanagari Hindi mein, "
+        f"system prompt ke 4-part format mein dein. Refuse mat karein — "
+        f"upar diya context aapke paas hai."
     )
 
 
