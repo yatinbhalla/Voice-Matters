@@ -16,7 +16,7 @@
 // page can pop the No-network overlay. We also serve a JSON 503 fallback
 // for write paths that miss network so JS catch() can branch correctly.
 
-const VERSION = 'v6-cross-origin-passthrough';
+const VERSION = 'v7-mic-timeslice-no-fallback';
 const STATIC_CACHE = 'vm-static-' + VERSION;
 const SCHEMES_CACHE = 'vm-schemes-' + VERSION;
 const MESSAGES_CACHE = 'vm-messages-' + VERSION;

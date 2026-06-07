@@ -1225,7 +1225,15 @@ const Mic = {
       ? 'audio/webm;codecs=opus' : 'audio/webm';
     this.recorder = new MediaRecorder(this.stream, {mimeType:mime});
     this.recorder.ondataavailable = (e)=>{ if(e.data && e.data.size) this.chunks.push(e.data); };
-    this.recorder.start();
+    // CRITICAL: pass a timeslice so MediaRecorder emits `dataavailable`
+    // events every 250ms. Without it, all audio is buffered until stop(),
+    // and on Chrome desktop the final `dataavailable` fires AFTER `onstop`
+    // — so the Promise resolves with an empty Blob. Empty audio -> Sarvam
+    // STT returns garbage -> RAG embeds garbage -> always matches PMJDY
+    // as the "default" closest scheme. With a timeslice the chunks
+    // accumulate live, so even if the final flush races, we keep what
+    // was recorded up to the last tick.
+    this.recorder.start(250);
     this._timer = setTimeout(()=>this.stop(), 30000);
     this._setupVAD();
   },
@@ -1280,9 +1288,21 @@ const Mic = {
       }
       this.recorder.onstop = ()=>{
         try{ this.stream.getTracks().forEach(t=>t.stop()); }catch(e){}
-        resolve(new Blob(this.chunks, {type:this.recorder.mimeType}));
+        // Wait one microtask for any pending `dataavailable` from the
+        // final stop() flush to land in this.chunks. Without this small
+        // delay, Chrome desktop occasionally resolves with the final
+        // chunk missing.
+        setTimeout(()=>{
+          resolve(new Blob(this.chunks, {type:this.recorder.mimeType}));
+        }, 50);
       };
-      try{ this.recorder.stop(); }catch(e){ resolve(new Blob([], {type:'audio/webm'})); }
+      try{
+        // Force any buffered data to flush as a dataavailable event
+        // BEFORE stop() fires onstop. Spec says stop() should flush, but
+        // belt-and-suspenders for cross-browser quirks.
+        try{ this.recorder.requestData(); }catch(e){}
+        this.recorder.stop();
+      }catch(e){ resolve(new Blob([], {type:'audio/webm'})); }
     });
   },
 };
@@ -1293,7 +1313,7 @@ let curAudio=null, reqAudioId=0;
 function setSpeaking(on){ document.body.classList.toggle('vm-speaking', !!on); }
 function stopAudio(){
   reqAudioId++;
-  if(curAudio){ try{ curAudio.pause(); curAudio.src=''; }catch(e){} curAudio=null; }
+  if(curAudio){ try{ curAudio.pause(); curAudio.src=''; curAudio.load(); }catch(e){} curAudio=null; }
   if(window.speechSynthesis){ try{ speechSynthesis.cancel(); }catch(e){} }
   setSpeaking(false);
 }
@@ -1302,6 +1322,16 @@ function speak(text, audioPath){
   if(lowData && !speak._forced){ /* low-data: require explicit tap handled by caller */ }
   const myId = ++reqAudioId;
   const src = audioSrc(audioPath);
+  // Browser speech-synthesis fallback. Used ONLY when the backend didn't
+  // return an audio URL (e.g., /chat path). The fallback used to also
+  // fire on Audio 'error' events — which caused two long-standing bugs:
+  //   (1) 'voice repeats the info' — Bulbul MP3 finishes playing, then
+  //       error fires on cleanup, useSynth() re-reads the same text.
+  //   (2) 'voice does not stop on screen change' — stopAudio() clears
+  //       curAudio.src='' which fires an error event AFTER navigation,
+  //       useSynth() then speaks the response on the new screen.
+  // Fix: useSynth() is no longer wired to any audio-failure path.
+  // Bulbul on Render is reliable; if its URL is non-empty we trust it.
   const useSynth = ()=>{
     if(myId!==reqAudioId) return;
     if(!window.speechSynthesis || !text){ setSpeaking(false); return; }
@@ -1313,19 +1343,19 @@ function speak(text, audioPath){
   };
   if(src){
     const a=new Audio(src); curAudio=a;
-    // `started` flag so the speech-synthesis fallback only fires when the
-    // Bulbul MP3 actually fails to start. Without it, any mid-stream
-    // 'error' event triggered useSynth() AFTER playback had already begun
-    // — the browser then re-read the same text via speechSynthesis, so
-    // the user heard the response twice ("voice repeats the info").
-    let started = false;
-    a.addEventListener('playing',()=>{ started = true; if(myId===reqAudioId) setSpeaking(true); });
+    a.addEventListener('playing',()=>{ if(myId===reqAudioId) setSpeaking(true); });
     a.addEventListener('ended',()=>{ if(myId===reqAudioId) setSpeaking(false); });
     a.addEventListener('pause',()=>{ if(myId===reqAudioId && a.ended) setSpeaking(false); });
-    a.addEventListener('error',()=>{ if(started) return; curAudio=null; useSynth(); });
+    // error / play-rejection: log silently but DON'T fall back to TTS.
+    // The user already saw the text on screen; if Bulbul can't play it,
+    // a duplicate read by browser TTS is worse than silence.
+    a.addEventListener('error',()=>{ if(myId===reqAudioId){ curAudio=null; setSpeaking(false); } });
     setSpeaking(true);
-    a.play().catch(()=>{ if(started) return; curAudio=null; useSynth(); });
-  } else { useSynth(); }
+    a.play().catch(()=>{ if(myId===reqAudioId){ curAudio=null; setSpeaking(false); } });
+  } else {
+    // No audio URL at all (e.g., /chat path) — fine to use browser TTS.
+    useSynth();
+  }
 }
 
 /* ─────────── TOAST ─────────── */
