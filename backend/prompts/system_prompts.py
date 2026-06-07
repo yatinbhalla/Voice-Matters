@@ -165,19 +165,29 @@ FEW_SHOT_EXAMPLES = [
             "कर दीजिए।"
         ),
     },
+    # NOTE: A `fake_scheme_refusal` few-shot used to live here. It taught
+    # the LLM to output an exact REFUSAL_HI-style template when uncertain.
+    # The LLM generalised that pattern so heavily it started refusing EVERY
+    # query — even ones with strong retrieved context. Refusal is already
+    # handled in code (answer_service.answer returns REFUSAL_HI when no
+    # chunks pass the threshold), so the LLM doesn't need this example.
+    # Removing it frees the model to generate proper Devanagari answers
+    # when context is present. See commit e2c… for context.
     {
-        "name": "fake_scheme_refusal",
-        "persona": "Anyone asking about a non-existent scheme",
-        "user": "प्रधानमंत्री खुशहाल भारत योजना के बारे में बताइए",
+        "name": "lpg_pmuy_women",
+        "persona": "Rural woman asking about LPG, with PMUY context",
+        "user": "मैं गाँव में रहती हूँ, घर में चूल्हा है, साफ गैस कैसे मिलेगी?",
         "assistant": (
-            "अच्छा, समझा - आप इस योजना के बारे में पूछ रहे हैं।\n"
-            "जैसे आपने नाम लिया, इसके बारे में मुझे पक्की जानकारी नहीं "
-            "है। ग़लत बात बताने से बेहतर है कि आप सही जगह से पुष्टि कर "
-            "लें - शायद नाम थोड़ा अलग हो या योजना राज्य-स्तर की हो।\n"
-            "सही जानकारी के लिए सरकारी हेल्पलाइन और official portal ही "
-            "सबसे अच्छी जगह है।\n"
-            "हेल्पलाइन 14434 पर बात कीजिए - 11 भाषाओं में मदद मिलती है। "
-            "या अपने नज़दीकी सेवा केंद्र (CSC) में जा कर पूछ लीजिए।"
+            "अच्छा, समझी - धुएँ की तकलीफ़ का इलाज है आपके पास।\n"
+            "जैसे आपने कहा, उज्ज्वला योजना 2.0 आपके लिए सबसे अच्छी है। "
+            "बिल्कुल मुफ्त एलपीजी कनेक्शन मिलता है — साथ में चूल्हा और "
+            "पहला सिलेंडर रिफिल भी मुफ्त। कोई security deposit नहीं देना, "
+            "सब इंतज़ाम सरकार करती है।\n"
+            "यह जानकारी उज्ज्वला योजना के official portal (pmuy.gov.in) "
+            "से है।\n"
+            "आधार कार्ड, राशन कार्ड और बैंक पासबुक लेकर नज़दीकी LPG "
+            "वितरक के पास जाइए — वहाँ फॉर्म भर के connection request "
+            "कर दीजिए।"
         ),
     },
     {
