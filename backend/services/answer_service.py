@@ -160,7 +160,53 @@ class AnswerService:
                 system_prompt=RAG_ANSWER_SYSTEM_HI,
             )
         except Exception as e:
-            log.error("llm_failed_fallback_refusal", error=str(e))
+            # Surface the actual error type + message in logs so we can
+            # tell quota / timeout / 5xx apart in production.
+            log.error(
+                "llm_failed_fallback",
+                error=str(e),
+                error_type=type(e).__name__,
+                scheme=top_schemes[0]["scheme_id"] if top_schemes else None,
+            )
+            # SYNTHETIC FALLBACK: if we have retrieved schemes, build a
+            # deterministic 4-part answer from the scheme metadata so the
+            # user gets a real answer even when Sarvam-m hiccups. Much
+            # better UX than the in-prompt refusal template, which the
+            # user perceives as "the app doesn't work" rather than "the
+            # LLM had a blip".
+            if top_schemes:
+                s0 = top_schemes[0]
+                # Enrich from the corpus JSON since top_schemes only has
+                # chunk metadata (scheme_id / names / source_url / score).
+                from data import scheme_corpus  # local import to avoid cycle
+                full = scheme_corpus.get_scheme(s0["scheme_id"]) or {}
+                pitch = (
+                    full.get("summary_hi")
+                    or full.get("one_line_pitch_hi")
+                    or "आपकी ज़रूरत के लिए बनाई गई एक सरकारी योजना है।"
+                )
+                # Truncate the pitch to one sentence so the fallback stays
+                # readable + Bulbul-friendly (TTS limit ~450 chars).
+                if len(pitch) > 220:
+                    cut = pitch[:220].rsplit("।", 1)[0]
+                    pitch = (cut + "।") if cut else pitch[:220]
+                domain = (s0.get("source_url") or "").replace("https://","").replace("http://","").rstrip("/")
+                helpline = full.get("helpline_phone", "14434")
+                synth = (
+                    f"अच्छा, समझा — आपके लिए {s0['name_hi']} सबसे अच्छी "
+                    f"लग रही है।\n"
+                    f"जैसे आपने कहा, {pitch}\n"
+                    f"यह जानकारी {s0['name_hi']} के official portal "
+                    f"({domain}) से है।\n"
+                    f"अधिक जानकारी के लिए हेल्पलाइन {helpline} पर बात कीजिए।"
+                )
+                return Answer(
+                    response_text_hi=synth,
+                    confidence="medium",
+                    top_schemes=top_schemes,
+                    sources=sources,
+                    refused=False,
+                )
             return Answer(
                 response_text_hi=REFUSAL_HI,
                 confidence="low",
