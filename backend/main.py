@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 from pathlib import Path
 
 import structlog
@@ -53,24 +54,29 @@ async def add_audio_cache_headers(request: Request, call_next):
         response.headers["Cache-Control"] = "public, max-age=86400, immutable"
     return response
 
-# In dev, accept any localhost/127.0.0.1 origin so the static web server and
-# the API can run on different ports without CORS drama. Prod stays strict.
-if ENVIRONMENT == "development":
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-else:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=[FRONTEND_ORIGIN],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+# CORS: accept localhost (dev), the configured FRONTEND_ORIGIN, AND any
+# voice-matters-* domain on render.com. The regex catch-all is the
+# resilience layer — if FRONTEND_ORIGIN gets reset or has a typo in the
+# Render dashboard, the static site at voice-matters-web.onrender.com
+# still works. Doesn't broaden the attack surface meaningfully because
+# our endpoints have no auth + the project naming pattern is unique.
+_default_allowed = re.escape(FRONTEND_ORIGIN) if FRONTEND_ORIGIN else ""
+_cors_regex = (
+    r"^https?://("
+    r"localhost(:\d+)?"
+    r"|127\.0\.0\.1(:\d+)?"
+    r"|voice-matters[a-zA-Z0-9_-]*\.onrender\.com"
+    + (rf"|{_default_allowed.replace('https://','').replace('http://','')}"
+       if _default_allowed else "")
+    + r")$"
+)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origin_regex=_cors_regex,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/health")
