@@ -1087,14 +1087,41 @@ async function apiFetch(path, opts){
   // Reads (schemes / messages): 30s is more than enough.
   const isWrite = /\/(voice|chat|action|feedback)(\?|$)/.test(path);
   const timeoutMs = isWrite ? 120000 : 30000;
-  const ctrl = new AbortController();
-  const t = setTimeout(()=>ctrl.abort(), timeoutMs);
-  try{
-    const r = await fetch(API_BASE+path, Object.assign({signal:ctrl.signal, headers:{'Content-Type':'application/json'}}, opts));
-    clearTimeout(t);
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    return await r.json();
-  }catch(e){ clearTimeout(t); throw e; }
+  // 5xx-retry: Render free tier serves 503 while the container is
+  // booting from sleep (~30-60s window). Without retry the user sees
+  // mockChat for the first query after a sleep. Retry up to 2 times
+  // with backoff for write endpoints; reads fail fast.
+  const maxAttempts = isWrite ? 3 : 1;
+  let lastErr = null;
+  for(let attempt = 1; attempt <= maxAttempts; attempt++){
+    const ctrl = new AbortController();
+    const t = setTimeout(()=>ctrl.abort(), timeoutMs);
+    try{
+      const r = await fetch(API_BASE+path, Object.assign({signal:ctrl.signal, headers:{'Content-Type':'application/json'}}, opts));
+      clearTimeout(t);
+      if(!r.ok){
+        // Retry on 5xx (transient server / cold-start). Bail on 4xx.
+        if(r.status >= 500 && r.status < 600 && attempt < maxAttempts){
+          console.warn(`apiFetch ${path} returned ${r.status}, retrying (attempt ${attempt+1}/${maxAttempts})...`);
+          await new Promise(res => setTimeout(res, attempt * 2000));
+          continue;
+        }
+        throw new Error('HTTP '+r.status);
+      }
+      return await r.json();
+    }catch(e){
+      clearTimeout(t);
+      lastErr = e;
+      // AbortError (timeout) or network error — retry once on writes
+      if(attempt < maxAttempts && (e.name === 'AbortError' || e.name === 'TypeError')){
+        console.warn(`apiFetch ${path} failed (${e.message}), retrying (attempt ${attempt+1}/${maxAttempts})...`);
+        await new Promise(res => setTimeout(res, attempt * 2000));
+        continue;
+      }
+      throw e;
+    }
+  }
+  throw lastErr || new Error('apiFetch exhausted retries');
 }
 const VM_API = {
   async chat(text, language_hint='hi'){

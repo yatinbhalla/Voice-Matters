@@ -16,7 +16,7 @@
 // page can pop the No-network overlay. We also serve a JSON 503 fallback
 // for write paths that miss network so JS catch() can branch correctly.
 
-const VERSION = 'v8-apifetch-timeout';
+const VERSION = 'v9-apifetch-retry';
 const STATIC_CACHE = 'vm-static-' + VERSION;
 const SCHEMES_CACHE = 'vm-schemes-' + VERSION;
 const MESSAGES_CACHE = 'vm-messages-' + VERSION;
